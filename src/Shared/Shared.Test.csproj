@@ -1,0 +1,74 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.21022</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{A8AA85C6-75F5-4030-B420-2568076EF68B}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>CSharpTest.Net.Shared.Test</RootNamespace>
+    <AssemblyName>CSharpTest.Net.Shared.Test</AssemblyName>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <OutputPath>..\bin\</OutputPath>
+    <IntermediateOutputPath>$(OutputPath)obj\$(AssemblyName)\</IntermediateOutputPath>
+    <DocumentationFile Condition="'$(OutputType)' == 'Library'">$(OutputPath)$(AssemblyName).xml</DocumentationFile>
+    <DebugSymbols>True</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>none</ErrorReport>
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <Optimize>False</Optimize>
+    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+    <Optimize>True</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="nunit.framework">
+      <HintPath>..\..\bin\nunit.framework.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.configuration" />
+    <Reference Include="System.XML" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ArgumentList.cs" />
+    <Compile Include="Check.cs" />
+    <Compile Include="FileList.cs" />
+    <Compile Include="QuickLog.cs" />
+    <Compile Include="TestArgumentList.cs" />
+    <Compile Include="TestCheck.cs" />
+    <Compile Include="TestFileList.cs" />
+    <Compile Include="TestQuickLog.cs" />
+    <Compile Include="Configuration.cs" />
+    <Compile Include="TestXmlConfiguration.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="LICENSE-2.0.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <EmbeddedResource Include="CSharpTest.Net.Shared.Test.TestXmlConfiguration+Section3.xsd">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="TestXmlSection2.xsd">
+    </EmbeddedResource>
+    <EmbeddedResource Include="TestXmlConfiguration+Section1.xsd">
+    </EmbeddedResource>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <StartAction>Program</StartAction>
+    <StartProgram>$(ProjectDir)$(OutputPath)..\Tools\NUnit\nunit-console.exe</StartProgram>
+    <StartArguments>/nologo /noshadow /labels /wait $(AssemblyName).dll</StartArguments>
+    <StartWorkingDirectory>$(ProjectDir)$(OutputPath)</StartWorkingDirectory>
+    <PostBuildEvent>"$(FrameworkSDKDir)bin\xsd.exe" /nologo /out:$(ProjectDir) $(TargetPath)</PostBuildEvent>
+  </PropertyGroup>
+  <Target Name="AfterBuild!">
+    <Exec Command="$(StartProgram) /nologo /noshadow $(AssemblyName).dll" WorkingDirectory="$(StartWorkingDirectory)" />
+  </Target>
+</Project>

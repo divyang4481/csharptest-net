@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="TestArgumentList" nillable="true" type="TestArgumentList" />
+  <xs:complexType name="TestArgumentList" />
+  <xs:element name="TestArgumentListNegative" nillable="true" type="TestArgumentListNegative" />
+  <xs:complexType name="TestArgumentListNegative" />
+  <xs:element name="TestCheck" nillable="true" type="TestCheck" />
+  <xs:complexType name="TestCheck" />
+  <xs:element name="TestFileList" nillable="true" type="TestFileList" />
+  <xs:complexType name="TestFileList" />
+  <xs:element name="TestFileListNegative" nillable="true" type="TestFileListNegative" />
+  <xs:complexType name="TestFileListNegative" />
+  <xs:element name="TestQuickLog" nillable="true" type="TestQuickLog" />
+  <xs:complexType name="TestQuickLog" />
+  <xs:element name="TestXmlConfiguration" nillable="true" type="TestXmlConfiguration" />
+  <xs:complexType name="TestXmlConfiguration" />
+</xs:schema>

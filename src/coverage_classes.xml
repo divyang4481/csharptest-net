@@ -1,0 +1,76 @@
+<?xml version='1.0' encoding='utf-8'?>
+<?xml-stylesheet href='CoverageReport.xsl' type='text/xsl'?>
+<coverageReport reportTitle='Module Class Summary' date='Wednesday, March 11, 2009' time='4:46:09 PM' version='1.5.7 Beta'>
+ <project name='Module Class Summary' files='30' classes='44' members='309' nonCommentLines='2539' sequencePoints='2494' unvisitedPoints='131' unvisitedFunctions='293' coverage='94.747393744988' acceptable='70' functionCoverage='5.17799352750809' acceptableFunction='70' filteredBy='None' sortedBy='Name'>
+  <coverageFiles>
+   <coverageFile>E:\Projects\rokserver\src\bin\CSharpTest.Net.Logging.Test.coverage</coverageFile>
+   <coverageFile>E:\Projects\rokserver\src\bin\CSharpTest.Net.Shared.Test.coverage</coverageFile>
+  </coverageFiles>
+ </project>
+ <modules>
+  <module name='CSharpTest.Net.Logging' sequencePoints='1040' unvisitedPoints='99' coverage='90.4808' acceptable='70'>
+   <namespace name='-' sequencePoints='282' unvisitedPoints='2' coverage='99.2908' acceptable='70'>
+    <class name='-.Log' sequencePoints='134' unvisitedPoints='2' coverage='98.5075' acceptable='70' />
+    <class name='-.Log+Config' sequencePoints='95' unvisitedPoints='0' coverage='100' acceptable='70' />
+   </namespace>
+   <namespace name='CSharpTest.Net.Logging' sequencePoints='193' unvisitedPoints='11' coverage='94.3005' acceptable='70'>
+    <class name='CSharpTest.Net.Logging.EventData' sequencePoints='153' unvisitedPoints='10' coverage='93.4641' acceptable='70' />
+    <class name='CSharpTest.Net.Logging.LogEventArgs' sequencePoints='40' unvisitedPoints='1' coverage='97.5' acceptable='70' />
+   </namespace>
+   <namespace name='CSharpTest.Net.Logging.Implementation' sequencePoints='684' unvisitedPoints='88' coverage='87.1345' acceptable='70'>
+    <class name='CSharpTest.Net.Logging.Implementation.Configuration' sequencePoints='52' unvisitedPoints='8' coverage='84.6154' acceptable='70' />
+    <class name='CSharpTest.Net.Logging.Implementation.EventDataFormatter' sequencePoints='65' unvisitedPoints='3' coverage='95.3846' acceptable='70' />
+    <class name='CSharpTest.Net.Logging.Implementation.EventLogSource' sequencePoints='11' unvisitedPoints='2' coverage='81.8182' acceptable='70' />
+    <class name='CSharpTest.Net.Logging.Implementation.LogFieldAttribute' sequencePoints='3' unvisitedPoints='0' coverage='100' acceptable='70' />
+    <class name='CSharpTest.Net.Logging.Implementation.MessageLogFile' sequencePoints='96' unvisitedPoints='18' coverage='81.25' acceptable='70' />
+    <class name='CSharpTest.Net.Logging.Implementation.MessageQueue' sequencePoints='237' unvisitedPoints='40' coverage='83.1224' acceptable='70' />
+    <class name='CSharpTest.Net.Logging.Implementation.MessageQueue+ThreadingControl' sequencePoints='19' unvisitedPoints='0' coverage='100' acceptable='70' />
+    <class name='CSharpTest.Net.Logging.Implementation.SharedException' sequencePoints='42' unvisitedPoints='0' coverage='100' acceptable='70' />
+    <class name='CSharpTest.Net.Logging.Implementation.TraceStack' sequencePoints='36' unvisitedPoints='0' coverage='100' acceptable='70' />
+    <class name='CSharpTest.Net.Logging.Implementation.Utils' sequencePoints='80' unvisitedPoints='13' coverage='83.75' acceptable='70' />
+    <class name='CSharpTest.Net.Logging.Implementation.VersionInfo' sequencePoints='43' unvisitedPoints='4' coverage='90.6977' acceptable='70' />
+   </namespace>
+  </module>
+  <module name='CSharpTest.Net.Logging.Test' sequencePoints='761' unvisitedPoints='3' coverage='99.6058' acceptable='70'>
+   <namespace name='CSharpTest.Net.Logging.Test' sequencePoints='761' unvisitedPoints='3' coverage='99.6058' acceptable='70'>
+    <class name='CSharpTest.Net.Logging.Test.BasicLogTest' sequencePoints='293' unvisitedPoints='2' coverage='99.3174' acceptable='70' />
+    <class name='CSharpTest.Net.Logging.Test.ConfigTest' sequencePoints='196' unvisitedPoints='0' coverage='100' acceptable='70' />
+    <class name='CSharpTest.Net.Logging.Test.NegativeTests' sequencePoints='171' unvisitedPoints='1' coverage='99.4152' acceptable='70' />
+    <class name='CSharpTest.Net.Logging.Test.NegativeTests+&lt;>c__DisplayClass1' sequencePoints='1' unvisitedPoints='0' coverage='100' acceptable='70' />
+    <class name='CSharpTest.Net.Logging.Test.NegativeTests+IBlowUp' sequencePoints='4' unvisitedPoints='0' coverage='100' acceptable='70' />
+    <class name='CSharpTest.Net.Logging.Test.NegativeTests+myconverter' sequencePoints='0' unvisitedPoints='0' coverage='0' acceptable='70' />
+    <class name='CSharpTest.Net.Logging.Test.SerializerTest' sequencePoints='49' unvisitedPoints='0' coverage='100' acceptable='70' />
+    <class name='CSharpTest.Net.Logging.Test.SerializerTest+&lt;>c__DisplayClass1' sequencePoints='1' unvisitedPoints='0' coverage='100' acceptable='70' />
+    <class name='CSharpTest.Net.Logging.Test.ThreadedLogTest' sequencePoints='35' unvisitedPoints='0' coverage='100' acceptable='70' />
+    <class name='CSharpTest.Net.Logging.Test.TraceListeningTest' sequencePoints='4' unvisitedPoints='0' coverage='100' acceptable='70' />
+    <class name='CSharpTest.Net.Logging.Test.TraceListeningTest+TraceListener' sequencePoints='7' unvisitedPoints='0' coverage='100' acceptable='70' />
+   </namespace>
+  </module>
+  <module name='CSharpTest.Net.Shared.Test' sequencePoints='693' unvisitedPoints='29' coverage='95.8153' acceptable='70'>
+   <namespace name='-' sequencePoints='282' unvisitedPoints='2' coverage='99.2908' acceptable='70'>
+    <class name='-.Check' sequencePoints='19' unvisitedPoints='0' coverage='100' acceptable='70' />
+    <class name='-.Log+LogWrapper' sequencePoints='28' unvisitedPoints='0' coverage='100' acceptable='70' />
+    <class name='-.Log+TaskInfo' sequencePoints='6' unvisitedPoints='0' coverage='100' acceptable='70' />
+   </namespace>
+   <namespace name='CSharpTest.Net.Shared.Test' sequencePoints='324' unvisitedPoints='27' coverage='91.6667' acceptable='70'>
+    <class name='CSharpTest.Net.Shared.Test.TestArgumentList' sequencePoints='63' unvisitedPoints='0' coverage='100' acceptable='70' />
+    <class name='CSharpTest.Net.Shared.Test.TestArgumentListNegative' sequencePoints='25' unvisitedPoints='12' coverage='52' acceptable='70' />
+    <class name='CSharpTest.Net.Shared.Test.TestCheck' sequencePoints='32' unvisitedPoints='6' coverage='81.25' acceptable='70' />
+    <class name='CSharpTest.Net.Shared.Test.TestFileList' sequencePoints='73' unvisitedPoints='2' coverage='97.2603' acceptable='70' />
+    <class name='CSharpTest.Net.Shared.Test.TestFileListNegative' sequencePoints='12' unvisitedPoints='6' coverage='50' acceptable='70' />
+    <class name='CSharpTest.Net.Shared.Test.TestQuickLog' sequencePoints='66' unvisitedPoints='0' coverage='100' acceptable='70' />
+    <class name='CSharpTest.Net.Shared.Test.TestQuickLog+TraceListener' sequencePoints='4' unvisitedPoints='0' coverage='100' acceptable='70' />
+    <class name='CSharpTest.Net.Shared.Test.TestXmlConfiguration' sequencePoints='48' unvisitedPoints='1' coverage='97.9167' acceptable='70' />
+    <class name='CSharpTest.Net.Shared.Test.TestXmlConfiguration+Section1' sequencePoints='1' unvisitedPoints='0' coverage='100' acceptable='70' />
+   </namespace>
+   <namespace name='CSharpTest.Net.Utils' sequencePoints='250' unvisitedPoints='0' coverage='100' acceptable='70'>
+    <class name='CSharpTest.Net.Utils.ArgumentList' sequencePoints='84' unvisitedPoints='0' coverage='100' acceptable='70' />
+    <class name='CSharpTest.Net.Utils.ArgumentList+Item' sequencePoints='36' unvisitedPoints='0' coverage='100' acceptable='70' />
+    <class name='CSharpTest.Net.Utils.FileList' sequencePoints='73' unvisitedPoints='0' coverage='100' acceptable='70' />
+    <class name='CSharpTest.Net.Utils.FileList+FileFoundEventArgs' sequencePoints='4' unvisitedPoints='0' coverage='100' acceptable='70' />
+    <class name='CSharpTest.Net.Utils.XmlConfiguration`1' sequencePoints='50' unvisitedPoints='0' coverage='100' acceptable='70' />
+    <class name='CSharpTest.Net.Utils.XmlConfiguration`1+&lt;>c__DisplayClass1' sequencePoints='3' unvisitedPoints='0' coverage='100' acceptable='70' />
+   </namespace>
+  </module>
+ </modules>
+</coverageReport>
