@@ -19,7 +19,7 @@ using System.Security;
 namespace CSharpTest.Net.Logging.Implementation
 {
 	[System.Diagnostics.DebuggerNonUserCode()]
-	//[System.Diagnostics.DebuggerStepThrough()]
+	[System.Diagnostics.DebuggerStepThrough()]
 	static class EventLogSource
 	{
 		public static bool IsWorking = true;
@@ -35,7 +35,7 @@ namespace CSharpTest.Net.Logging.Implementation
 					__log = new EventLog(Configuration.EventLogName);
 					__log.Source = Configuration.EventLogSource;
 				}
-				catch(Exception e) { Utils.LogError(e); }
+				catch(Exception e) { LogUtils.LogError(e); }
 			}
 			eventId = 0; 
 			return __log; 

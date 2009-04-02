@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="unqualified" attributeFormDefault="unqualified" xmlns:vs="http://schemas.microsoft.com/Visual-Studio-Intellisense">
+  <!-- Copyright 2008-2009 by Roger Knapp, Licensed under the Apache License, Version 2.0 -->
+  <xs:annotation>
+    <xs:documentation>
+      <![CDATA[
+Author: Roger Knapp
+Url:    http://csharptest.net/downloads/schema/userSettings.xsd
+Date:   March 27th, 2009
+Rev:    1.0
+Usage:  You only need to add the following to the userSettings element:
+        <userSettings 
+          xsi:noNamespaceSchemaLocation="http://csharptest.net/downloads/schema/userSettings.xsd" 
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+Legal:
+   Copyright 2008-2009 by Roger Knapp
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+]]>
+    </xs:documentation>
+    <xs:appinfo source="http://csharptest.net" />
+  </xs:annotation>
+  <xs:element name="userSettings" vs:help="configuration/appSettings">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="sections">
+          <xs:complexType>
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
+              <xs:element name="section">
+                <xs:complexType>
+                  <xs:choice minOccurs="0" maxOccurs="unbounded">
+                    <xs:element name="add" vs:help="configuration/appSettings/add">
+                      <xs:complexType>
+                        <xs:attribute name="key" type="xs:string" use="optional" />
+                        <xs:attribute name="value" type="xs:string" use="optional" />
+                      </xs:complexType>
+                    </xs:element>
+                    <xs:element name="remove" vs:help="configuration/appSettings/remove">
+                      <xs:complexType>
+                        <xs:attribute name="key" type="xs:string" use="required" />
+                      </xs:complexType>
+                    </xs:element>
+                    <xs:element name="clear" vs:help="configuration/appSettings/clear">
+                      <xs:complexType>
+                        <!--tag is empty-->
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:choice>
+                  <xs:attribute name="name" type="xs:string" use="required" />
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="remove" vs:help="configuration/appSettings/remove">
+                <xs:complexType>
+                  <xs:attribute name="name" type="xs:string" use="required" />
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="clear" vs:help="configuration/appSettings/clear">
+                <xs:complexType>
+                  <!--tag is empty-->
+                </xs:complexType>
+              </xs:element>
+            </xs:choice>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="add" vs:help="configuration/appSettings/add">
+          <xs:complexType>
+            <xs:attribute name="key" type="xs:string" use="optional" />
+            <xs:attribute name="value" type="xs:string" use="optional" />
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="remove" vs:help="configuration/appSettings/remove">
+          <xs:complexType>
+            <xs:attribute name="key" type="xs:string" use="required" />
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="clear" vs:help="configuration/appSettings/clear">
+          <xs:complexType>
+            <!--tag is empty-->
+          </xs:complexType>
+        </xs:element>
+      </xs:choice>
+      <xs:attribute name="file" type="xs:string" use="optional" />
+      <xs:attribute name="originalVersion" type="version" use="optional" />
+      <xs:attribute name="upgradedVersion" type="version" use="optional" />
+      <xs:attribute name="upgradedDate" type="xs:dateTime" use="optional" />
+    </xs:complexType>
+  </xs:element>
+  <xs:simpleType name="version">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="^[0-9]{1,4}\.[0-9]{1,9}\.[0-9]{1,9}\.[0-9]{1,9}$" />
+    </xs:restriction>
+  </xs:simpleType>
+</xs:schema>

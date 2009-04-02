@@ -18,7 +18,7 @@ using System.Collections.Generic;
 namespace CSharpTest.Net.Logging.Implementation
 {
 	[System.Diagnostics.DebuggerNonUserCode()]
-	//[System.Diagnostics.DebuggerStepThrough()]
+	[System.Diagnostics.DebuggerStepThrough()]
 	class TraceStack : IDisposable
 	{
 		[ThreadStatic]

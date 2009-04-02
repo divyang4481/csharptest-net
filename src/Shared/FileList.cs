@@ -21,6 +21,8 @@ namespace CSharpTest.Net.Utils
 	/// <summary>
 	/// A utility class for gathering files
 	/// </summary>
+	[System.Diagnostics.DebuggerNonUserCode]
+	[System.Diagnostics.DebuggerStepThrough]
 	internal class FileList : System.Collections.ObjectModel.KeyedCollection<string, FileInfo>
 	{
 		bool _recurse = true;
@@ -87,6 +89,9 @@ namespace CSharpTest.Net.Utils
 		{
 			if (fileOrDirectory == null) throw new ArgumentNullException();
 
+			if (!Path.IsPathRooted(fileOrDirectory))
+				fileOrDirectory = Path.Combine(Environment.CurrentDirectory, fileOrDirectory);
+
 			if (File.Exists(fileOrDirectory))
 				AddFile(new FileInfo(fileOrDirectory));
 			else if (Directory.Exists(fileOrDirectory))
@@ -96,13 +101,22 @@ namespace CSharpTest.Net.Utils
 				string filePart = Path.GetFileName(fileOrDirectory);
 				string dirPart = Path.GetDirectoryName(fileOrDirectory);
 
-				if (Directory.Exists(dirPart) && filePart.IndexOfAny(new char[] { '?', '*' }) >= 0)
+				//if it is a valid directory and the file exists in the search area, then pass
+				//it on to the filters, if it doesn't exist throw not found.
+				if (Directory.Exists(dirPart) && (filePart.IndexOfAny(new char[] { '?', '*' }) >= 0 ||
+					Directory.GetFiles(dirPart, filePart, RecurseFolders ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly).Length > 0
+					) )
+				{
 					AddDirectory(new DirectoryInfo(dirPart), filePart);
+				}
 				else
 					throw new FileNotFoundException("File not found.", fileOrDirectory);
 			}
 		}
 
+		/// <summary>
+		/// Returns the collection of FileInfo as an array
+		/// </summary>
 		public FileInfo[] ToArray()
 		{
 			return new List<FileInfo>(base.Items).ToArray();
@@ -167,11 +181,23 @@ namespace CSharpTest.Net.Utils
 		/// </summary>
 		public event EventHandler<FileFoundEventArgs> FileFound;
 
+		/// <summary>
+		/// Event args passed to the FileFound event
+		/// </summary>
 		public class FileFoundEventArgs : EventArgs
 		{
+			/// <summary>
+			/// Allows manually filtering a file by setting Ignore=true;
+			/// </summary>
 			public bool Ignore;
+			/// <summary>
+			/// Provides access to the FileInfo of this item
+			/// </summary>
 			public readonly FileInfo File;
 
+			/// <summary>
+			/// Constructs the event args
+			/// </summary>
 			public FileFoundEventArgs(bool ignore, FileInfo file)
 			{
 				this.Ignore = ignore;

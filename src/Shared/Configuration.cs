@@ -31,6 +31,8 @@ namespace CSharpTest.Net.Utils
 	/// type XmlException() will be raised on errors.  Optionally, you can directly set the schema via
 	/// the static XmlSchema property.
 	/// </summary>
+	[System.Diagnostics.DebuggerNonUserCode]
+	[System.Diagnostics.DebuggerStepThrough]
 	internal class XmlConfiguration<T> : ConfigurationSection
 	{
 		public static System.Xml.Schema.XmlSchema XmlSchema = null;// <-- allows external setting

@@ -34,10 +34,13 @@ if exist bin\* @rd /s /q bin
 MD bin
 XCOPY /D /R /Y Depend\* .\bin
 
+%MSBUILD% /nologo /t:Build /v:Minimal Tools\StampVersion\StampVersion.csproj
 %MSBUILD% /nologo /t:Build /v:Minimal Log\Logging.csproj
 %MSBUILD% /nologo /t:Build /v:Minimal Log\Test\Logging.Test.csproj
 %MSBUILD% /nologo /t:Build /v:Minimal Log\GZipViewer\GZipViewer.csproj
 %MSBUILD% /nologo /t:Build /v:Minimal Shared\Shared.Test.csproj
+%MSBUILD% /nologo /t:Build /v:Minimal Library\Library.csproj
+%MSBUILD% /nologo /t:Build /v:Minimal Library\Library.Test\Library.Test.csproj
 
 goto exit
 

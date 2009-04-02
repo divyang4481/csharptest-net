@@ -34,6 +34,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Shared\ProcessInfo.cs">
+      <Link>Shared\ProcessInfo.cs</Link>
+    </Compile>
     <Compile Include="Implementation\EventLogSource.cs" />
     <Compile Include="Implementation\EventDataFormatter.cs" />
     <Compile Include="Implementation\LogFields.cs" />

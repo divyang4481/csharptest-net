@@ -27,7 +27,7 @@ namespace CSharpTest.Net.Logging
 	/// </summary>
 	[Serializable]
 	[System.Diagnostics.DebuggerNonUserCode()]
-	//[System.Diagnostics.DebuggerStepThrough()]
+	[System.Diagnostics.DebuggerStepThrough()]
 	public sealed partial class EventData : ISerializable
 	{
 		#region internal EventData()
@@ -159,8 +159,8 @@ namespace CSharpTest.Net.Logging
 		/// </summary>
 		public string ToString(string format)
 		{
-			try { return String.Format(Configuration.FormatProvider, Utils.PrepareFormatString(format), ToObjectArray()); }
-			catch(Exception e) { Utils.LogError(e); }
+			try { return String.Format(Configuration.FormatProvider, LogUtils.PrepareFormatString(format), ToObjectArray()); }
+			catch(Exception e) { LogUtils.LogError(e); }
 			return Message;
 		}
 
@@ -170,7 +170,7 @@ namespace CSharpTest.Net.Logging
 		public void Write(System.IO.TextWriter writer)
 		{
 			try { writer.WriteLine(String.Format(Configuration.FormatProvider, Configuration.FORMAT_DEFAULT, ToObjectArray())); }
-			catch(Exception e) { Utils.LogError(e); }
+			catch(Exception e) { LogUtils.LogError(e); }
 		}
 
 		/// <summary>
@@ -179,8 +179,8 @@ namespace CSharpTest.Net.Logging
 		/// </summary>
 		public void Write(System.IO.TextWriter writer, string format)
 		{
-			try { writer.WriteLine(String.Format(Configuration.FormatProvider, Utils.PrepareFormatString(format), ToObjectArray())); }
-			catch(Exception e) { Utils.LogError(e); }
+			try { writer.WriteLine(String.Format(Configuration.FormatProvider, LogUtils.PrepareFormatString(format), ToObjectArray())); }
+			catch(Exception e) { LogUtils.LogError(e); }
 		}
 
 		/// <summary>
@@ -223,7 +223,7 @@ namespace CSharpTest.Net.Logging
 				finally { writer.WriteEndElement(); }
 			}
 			catch(Exception e)
-			{ Utils.LogError(e); }
+			{ LogUtils.LogError(e); }
 		}
 
 		/// <summary>

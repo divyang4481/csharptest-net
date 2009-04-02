@@ -21,6 +21,8 @@ namespace CSharpTest.Net.Utils
 	/// This is a private class as the means of sharing is to simply include the source file not
 	/// reference a library.
 	/// </summary>
+	[System.Diagnostics.DebuggerNonUserCode]
+	[System.Diagnostics.DebuggerStepThrough]
 	internal class ArgumentList : System.Collections.ObjectModel.KeyedCollection<string, ArgumentList.Item>
 	{
 		#region Static Configuration Options
@@ -78,9 +80,9 @@ namespace CSharpTest.Net.Utils
 		/// static collection.  These arguments can be modified by the methods on the returned
 		/// collection, or you set this property to a new collection (a copy is made).
 		/// </summary>
-		public ICollection<string> Unnamed
+		public IList<string> Unnamed
 		{
-			get { return _unnamed; }
+			get { return new List<string>(_unnamed); }
 			set 
 			{
 				_unnamed.Clear();
@@ -139,6 +141,27 @@ namespace CSharpTest.Net.Utils
 			return false;
 		}
 
+		/// <summary>
+		/// Returns true if the value was found by that name and set the output value
+		/// </summary>
+		public bool TryGetValue(string name, out string value)
+		{
+			if (name == null)
+				throw new ArgumentNullException();
+
+			Item test;
+			if (Dictionary != null && Dictionary.TryGetValue(name, out test))
+			{ 
+				value = test.Value; 
+				return true; 
+			}
+			value = null;
+			return false;
+		}
+
+		/// <summary>
+		/// Returns an Item of name even if it does not exist
+		/// </summary>
 		public Item SafeGet(string name)
 		{
 			Item result;
@@ -191,11 +214,16 @@ namespace CSharpTest.Net.Utils
 		/// This is a single named argument within an argument list collection, this
 		/// can be implicitly assigned to a string, or a string[] array
 		/// </summary>
+		[System.Diagnostics.DebuggerNonUserCode]
+		[System.Diagnostics.DebuggerStepThrough]
 		internal class Item : System.Collections.ObjectModel.Collection<string>
 		{
 			protected readonly string _name;
 			protected readonly List<string> _values;
 
+			/// <summary>
+			/// Constructs an item for the name and values provided.
+			/// </summary>
 			public Item(string name, params string[] items)
 				: this(new List<string>(), name, items) { }
 
@@ -211,8 +239,14 @@ namespace CSharpTest.Net.Utils
 					_values.AddRange(items);
 			}
 
+			/// <summary>
+			/// Returns the name of this item
+			/// </summary>
 			public string Name { get { return _name; } }
 
+			/// <summary>
+			/// Returns the first value of this named item or null if one doesn't exist
+			/// </summary>
 			public string Value
 			{
 				get { return _values.Count > 0 ? _values[0] : null; }
@@ -224,6 +258,9 @@ namespace CSharpTest.Net.Utils
 				}
 			}
 
+			/// <summary>
+			/// Returns the collection of items in this named slot
+			/// </summary>
 			public string[] Values
 			{
 				get { return _values.ToArray(); }
@@ -235,15 +272,33 @@ namespace CSharpTest.Net.Utils
 				}
 			}
 
+			/// <summary>
+			/// Same as the .Values property, returns the collection of items in this named slot
+			/// </summary>
+			/// <returns></returns>
 			public string[] ToArray() { return _values.ToArray(); }
+			/// <summary>
+			/// Add one or more values to this named item
+			/// </summary>
 			public void AddRange(IEnumerable<string> items) { _values.AddRange(items); }
 
+			/// <summary>
+			/// Converts this item to key-value pair to add to a dictionary
+			/// </summary>
 			public static implicit operator KeyValuePair<string, string[]>(Item item)
 			{
 				if (item == null) throw new ArgumentNullException();
 				return new KeyValuePair<string, string[]>(item.Name, item.Values);
 			}
+
+			/// <summary>
+			/// Converts this item to a string by getting the first value or null if none
+			/// </summary>
 			public static implicit operator string(Item item) { return item == null ? null : item.Value; }
+
+			/// <summary>
+			/// Converts this item to array of strings
+			/// </summary>
 			public static implicit operator string[](Item item) { return item == null ? null : item.Values; }
 		}
 

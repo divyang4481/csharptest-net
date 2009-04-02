@@ -10,6 +10,8 @@
   <xs:complexType name="TestFileList" />
   <xs:element name="TestFileListNegative" nillable="true" type="TestFileListNegative" />
   <xs:complexType name="TestFileListNegative" />
+  <xs:element name="TestProcessInfo" nillable="true" type="TestProcessInfo" />
+  <xs:complexType name="TestProcessInfo" />
   <xs:element name="TestQuickLog" nillable="true" type="TestQuickLog" />
   <xs:complexType name="TestQuickLog" />
   <xs:element name="TestXmlConfiguration" nillable="true" type="TestXmlConfiguration" />

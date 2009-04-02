@@ -83,6 +83,7 @@ namespace CSharpTest.Net.Shared.Test
 			Assert.IsNotNull(args.SafeGet("other-not-existing"));
 			Assert.AreEqual(null, (string)args.SafeGet("other-not-existing"));
 
+			string test;
 			ArgumentList.Item item;
 
 			args = new ArgumentList();
@@ -91,7 +92,13 @@ namespace CSharpTest.Net.Shared.Test
 			args.Add(String.Empty, null);
 			Assert.IsTrue(args.TryGetValue(String.Empty, out item));
 
-			string test = item;
+			args = new ArgumentList();
+			Assert.AreEqual(0, args.Count);
+			Assert.IsFalse(args.TryGetValue(String.Empty, out test));
+			args.Add(String.Empty, null);
+			Assert.IsTrue(args.TryGetValue(String.Empty, out test));
+
+			test = item;
 			Assert.IsNull(test);
 
 			string[] testarry = item;
@@ -187,6 +194,13 @@ namespace CSharpTest.Net.Shared.Test
 		public void TestTryGetValue()
 		{
 			ArgumentList.Item item;
+			new ArgumentList().TryGetValue(null, out item);
+		}
+		[Test]
+		[ExpectedException(ExceptionType = typeof(ArgumentNullException))]
+		public void TestTryGetValue2()
+		{
+			string item;
 			new ArgumentList().TryGetValue(null, out item);
 		}
 		[Test]

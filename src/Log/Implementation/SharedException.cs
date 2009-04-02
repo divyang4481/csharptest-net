@@ -24,7 +24,7 @@ namespace CSharpTest.Net.Logging.Implementation
 	/// </summary>
 	[Serializable]
 	[System.Diagnostics.DebuggerNonUserCode()]
-	//[System.Diagnostics.DebuggerStepThrough()]
+	[System.Diagnostics.DebuggerStepThrough()]
 	class SharedException : Exception
 	{
 		string _message, _source, _stack, _toString;

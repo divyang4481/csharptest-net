@@ -17,8 +17,12 @@ using System.Diagnostics;
 using System.IO;
 
 /// <summary>
-/// Quick and dirty logging for components that do not have dependencies
+/// Quick and dirty logging for components that do not have dependencies, BTW, the
+/// additional try/finally pair in the one-liner methods prevents the optimizer from
+/// removing the method call and thus keeps the stack accurate at 2 levels.
 /// </summary>
+[System.Diagnostics.DebuggerNonUserCode]
+[System.Diagnostics.DebuggerStepThrough]
 internal static partial class Log
 {
 	#region static Log() -- Opens Log file for writting
@@ -29,6 +33,9 @@ internal static partial class Log
 
 	static TextWriterTraceListener _traceWriter = null;
 
+	/// <summary>
+	/// Allows you to close/open the writer
+	/// </summary>
 	public static void Open()
 	{
 		try
@@ -51,31 +58,29 @@ internal static partial class Log
 		{ Trace.WriteLine(e.ToString(), "CSharpTest.Net.QuickLog.Open()"); }
 	}
 
+	/// <summary>
+	/// Allows you to close/open the writer
+	/// </summary>
 	public static void Close()
 	{
-		try
+		if (_traceWriter != null)
 		{
-			if (_traceWriter != null)
-			{
-				Trace.Listeners.Remove(_traceWriter);
-				_traceWriter.Dispose();
-				_traceWriter = null;
-			}
+			Trace.Listeners.Remove(_traceWriter);
+			_traceWriter.Dispose();
+			_traceWriter = null;
 		}
-		catch (Exception e)
-		{ Trace.WriteLine(e.ToString(), "CSharpTest.Net.QuickLog.Close()"); }
 	}
 	#endregion
 
-	public static void Error(Exception e) { InternalWrite(TraceLevel.Error, "{0}", e); }
-	public static void Warning(Exception e) { InternalWrite(TraceLevel.Warning, "{0}", e); }
+	public static void Error(Exception e) { try { InternalWrite(TraceLevel.Error, "{0}", e); } finally { } }
+	public static void Warning(Exception e) { try { InternalWrite(TraceLevel.Warning, "{0}", e); } finally { } }
 
-	public static void Error(string format, params object[] args) { InternalWrite(TraceLevel.Error, format, args); }
-	public static void Warning(string format, params object[] args) { InternalWrite(TraceLevel.Warning, format, args); }
-	public static void Info(string format, params object[] args) { InternalWrite(TraceLevel.Info, format, args); }
-	public static void Verbose(string format, params object[] args) { InternalWrite(TraceLevel.Verbose, format, args); }
-	public static void Write(string format, params object[] args) { InternalWrite(TraceLevel.Off, format, args); }
-	public static void Write(TraceLevel level, string format, params object[] args) { InternalWrite(level, format, args); }
+	public static void Error(string format, params object[] args) { try { InternalWrite(TraceLevel.Error, format, args); } finally { } }
+	public static void Warning(string format, params object[] args) { try { InternalWrite(TraceLevel.Warning, format, args); } finally { } }
+	public static void Info(string format, params object[] args) { try { InternalWrite(TraceLevel.Info, format, args); } finally { } }
+	public static void Verbose(string format, params object[] args) { try { InternalWrite(TraceLevel.Verbose, format, args); } finally { } }
+	public static void Write(string format, params object[] args) { try { InternalWrite(TraceLevel.Off, format, args); } finally { } }
+	public static void Write(TraceLevel level, string format, params object[] args) { try { InternalWrite(level, format, args); } finally { } }
 	
 	public static IDisposable Start(string format, params object[] args)
 	{
@@ -98,30 +103,49 @@ internal static partial class Log
 		catch (Exception e) { Trace.WriteLine(e.ToString(), "CSharpTest.Net.QuickLog.Write()"); }
 		return new TaskInfo(format);
 	}
-	
+
+	[System.Diagnostics.DebuggerNonUserCode]
+	[System.Diagnostics.DebuggerStepThrough]
 	private class TaskInfo : MarshalByRefObject, IDisposable
 	{
 		private readonly DateTime _start;
 		private readonly string _task;
 		public TaskInfo(string task) { _task = task; _start = DateTime.Now; }
-		void IDisposable.Dispose() { InternalWrite(TraceLevel.Verbose, "End {0} ({1} ms)", _task, (DateTime.Now - _start).TotalMilliseconds); }
+		void IDisposable.Dispose() 
+		{ 
+			try  { InternalWrite(TraceLevel.Verbose, "End {0} ({1} ms)", _task, (DateTime.Now - _start).TotalMilliseconds); } 
+			finally { } 
+		}
 	}
 
 	private static void InternalWrite( TraceLevel level, string format, params object[] args )
 	{
 		try
 		{
+			int depth = 2;
 			if (args.Length > 0)
 				format = String.Format(format, args);
 			
-			StackFrame frame = new StackFrame(2);
-			System.Reflection.MethodBase method = frame.GetMethod();
+			StackFrame frame;
+			System.Reflection.MethodBase method;
+
+			do
+			{
+				frame = new StackFrame(depth++);
+				method = frame.GetMethod();
+			}
+			while (method.ReflectedType.GetCustomAttributes(typeof(System.Diagnostics.DebuggerNonUserCodeAttribute), true).Length > 0);
+
+			string methodName, callingType;
+			methodName = String.Format("{0}", method);
+			callingType = String.Format("{0}", method.ReflectedType);
+
 			string full = String.Format("{0:D2}{1,8} - {2}   at {3}", 
 				System.Threading.Thread.CurrentThread.ManagedThreadId, 
 				level == TraceLevel.Off ? "None" : level.ToString(),
-				format, method);
+				format, methodName);
 
-			Trace.WriteLine(full, method.ReflectedType.ToString());
+			Trace.WriteLine(full, callingType);
 			if (LogWrite != null)
 				LogWrite(method, level, format);
 		}
@@ -148,18 +172,24 @@ internal static partial class Log
 		IDisposable AppStart(string format, params object[] args);
 	}
 
+	/// <summary>
+	/// Returns a remoteable version of the Log interface for writing across AppDomains
+	/// into a single log
+	/// </summary>
 	public static ILog RemoteLog = new LogWrapper();
 
+	[System.Diagnostics.DebuggerNonUserCode]
+	[System.Diagnostics.DebuggerStepThrough]
 	private class LogWrapper : MarshalByRefObject, ILog
 	{
-		void ILog.Error(Exception e) { InternalWrite(TraceLevel.Error, "{0}", e); }
-		void ILog.Warning(Exception e) { InternalWrite(TraceLevel.Warning, "{0}", e); }
+		void ILog.Error(Exception e) { try { InternalWrite(TraceLevel.Error, "{0}", e); } finally { } }
+		void ILog.Warning(Exception e) { try { InternalWrite(TraceLevel.Warning, "{0}", e); } finally { } }
 
-		void ILog.Error(string format, params object[] args) { InternalWrite(TraceLevel.Error, format, args); }
-		void ILog.Warning(string format, params object[] args) { InternalWrite(TraceLevel.Warning, format, args); }
-		void ILog.Info(string format, params object[] args) { InternalWrite(TraceLevel.Info, format, args); }
-		void ILog.Verbose(string format, params object[] args) { InternalWrite(TraceLevel.Verbose, format, args); }
-		void ILog.Write(string format, params object[] args) { InternalWrite(TraceLevel.Off, format, args); }
+		void ILog.Error(string format, params object[] args) { try { InternalWrite(TraceLevel.Error, format, args); } finally { } }
+		void ILog.Warning(string format, params object[] args) { try { InternalWrite(TraceLevel.Warning, format, args); } finally { } }
+		void ILog.Info(string format, params object[] args) { try { InternalWrite(TraceLevel.Info, format, args); } finally { } }
+		void ILog.Verbose(string format, params object[] args) { try { InternalWrite(TraceLevel.Verbose, format, args); } finally { } }
+		void ILog.Write(string format, params object[] args) { try { InternalWrite(TraceLevel.Off, format, args); } finally { } }
 
 		IDisposable ILog.Start(string format, params object[] args)
 		{

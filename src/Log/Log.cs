@@ -28,7 +28,7 @@ using CSharpTest.Net.Logging.Implementation;
 /// </summary>
 [System.Reflection.Obfuscation(Exclude = true)]
 [System.Diagnostics.DebuggerNonUserCode()]
-//[System.Diagnostics.DebuggerStepThrough()]
+[System.Diagnostics.DebuggerStepThrough()]
 public static partial class Log
 {
 	static Log()
@@ -40,7 +40,7 @@ public static partial class Log
 	/// Provides configuration options for the Log subsystem
 	/// </summary>
 	[System.Diagnostics.DebuggerNonUserCode()]
-	//[System.Diagnostics.DebuggerStepThrough()]
+	[System.Diagnostics.DebuggerStepThrough()]
 	public static class Config
 	{
 		static Config()
@@ -132,7 +132,7 @@ public static partial class Log
 		/// </summary>
 		public static void SetOutputFormat(LogOutputs outputToConfigure, string newFormat)
 		{
-			newFormat = Utils.PrepareFormatString(newFormat);
+			newFormat = LogUtils.PrepareFormatString(newFormat);
 			switch(outputToConfigure)
 			{
 				case LogOutputs.AspNetTrace: { Configuration.FORMAT_ASPNET = newFormat; break; }
@@ -205,7 +205,7 @@ public static partial class Log
 	/// This call (and Disponse) IS Thread safe and can be called multiple times either 
 	/// concurrently, sequentially, nested, or overlapping calls are all permitted and handled.
 	/// </summary>
-	public static IDisposable AppStart(string format, params object[] args) { return new MessageQueue.ThreadingControl(Utils.Format(format, args)); }
+	public static IDisposable AppStart(string format, params object[] args) { return new MessageQueue.ThreadingControl(LogUtils.Format(format, args)); }
 
 	/// <summary>
 	/// Pushes a string into the trace stack so that log messages appear with the 'context'
@@ -223,7 +223,7 @@ public static partial class Log
 	/// <param name="args"></param>
 	/// <returns>An IDisposable object that should be destroyed by calling the Dispose() 
 	/// method when the activity is complete.</returns>
-	public static IDisposable Start(string format, params object[] args) { return new TraceStack(Utils.Format(format, args)); }
+	public static IDisposable Start(string format, params object[] args) { return new TraceStack(LogUtils.Format(format, args)); }
 
 	/// <summary>
 	/// Forces any left-behind calls to Start() to be closed.

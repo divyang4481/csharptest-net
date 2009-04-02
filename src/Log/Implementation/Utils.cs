@@ -21,8 +21,8 @@ using System.Text.RegularExpressions;
 namespace CSharpTest.Net.Logging.Implementation
 {
 	[System.Diagnostics.DebuggerNonUserCode()]
-	//[System.Diagnostics.DebuggerStepThrough()]
-	static class Utils
+	[System.Diagnostics.DebuggerStepThrough()]
+	static class LogUtils
 	{
 		static readonly Regex fieldsFromFormat = new Regex("{(?<field>[a-zA-Z]+)(?:[^}]+)?}");
 
@@ -84,7 +84,7 @@ namespace CSharpTest.Net.Logging.Implementation
 			try 
 			{
 				string path = Path.Combine(Path.GetDirectoryName(Configuration.CurrentLogFile), "CSharpTest.Net.Logging.Errors.txt");
-				lock (typeof(Utils))
+				lock (typeof(LogUtils))
 				{
 					int max_size = 65535;
 					if (File.Exists(path) && new FileInfo(path).Length > max_size)
@@ -105,7 +105,7 @@ namespace CSharpTest.Net.Logging.Implementation
 				sbDesc.AppendLine();
 				sbDesc.AppendLine(new String('*', 80));
 
-				lock(typeof(Utils))
+				lock(typeof(LogUtils))
 				{
 					File.AppendAllText(path, sbDesc.ToString());
 				}

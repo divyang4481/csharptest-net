@@ -39,10 +39,12 @@
     <Compile Include="ArgumentList.cs" />
     <Compile Include="Check.cs" />
     <Compile Include="FileList.cs" />
+    <Compile Include="ProcessInfo.cs" />
     <Compile Include="QuickLog.cs" />
     <Compile Include="TestArgumentList.cs" />
     <Compile Include="TestCheck.cs" />
     <Compile Include="TestFileList.cs" />
+    <Compile Include="TestProcessInfo.cs" />
     <Compile Include="TestQuickLog.cs" />
     <Compile Include="Configuration.cs" />
     <Compile Include="TestXmlConfiguration.cs" />

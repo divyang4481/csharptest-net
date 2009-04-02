@@ -20,7 +20,7 @@ using System.IO.Compression;
 namespace CSharpTest.Net.Logging.Implementation
 {
 	[System.Diagnostics.DebuggerNonUserCode()]
-	//[System.Diagnostics.DebuggerStepThrough()]
+	[System.Diagnostics.DebuggerStepThrough()]
 	class MessageLogFile : IDisposable
 	{
 		public readonly string CurrentFile;
@@ -65,13 +65,13 @@ namespace CSharpTest.Net.Logging.Implementation
 						OpenTextFile(name, IsXmlFile, ref TextWriter);
 						IsOpen = true;
 
-						Utils.LogError(new System.IO.IOException(String.Format("The log file '{0}' was in use, logging to: '{1}'", CurrentFile, name)));
+						LogUtils.LogError(new System.IO.IOException(String.Format("The log file '{0}' was in use, logging to: '{1}'", CurrentFile, name)));
 					}
 					catch
 					{ }
 				}
 				if (TextWriter == null || !IsOpen)
-					Utils.LogError(e);
+					LogUtils.LogError(e);
 			}
 		}
 
@@ -133,10 +133,10 @@ namespace CSharpTest.Net.Logging.Implementation
 					IsOpen = false;
 					if(TextWriter != null)
 						try { TextWriter.Dispose(); }
-						catch(Exception e) { Utils.LogError(e); }
+						catch(Exception e) { LogUtils.LogError(e); }
 				}
 				catch(ObjectDisposedException) { }
-				catch(Exception e) { Utils.LogError(e); }
+				catch(Exception e) { LogUtils.LogError(e); }
 			}
 		}
 
@@ -183,12 +183,12 @@ namespace CSharpTest.Net.Logging.Implementation
 				if(nextFile == null)
 				{
 					try { File.Delete(myFile); }
-					catch(Exception e) { Utils.LogError(e); return null; }
+					catch(Exception e) { LogUtils.LogError(e); return null; }
 					return myFile;
 				}
 				File.Move(myFile, nextFile);
 			}
-			catch(Exception e) { Utils.LogError(e); return null; }
+			catch(Exception e) { LogUtils.LogError(e); return null; }
 			return myFile;
 		}
 

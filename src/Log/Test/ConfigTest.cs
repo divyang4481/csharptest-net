@@ -116,7 +116,7 @@ namespace CSharpTest.Net.Logging.Test
 		{
 			Log.Config.Output |= LogOutputs.LogFile;
 			string curFile = Log.Config.LogFile;
-			Assert.IsTrue(curFile.EndsWith("LogFile{0}.txt"));
+			Assert.IsTrue(curFile.EndsWith("{0}.txt"));
 			string temp = Path.GetTempFileName();
 			try
 			{

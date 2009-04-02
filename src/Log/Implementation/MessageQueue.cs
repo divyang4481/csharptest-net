@@ -30,7 +30,7 @@ namespace CSharpTest.Net.Logging.Implementation
 	/// In a nutshell: this being easy to maintain is not as important as library performance.
 	/// </summary>
 	[System.Diagnostics.DebuggerNonUserCode()]
-	//[System.Diagnostics.DebuggerStepThrough()]
+	[System.Diagnostics.DebuggerStepThrough()]
 	static partial class MessageQueue
 	{
 		/// <summary> This allows for async subscriptions to InternalLogWrite event </summary>
@@ -67,7 +67,7 @@ namespace CSharpTest.Net.Logging.Implementation
 				
 				try
 				{
-					message = (args != null && args.Length > 0) ? Utils.Format(format, args) : format;
+					message = (args != null && args.Length > 0) ? LogUtils.Format(format, args) : format;
 					if(String.IsNullOrEmpty(message) && error != null)
 						message = error.Message;
 
@@ -92,7 +92,7 @@ namespace CSharpTest.Net.Logging.Implementation
 					stack = TraceStack.CurrentStack;
 					currUser = System.Threading.Thread.CurrentPrincipal;
 				}
-				catch(Exception e) { Utils.LogError(e); }
+				catch(Exception e) { LogUtils.LogError(e); }
 
 				#endregion
 				#region Push all the crap into a great big object dump...
@@ -149,7 +149,7 @@ namespace CSharpTest.Net.Logging.Implementation
 							System.Web.HttpContext.Current.Trace.Write(data.MethodType, String.Format(Configuration.FormatProvider, Configuration.FORMAT_ASPNET, properties), data.Exception);
 					}
 					catch(Exception e)
-					{ Utils.LogError(e); }
+					{ LogUtils.LogError(e); }
 				}
 				else if(Configuration.IsDebugging && (Configuration.LogOutput & LogOutputs.TraceWrite) == LogOutputs.TraceWrite
 					&& (Configuration.LEVEL_TRACE & data.Level) == data.Level)
@@ -190,7 +190,7 @@ namespace CSharpTest.Net.Logging.Implementation
 			}
 			catch( Exception e )
 			{
-				Utils.LogError( e );
+				LogUtils.LogError( e );
 			}
 		}
 
@@ -234,7 +234,7 @@ namespace CSharpTest.Net.Logging.Implementation
 							Console.ForegroundColor = color;
 						output.WriteLine(String.Format(Configuration.FormatProvider, Configuration.FORMAT_CONSOLE, args));
 					}
-					catch(Exception e) { Utils.LogError(e); }
+					catch(Exception e) { LogUtils.LogError(e); }
 					finally
 					{
 						if((Configuration.LogOption & LogOptions.ConsoleColors) == LogOptions.ConsoleColors)
@@ -286,11 +286,11 @@ namespace CSharpTest.Net.Logging.Implementation
 									_logFile.TextWriter.WriteLine(String.Format(Configuration.FormatProvider, Configuration.FORMAT_LOGFILE, args));
 							}
 							catch (ObjectDisposedException e)
-							{ _logFile.Dispose(); Utils.LogError(e); }
+							{ _logFile.Dispose(); LogUtils.LogError(e); }
 							catch (System.IO.IOException e)
-							{ _logFile.Dispose(); Utils.LogError(e); }
+							{ _logFile.Dispose(); LogUtils.LogError(e); }
 							catch (Exception e)
-							{ Utils.LogError(e); }
+							{ LogUtils.LogError(e); }
 						}
 					}
 				}
@@ -318,7 +318,7 @@ namespace CSharpTest.Net.Logging.Implementation
 						catch(Exception e)
 						{
 							if(EventLogSource.IsWorking)
-								Utils.LogError(e);
+								LogUtils.LogError(e);
 							EventLogSource.IsWorking = false;
 						}
 					}
@@ -339,7 +339,7 @@ namespace CSharpTest.Net.Logging.Implementation
 					catch(ThreadAbortException)
 					{ return; }
 					catch(Exception e)
-					{ Utils.LogError(e); }
+					{ LogUtils.LogError(e); }
 				}
 			}
 		}

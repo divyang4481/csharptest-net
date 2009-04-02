@@ -18,7 +18,7 @@ using System.IO;
 namespace CSharpTest.Net.Logging.Implementation
 {
 	[System.Diagnostics.DebuggerNonUserCode()]
-	//[System.Diagnostics.DebuggerStepThrough()]
+	[System.Diagnostics.DebuggerStepThrough()]
 	class Configuration
 	{
 		internal static readonly Int32 ProcessId;
@@ -73,42 +73,32 @@ namespace CSharpTest.Net.Logging.Implementation
 			Binary.TypeFormat = System.Runtime.Serialization.Formatters.FormatterTypeStyle.TypesWhenNeeded;
 
 			// DEFUALT FORMATTING
-			FORMAT_DEFAULT		= Utils.PrepareFormatString("[{ManagedThreadId:D2}] {Level,8} - {Message}");// <- this can NOT contain expressions
-			FORMAT_METHOD		= Utils.PrepareFormatString("{MethodType:%s.}{MethodName}{MethodArgs:(%s)}");
-			FORMAT_LOCATION		= Utils.PrepareFormatString("{LogCurrent:   executing %s}{Method:   at %s@}{IlOffset:?}{FileLocation}");
-			FORMAT_FILELINE		= Utils.PrepareFormatString("{FileName: in %s:line }{FileLine:?}");
-			FORMAT_FULLMESSAGE	= Utils.PrepareFormatString("{Message}{Location}{Exception}");
+			FORMAT_DEFAULT		= LogUtils.PrepareFormatString("[{ManagedThreadId:D2}] {Level,8} - {Message}");// <- this can NOT contain expressions
+			FORMAT_METHOD		= LogUtils.PrepareFormatString("{MethodType:%s.}{MethodName}{MethodArgs:(%s)}");
+			FORMAT_LOCATION		= LogUtils.PrepareFormatString("{LogCurrent:   executing %s}{Method:   at %s@}{IlOffset:?}{FileLocation}");
+			FORMAT_FILELINE		= LogUtils.PrepareFormatString("{FileName: in %s:line }{FileLine:?}");
+			FORMAT_FULLMESSAGE	= LogUtils.PrepareFormatString("{Message}{Location}{Exception}");
 			FormatProvider = new EventDataFormatter();
 
-			// INIT STATIC DATA
-			IsDebugging = System.Diagnostics.Debugger.IsAttached;
+			CSharpTest.Net.Utils.ProcessInfo info = new CSharpTest.Net.Utils.ProcessInfo();
+			ProcessId = info.ProcessId;
+			ProcessName = info.ProcessName;
+			AppDomainName = info.AppDomainName;
+			EntryAssembly = info.EntryAssembly.GetName().Name;
+			IsDebugging = info.IsDebugging;
 
-			System.Diagnostics.Process thisProcess = System.Diagnostics.Process.GetCurrentProcess();
-			ProcessId = thisProcess.Id;
-			try { ProcessName = thisProcess.MainModule.ModuleName; }
-			catch { ProcessName = String.Format( "[{0}]", ProcessId ); }
-
-			AppDomainName = AppDomain.CurrentDomain.FriendlyName;
-			System.Reflection.Assembly asm = System.Reflection.Assembly.GetEntryAssembly();
-			if( asm != null )
-				EntryAssembly = asm.GetName().Name;
-			else if( ProcessName.EndsWith( ".exe", StringComparison.OrdinalIgnoreCase ) )
-				EntryAssembly = ProcessName.Substring( 0, ProcessName.Length - 4 );
-			else
-				EntryAssembly = ProcessName;
-
-			DefaultLogFile = Path.Combine( Path.Combine( Environment.GetFolderPath( Environment.SpecialFolder.LocalApplicationData ), EntryAssembly ), "LogFile{0}.txt" );
+			DefaultLogFile = info.DefaultLogFile.Insert(info.DefaultLogFile.LastIndexOf('.'), "{0}");
 		}
 
 		/// <summary> Sets appropriate (i hope) defaults to all configuration options </summary>
 		public static void Configure()
 		{
 			// DEFAULT OUTPUT FORMATS:
-			FORMAT_ASPNET	= Utils.PrepareFormatString("{Level,8} - {Message}");
-			FORMAT_TRACE	= Utils.PrepareFormatString("[{ManagedThreadId:D2}] {Level,8} - {Message}{Location}{Exception}");
-			FORMAT_CONSOLE  = Utils.PrepareFormatString("[{ManagedThreadId:D2}] {Level,8} - {Message}{Location}{Exception}");
-			FORMAT_EVENTLOG = Utils.PrepareFormatString("[{ManagedThreadId:D2}] {Level,8} - {Message}{Location}{Exception}");
-			FORMAT_LOGFILE	= Utils.PrepareFormatString("{EventTime:o} [{ProcessId:D4},{ManagedThreadId:D2}] {Level,8} - {Message}{Location}{Exception}");
+			FORMAT_ASPNET	= LogUtils.PrepareFormatString("{Level,8} - {Message}");
+			FORMAT_TRACE	= LogUtils.PrepareFormatString("[{ManagedThreadId:D2}] {Level,8} - {Message}{Location}{Exception}");
+			FORMAT_CONSOLE  = LogUtils.PrepareFormatString("[{ManagedThreadId:D2}] {Level,8} - {Message}{Location}{Exception}");
+			FORMAT_EVENTLOG = LogUtils.PrepareFormatString("[{ManagedThreadId:D2}] {Level,8} - {Message}{Location}{Exception}");
+			FORMAT_LOGFILE	= LogUtils.PrepareFormatString("{EventTime:o} [{ProcessId:D4},{ManagedThreadId:D2}] {Level,8} - {Message}{Location}{Exception}");
 
 			//These filters will apply after the Log.Level filter:
 			LEVEL_ASPNET = LogLevels.Verbose;

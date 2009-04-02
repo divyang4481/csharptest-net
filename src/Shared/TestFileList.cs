@@ -166,7 +166,9 @@ namespace CSharpTest.Net.Shared.Test
 		public void TestAddFileNotFound()
 		{
 			//A file name that does not contain wildcards and does not exist will throw FileNotFound
-			new FileList().Add(Path.Combine(@"C:\", Guid.NewGuid().ToString()));
+			FileList list = new FileList();
+			list.RecurseFolders = false;
+			list.Add(Path.Combine(@"C:\", Guid.NewGuid().ToString()));
 		}
 	}
 }

@@ -74,7 +74,7 @@ namespace CSharpTest.Net.Logging.Implementation
 					{ return; }
 					catch (Exception e)
 					{
-						Utils.LogError(e);
+						LogUtils.LogError(e);
 					}
 				}//end while
 			}
@@ -113,7 +113,7 @@ namespace CSharpTest.Net.Logging.Implementation
 				__queueReady.Set();
 				__workerThread.Join();
 			}
-			catch(Exception e) { Utils.LogError(e); }
+			catch(Exception e) { LogUtils.LogError(e); }
 			finally
 			{
 				__workerThread = null;

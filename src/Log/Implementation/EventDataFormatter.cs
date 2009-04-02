@@ -18,7 +18,7 @@ using System.Text;
 namespace CSharpTest.Net.Logging.Implementation
 {
 	[System.Diagnostics.DebuggerNonUserCode()]
-	//[System.Diagnostics.DebuggerStepThrough()]
+	[System.Diagnostics.DebuggerStepThrough()]
 	sealed class EventDataFormatter : IFormatProvider, ICustomFormatter
 	{
 		public object GetFormat(Type service)
