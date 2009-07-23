@@ -22,8 +22,6 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <Optimize>False</Optimize>
-    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
-    <DocumentationFile>..\..\bin\CSharpTest.Net.Library.Test.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
     <Optimize>True</Optimize>
@@ -40,8 +38,10 @@
     <Reference Include="nunit.framework" />
     <Reference Include="System" />
     <Reference Include="System.configuration" />
+    <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="TestEncryption.cs" />
     <Compile Include="TestPropertySerializer.cs" />
     <Compile Include="TestPropertyType.cs" />
     <Compile Include="TestPropertyValue.cs" />
@@ -50,6 +50,7 @@
     <Compile Include="TestStringConvert.cs" />
     <Compile Include="TestStringUtils.cs" />
     <Compile Include="TestUserSettings.cs" />
+    <Compile Include="TestWin32Window.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

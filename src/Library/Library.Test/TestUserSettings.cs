@@ -37,10 +37,13 @@ namespace CSharpTest.Net.Library.Test
 
 			//attempt to remove all previous configurations
 			string versionRoot = Path.GetDirectoryName(Path.GetDirectoryName(cfg.FilePath));
-			foreach (string dir in Directory.GetDirectories(versionRoot, "*.*.*.*"))
+			if(Directory.Exists(versionRoot))
 			{
-				if (RegexPatterns.FullVersion.IsMatch(Path.GetFileName(dir)))
-					Directory.Delete(dir, true);
+				foreach (string dir in Directory.GetDirectories(versionRoot, "*.*.*.*"))
+				{
+					if (RegexPatterns.FullVersion.IsMatch(Path.GetFileName(dir)))
+						Directory.Delete(dir, true);
+				}
 			}
 
 			cfg = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);

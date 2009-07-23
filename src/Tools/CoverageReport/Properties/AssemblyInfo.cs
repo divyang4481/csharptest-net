@@ -22,7 +22,7 @@ using System.Reflection;
 [assembly: AssemblyCompany("Roger Knapp")]
 [assembly: AssemblyCopyright("Copyright 2009 by Roger Knapp, Licensed under the Apache License, Version 2.0")]
 
-[assembly: AssemblyVersion("1.0.401.118")]
-[assembly: AssemblyFileVersion("1.0.401.118")]
+[assembly: AssemblyVersion("1.0.723.3")]
+[assembly: AssemblyFileVersion("1.0.723.3")]
 
 [assembly: ObfuscateAssembly(false)]

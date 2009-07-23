@@ -41,6 +41,9 @@ XCOPY /D /R /Y Depend\* .\bin
 %MSBUILD% /nologo /t:Build /v:Minimal Shared\Shared.Test.csproj
 %MSBUILD% /nologo /t:Build /v:Minimal Library\Library.csproj
 %MSBUILD% /nologo /t:Build /v:Minimal Library\Library.Test\Library.Test.csproj
+%MSBUILD% /nologo /t:Build /v:Minimal Tools\SvnPlugin\SvnPlugin.csproj
+%MSBUILD% /nologo /t:Build /v:Minimal Tools\SvnPlugin\SvnEditor.csproj
+%MSBUILD% /nologo /t:Build /v:Minimal Tools\SvnPlugin\SvnJiraIntegration.csproj
 
 goto exit
 

@@ -14,6 +14,7 @@
 #endregion
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace CSharpTest.Net.Logging.Implementation
 {
@@ -28,7 +29,8 @@ namespace CSharpTest.Net.Logging.Implementation
 		readonly DateTime _start;
 		readonly int _depth;
 		bool _disposed = false;
-		
+
+		[MethodImpl(MethodImplOptions.NoInlining)]
 		public TraceStack(string name)
 		{
 			if(__threadStack == null) __threadStack = new List<TraceStack>(25);
@@ -43,6 +45,7 @@ namespace CSharpTest.Net.Logging.Implementation
 				MessageQueue.Push(2, LogLevels.Verbose, null, String.Format("Start {0}", _name), null);
 		}
 
+		[MethodImpl(MethodImplOptions.NoInlining)]
 		void IDisposable.Dispose()
 		{
 			if (_disposed ) return;

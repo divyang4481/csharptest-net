@@ -18,6 +18,7 @@ using System.Diagnostics;
 
 using CSharpTest.Net.Logging;
 using CSharpTest.Net.Logging.Implementation;
+using System.Runtime.CompilerServices;
 
 /// <summary>
 /// Provides an abstraction api for logging to various outputs.  This class in the global namespace for a reason.
@@ -53,6 +54,7 @@ public static partial class Log
 		public static LogLevels Level
 		{
 			get { return Configuration.LogLevel; }
+			[MethodImpl(MethodImplOptions.NoInlining)]
 			set
 			{
 				if ((Configuration.LogLevel & LogLevels.Verbose) == LogLevels.Verbose) MessageQueue.Push(1, LogLevels.Verbose, null, String.Format("Log Level changed from {0} to {1}.", Configuration.LogLevel, value), null);
@@ -63,6 +65,7 @@ public static partial class Log
 		public static LogOutputs Output
 		{
 			get { return Configuration.LogOutput; }
+			[MethodImpl(MethodImplOptions.NoInlining)]
 			set
 			{
 				if ((Configuration.LogLevel & LogLevels.Verbose) == LogLevels.Verbose) MessageQueue.Push(1, LogLevels.Verbose, null, String.Format("Log Output changed from {0} to {1}.", Configuration.LogOutput, value), null);
@@ -87,6 +90,7 @@ public static partial class Log
 		public static LogOptions Options
 		{
 			get { return Configuration.LogOption; }
+			[MethodImpl(MethodImplOptions.NoInlining)]
 			set
 			{
 				if ((Configuration.LogLevel & LogLevels.Verbose) == LogLevels.Verbose) MessageQueue.Push(1, LogLevels.Verbose, null, String.Format("Log Options changed from {0} to {1}.", Configuration.LogOption, value), null);
@@ -98,6 +102,7 @@ public static partial class Log
 		public static IFormatProvider FormatProvider { set { if( value != null ) Configuration.InnerFormatter = value; } }
 
 		/// <summary> Changes the log level required to write to a specific output device. </summary>
+		[MethodImpl(MethodImplOptions.NoInlining)]
 		public static LogLevels SetOutputLevel(LogOutputs outputToConfigure, LogLevels newLevel)
 		{
 			LogLevels old = LogLevels.None;
@@ -130,6 +135,7 @@ public static partial class Log
 		/// "[{ManagedThreadId:D2}] {Level,8} - {Message}{Location}{Exception}" -- this is the default format of ToString()
 		/// "{EventTime:o} [{ProcessId:D4},{ManagedThreadId:D2}] {Level,8} - {Message}{Location}{Exception}"  -- This is the default log file format.
 		/// </summary>
+		[MethodImpl(MethodImplOptions.NoInlining)]
 		public static void SetOutputFormat(LogOutputs outputToConfigure, string newFormat)
 		{
 			newFormat = LogUtils.PrepareFormatString(newFormat);
@@ -159,6 +165,7 @@ public static partial class Log
 		public static string LogFile
 		{
 			get { return Configuration.CurrentLogFile; }
+			[MethodImpl(MethodImplOptions.NoInlining)]
 			set
 			{
 				string newname = value;
@@ -233,40 +240,56 @@ public static partial class Log
 	/// <summary>
 	/// Write directly to the log reguardless of the currently configured log-LogLevel
 	/// </summary>
+	[MethodImpl(MethodImplOptions.NoInlining)]
 	public static void Write(string format, params object[] args) { MessageQueue.Push(1, LogLevels.None, e, format, args); }
 
 	/// <summary> Logs a Critical error </summary>
+	[MethodImpl(MethodImplOptions.NoInlining)]
 	public static void Critical(Exception e) { if ((Configuration.LogLevel & LogLevels.Critical) == LogLevels.Critical) MessageQueue.Push(1, LogLevels.Critical, e, format, args); }
 	/// <summary> Logs a Critical error </summary>
+	[MethodImpl(MethodImplOptions.NoInlining)]
 	public static void Critical(Exception e, string format, params object[] args) { if ((Configuration.LogLevel & LogLevels.Critical) == LogLevels.Critical) MessageQueue.Push(1, LogLevels.Critical, e, format, args); }
 	/// <summary> Logs a Critical error </summary>
+	[MethodImpl(MethodImplOptions.NoInlining)]
 	public static void Critical(string format, params object[] args) { if ((Configuration.LogLevel & LogLevels.Critical) == LogLevels.Critical) MessageQueue.Push(1, LogLevels.Critical, e, format, args); }
 
 	/// <summary> Logs an Error </summary>
+	[MethodImpl(MethodImplOptions.NoInlining)]
 	public static void Error(Exception e) { if ((Configuration.LogLevel & LogLevels.Error) == LogLevels.Error) MessageQueue.Push(1, LogLevels.Error, e, format, args); }
 	/// <summary> Logs an Error </summary>
+	[MethodImpl(MethodImplOptions.NoInlining)]
 	public static void Error(Exception e, string format, params object[] args) { if ((Configuration.LogLevel & LogLevels.Error) == LogLevels.Error)  MessageQueue.Push(1, LogLevels.Error, e, format, args); }
 	/// <summary> Logs an Error </summary>
+	[MethodImpl(MethodImplOptions.NoInlining)]
 	public static void Error(string format, params object[] args) { if ((Configuration.LogLevel & LogLevels.Error) == LogLevels.Error) MessageQueue.Push(1, LogLevels.Error, e, format, args); }
 
 	/// <summary> Logs a Warning </summary>
+	[MethodImpl(MethodImplOptions.NoInlining)]
 	public static void Warning(Exception e) { if ((Configuration.LogLevel & LogLevels.Warning) == LogLevels.Warning) MessageQueue.Push(1, LogLevels.Warning, e, format, args); }
 	/// <summary> Logs a Warning </summary>
+	[MethodImpl(MethodImplOptions.NoInlining)]
 	public static void Warning(Exception e, string format, params object[] args) { if ((Configuration.LogLevel & LogLevels.Warning) == LogLevels.Warning) MessageQueue.Push(1, LogLevels.Warning, e, format, args); }
 	/// <summary> Logs a Warning </summary>
+	[MethodImpl(MethodImplOptions.NoInlining)]
 	public static void Warning(string format, params object[] args) { if ((Configuration.LogLevel & LogLevels.Warning) == LogLevels.Warning) MessageQueue.Push(1, LogLevels.Warning, e, format, args); }
 
 	/// <summary> Logs a Info error </summary>
+	[MethodImpl(MethodImplOptions.NoInlining)]
 	public static void Info(Exception e) { if ((Configuration.LogLevel & LogLevels.Info) == LogLevels.Info) MessageQueue.Push(1, LogLevels.Info, e, format, args); }
 	/// <summary> Logs a Info error </summary>
+	[MethodImpl(MethodImplOptions.NoInlining)]
 	public static void Info(Exception e, string format, params object[] args) { if ((Configuration.LogLevel & LogLevels.Info) == LogLevels.Info) MessageQueue.Push(1, LogLevels.Info, e, format, args); }
 	/// <summary> Logs an Informational message </summary>
-	public static void Info(string format, params object[] args) { if((Configuration.LogLevel & LogLevels.Info) == LogLevels.Info) MessageQueue.Push(1, LogLevels.Info, e, format, args); }
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	public static void Info(string format, params object[] args) { if ((Configuration.LogLevel & LogLevels.Info) == LogLevels.Info) MessageQueue.Push(1, LogLevels.Info, e, format, args); }
 
 	/// <summary> Logs a Verbose error </summary>
+	[MethodImpl(MethodImplOptions.NoInlining)]
 	public static void Verbose(Exception e) { if ((Configuration.LogLevel & LogLevels.Verbose) == LogLevels.Verbose) MessageQueue.Push(1, LogLevels.Verbose, e, format, args); }
 	/// <summary> Logs a Verbose error </summary>
+	[MethodImpl(MethodImplOptions.NoInlining)]
 	public static void Verbose(Exception e, string format, params object[] args) { if ((Configuration.LogLevel & LogLevels.Verbose) == LogLevels.Verbose) MessageQueue.Push(1, LogLevels.Verbose, e, format, args); }
 	/// <summary> Logs a Verbose message </summary>
-	public static void Verbose(string format, params object[] args) { if((Configuration.LogLevel & LogLevels.Verbose) == LogLevels.Verbose) MessageQueue.Push(1, LogLevels.Verbose, e, format, args); }
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	public static void Verbose(string format, params object[] args) { if ((Configuration.LogLevel & LogLevels.Verbose) == LogLevels.Verbose) MessageQueue.Push(1, LogLevels.Verbose, e, format, args); }
 }

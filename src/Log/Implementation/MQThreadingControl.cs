@@ -15,6 +15,7 @@
 using System;
 using System.Threading;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace CSharpTest.Net.Logging.Implementation
 {
@@ -128,6 +129,7 @@ namespace CSharpTest.Net.Logging.Implementation
 
 			static int __openCount = 0;
 
+			[MethodImpl(MethodImplOptions.NoInlining)]
 			public ThreadingControl(string name)
 			{
 				_start = DateTime.Now;
@@ -143,6 +145,7 @@ namespace CSharpTest.Net.Logging.Implementation
 				}
 			}
 
+			[MethodImpl(MethodImplOptions.NoInlining)]
 			void IDisposable.Dispose()
 			{
 				lock(typeof(ThreadingControl))
