@@ -19,7 +19,6 @@ using System.Collections.Generic;
 /// provides a set of runtime validations for inputs
 /// </summary>
 [System.Diagnostics.DebuggerNonUserCode]
-[System.Diagnostics.DebuggerStepThrough]
 internal static partial class Check
 {
 	/// <summary>

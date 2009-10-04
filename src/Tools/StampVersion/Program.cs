@@ -28,6 +28,14 @@ namespace CSharpTest.Net.StampVersion
 			Console.WriteLine("Usage:");
 			Console.WriteLine("    StampVersion.exe [/nologo] [/wait] /build:{Number}|{File Path} [/revision={Number}|{File Path}]");
 			Console.WriteLine("");
+			Console.WriteLine("        /major:{Number} - defines the major (2th part) of the version");
+			Console.WriteLine("        /major:{File Path} - file path of a text file contain a line with:");
+			Console.WriteLine("                       Major: {Number}");
+			Console.WriteLine("");
+			Console.WriteLine("        /minor:{Number} - defines the minor (2th part) of the version");
+			Console.WriteLine("        /minor:{File Path} - file path of a text file contain a line with:");
+			Console.WriteLine("                       Minor: {Number}");
+			Console.WriteLine("");
 			Console.WriteLine("        /build:{Number} - defines the build (3th part) of the version");
 			Console.WriteLine("        /build:{File Path} - file path of a text file contain a line with:");
 			Console.WriteLine("                       Build: {Number}");
@@ -61,10 +69,12 @@ namespace CSharpTest.Net.StampVersion
 
 				try
 				{
+					string major = GetNumber("Major", args);
+					string minor = GetNumber("Minor", args);
 					string build = GetNumber("Build", args);
 					string revision = GetNumber("Revision", args);
 
-					if (build == null && revision == null)
+					if (major == null && minor == null && build == null && revision == null)
 						return DoHelp();
 
 					FileList files = new FileList(@"AssemblyInfo.cs");
@@ -96,6 +106,10 @@ namespace CSharpTest.Net.StampVersion
 							if( build != null && build == "*" )
 								parts = new string[] { parts[0], parts[1], "*" };
 
+							if (major != null && parts.Length > 0)
+								parts[0] = major;
+							if (minor != null && parts.Length > 1)
+								parts[1] = minor;
 							if (build != null && parts.Length > 2)
 								parts[2] = build;
 							if (revision != null && parts.Length > 3)

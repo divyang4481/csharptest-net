@@ -85,7 +85,7 @@ namespace CSharpTest.Net.Logging
 		LogImmediateCaller = 0x0001,
 		/// <summary>
 		/// Starting with n frames back walk back until the calling class is not decorated with the
-		/// //[System.Diagnostics.DebuggerStepThrough()] attribute.  This allows you to create wrapper
+		/// ////[System.Diagnostics.DebuggerNonUserCode()] attribute.  This allows you to create wrapper
 		/// classes that provide logging but are not considered to be the point of origin in the log.
 		/// Can be slightly slower as this now reflects each class' attributes and addtionally may 
 		/// gather more than one stack frame.

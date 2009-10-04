@@ -22,7 +22,6 @@ namespace CSharpTest.Net.Utils
 	/// A utility class for gathering files
 	/// </summary>
 	[System.Diagnostics.DebuggerNonUserCode]
-	[System.Diagnostics.DebuggerStepThrough]
 	internal class FileList : System.Collections.ObjectModel.KeyedCollection<string, FileInfo>
 	{
 		bool _recurse = true;

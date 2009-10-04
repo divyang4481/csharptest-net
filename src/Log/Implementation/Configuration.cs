@@ -18,7 +18,6 @@ using System.IO;
 namespace CSharpTest.Net.Logging.Implementation
 {
 	[System.Diagnostics.DebuggerNonUserCode()]
-	[System.Diagnostics.DebuggerStepThrough()]
 	class Configuration
 	{
 		internal static readonly Int32 ProcessId;

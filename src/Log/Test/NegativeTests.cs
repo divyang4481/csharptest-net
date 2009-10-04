@@ -54,7 +54,6 @@ namespace CSharpTest.Net.Logging.Test
 		#endregion
 
 		[System.Diagnostics.DebuggerNonUserCode]
-		[System.Diagnostics.DebuggerStepThrough]
 		public class IBlowUp : Exception
 		{
 			public override string Message { get { throw new NotImplementedException(); } }
@@ -243,7 +242,6 @@ namespace CSharpTest.Net.Logging.Test
 		}
 
 		[System.Diagnostics.DebuggerNonUserCode]
-		[System.Diagnostics.DebuggerStepThrough]
 		void BreakIn_LogWrite(object sender, LogEventArgs args)
 		{
 			throw new NotImplementedException();

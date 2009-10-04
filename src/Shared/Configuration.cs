@@ -32,7 +32,6 @@ namespace CSharpTest.Net.Utils
 	/// the static XmlSchema property.
 	/// </summary>
 	[System.Diagnostics.DebuggerNonUserCode]
-	[System.Diagnostics.DebuggerStepThrough]
 	internal class XmlConfiguration<T> : ConfigurationSection
 	{
 		public static System.Xml.Schema.XmlSchema XmlSchema = null;// <-- allows external setting

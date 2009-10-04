@@ -1,0 +1,73 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.21022</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{8C8B35B9-9A35-4020-9A86-BA934B718331}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>CSharpTest.Net.SslTunnel.Test</RootNamespace>
+    <AssemblyName>CSharpTest.Net.SslTunnel.Test</AssemblyName>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <OutputPath>..\..\bin\</OutputPath>
+    <IntermediateOutputPath>$(OutputPath)obj\$(AssemblyName)\</IntermediateOutputPath>
+    <DocumentationFile Condition="'$(OutputType)' == 'Library'">$(OutputPath)$(AssemblyName).xml</DocumentationFile>
+    <DebugSymbols>True</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>none</ErrorReport>
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <Optimize>False</Optimize>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+    <Optimize>True</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="nunit.framework">
+      <HintPath>..\..\bin\nunit.framework.dll</HintPath>
+    </Reference>
+    <Reference Include="SslTunnel.Library">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\bin\SslTunnel.Library.dll</HintPath>
+    </Reference>
+    <Reference Include="SslTunnel.Server">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\bin\SslTunnel.Server.exe</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.XML" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="TcpTestServer.cs" />
+    <Compile Include="TestCert.cs" />
+    <Compile Include="TestCertValidator.cs" />
+    <Compile Include="TestClientServer.cs" />
+    <Compile Include="TestMuxSslTunnel.cs" />
+    <Compile Include="TestMuxTunnel.cs" />
+    <Compile Include="TestPort.cs" />
+    <Compile Include="TestSampleConfig.cs" />
+    <Compile Include="TestSslTunnel.cs" />
+    <Compile Include="TestTunnel.cs" />
+    <Compile Include="TestTunnelBase.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="SslTunnel.Test.Sample.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <StartAction>Program</StartAction>
+    <StartProgram>$(ProjectDir)$(OutputPath)..\Tools\NUnit\nunit-console.exe</StartProgram>
+    <StartArguments>/nologo /noshadow /labels /wait $(AssemblyName).dll</StartArguments>
+    <StartWorkingDirectory>$(ProjectDir)$(OutputPath)</StartWorkingDirectory>
+    <PreBuildEvent>Copy /Y $(ProjectDir)..\Library\SslTunnel.xsd $(ProjectDir)</PreBuildEvent>
+  </PropertyGroup>
+  <Target Name="Test">
+    <Exec Command="$(StartProgram) /nologo /noshadow $(AssemblyName).dll" WorkingDirectory="$(StartWorkingDirectory)" />
+  </Target>
+</Project>

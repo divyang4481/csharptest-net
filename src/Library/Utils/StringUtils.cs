@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace CSharpTest.Net.Utils
 {
@@ -22,7 +23,6 @@ namespace CSharpTest.Net.Utils
 	/// Various routines for string manipulations
 	/// </summary>
 	[System.Diagnostics.DebuggerNonUserCode]
-	[System.Diagnostics.DebuggerStepThrough]
 	public static class StringUtils
 	{
 		/// <summary>
@@ -117,5 +117,30 @@ namespace CSharpTest.Net.Utils
 		/// Reconstructs a type from a string that was previously obtained via StringUtils.ToString(T data)
 		/// </summary>
 		public static bool TryParse(string input, Type type, out object value) { return DefaultConverter.TryParse(input, type, out value); }
+
+		/// <summary>
+		/// Used for text-template transformation where a regex match is replaced in the input string.
+		/// </summary>
+		/// <param name="input">The text to perform the replacement upon</param>
+		/// <param name="pattern">The regex used to perform the match</param>
+		/// <param name="fnReplace">A delegate that selects the appropriate replacement text</param>
+		/// <returns>The newly formed text after all replacements are made</returns>
+		public static string Transform(string input, Regex pattern, Converter<Match, string> fnReplace)
+		{
+			int currIx = 0;
+			StringBuilder sb = new StringBuilder();
+
+			foreach (Match match in pattern.Matches(input))
+			{
+				sb.Append(input, currIx, match.Index - currIx);
+				string replace = fnReplace(match);
+				sb.Append(replace);
+
+				currIx = match.Index + match.Length;
+			}
+
+			sb.Append(input, currIx, input.Length - currIx);
+			return sb.ToString();
+		}
 	}
 }

@@ -22,8 +22,8 @@ using System.Reflection;
 [assembly: AssemblyCompany( "Roger Knapp" )]
 [assembly: AssemblyCopyright( "Copyright 2008 by Roger Knapp, Licensed under the Apache License, Version 2.0" )]
 
-[assembly: AssemblyVersion( "1.0.723.3" )]
-[assembly: AssemblyFileVersion( "1.0.723.3" )]
+[assembly: AssemblyVersion( "1.9.1004.144" )]
+[assembly: AssemblyFileVersion( "1.9.1004.144" )]
 
 [assembly: ObfuscateAssembly( true )]
 

@@ -32,6 +32,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SvnEditor", "Tools\SvnPlugi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SvnJiraIntegration", "Tools\SvnPlugin\SvnJiraIntegration.csproj", "{73680B86-524B-4296-90CE-740B2486D279}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SslTunnel.Library", "SslTunnel\Library\SslTunnel.Library.csproj", "{022F82B4-4E41-4A8A-ADE2-B500F71D3C26}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SslTunnel.Server", "SslTunnel\Server\SslTunnel.Server.csproj", "{61A72054-0822-401C-BD89-DC3B2ED328A5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SslTunnel.Test", "SslTunnel\Test\SslTunnel.Test.csproj", "{8C8B35B9-9A35-4020-9A86-BA934B718331}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -152,6 +158,36 @@ Global
 		{73680B86-524B-4296-90CE-740B2486D279}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{73680B86-524B-4296-90CE-740B2486D279}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{73680B86-524B-4296-90CE-740B2486D279}.Release|Win32.ActiveCfg = Release|Any CPU
+		{022F82B4-4E41-4A8A-ADE2-B500F71D3C26}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{022F82B4-4E41-4A8A-ADE2-B500F71D3C26}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{022F82B4-4E41-4A8A-ADE2-B500F71D3C26}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{022F82B4-4E41-4A8A-ADE2-B500F71D3C26}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{022F82B4-4E41-4A8A-ADE2-B500F71D3C26}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{022F82B4-4E41-4A8A-ADE2-B500F71D3C26}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{022F82B4-4E41-4A8A-ADE2-B500F71D3C26}.Release|Any CPU.Build.0 = Release|Any CPU
+		{022F82B4-4E41-4A8A-ADE2-B500F71D3C26}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{022F82B4-4E41-4A8A-ADE2-B500F71D3C26}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{022F82B4-4E41-4A8A-ADE2-B500F71D3C26}.Release|Win32.ActiveCfg = Release|Any CPU
+		{61A72054-0822-401C-BD89-DC3B2ED328A5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{61A72054-0822-401C-BD89-DC3B2ED328A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{61A72054-0822-401C-BD89-DC3B2ED328A5}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{61A72054-0822-401C-BD89-DC3B2ED328A5}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{61A72054-0822-401C-BD89-DC3B2ED328A5}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{61A72054-0822-401C-BD89-DC3B2ED328A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{61A72054-0822-401C-BD89-DC3B2ED328A5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{61A72054-0822-401C-BD89-DC3B2ED328A5}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{61A72054-0822-401C-BD89-DC3B2ED328A5}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{61A72054-0822-401C-BD89-DC3B2ED328A5}.Release|Win32.ActiveCfg = Release|Any CPU
+		{8C8B35B9-9A35-4020-9A86-BA934B718331}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8C8B35B9-9A35-4020-9A86-BA934B718331}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8C8B35B9-9A35-4020-9A86-BA934B718331}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{8C8B35B9-9A35-4020-9A86-BA934B718331}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{8C8B35B9-9A35-4020-9A86-BA934B718331}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{8C8B35B9-9A35-4020-9A86-BA934B718331}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8C8B35B9-9A35-4020-9A86-BA934B718331}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8C8B35B9-9A35-4020-9A86-BA934B718331}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{8C8B35B9-9A35-4020-9A86-BA934B718331}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{8C8B35B9-9A35-4020-9A86-BA934B718331}.Release|Win32.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

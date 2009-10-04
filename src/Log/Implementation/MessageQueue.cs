@@ -30,7 +30,6 @@ namespace CSharpTest.Net.Logging.Implementation
 	/// In a nutshell: this being easy to maintain is not as important as library performance.
 	/// </summary>
 	[System.Diagnostics.DebuggerNonUserCode()]
-	[System.Diagnostics.DebuggerStepThrough()]
 	static partial class MessageQueue
 	{
 		/// <summary> This allows for async subscriptions to InternalLogWrite event </summary>
@@ -357,7 +356,9 @@ namespace CSharpTest.Net.Logging.Implementation
 				if(frame != null && (Configuration.LogOption & LogOptions.LogNearestCaller) == LogOptions.LogNearestCaller)
 				{
 					method = frame.GetMethod();
-					while( method != null && method.ReflectedType.GetCustomAttributes( typeof( System.Diagnostics.DebuggerStepThroughAttribute ), false ).Length > 0 )
+					while (method != null && (
+						method.ReflectedType.IsDefined(typeof(System.Diagnostics.DebuggerStepThroughAttribute), false) ||
+						method.ReflectedType.IsDefined(typeof(System.Diagnostics.DebuggerNonUserCodeAttribute), false)))
 					{
 						method = null;
 						if( null != (frame = new StackFrame( ++depth, getFile )) )

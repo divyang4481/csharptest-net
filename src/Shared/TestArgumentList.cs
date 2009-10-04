@@ -49,6 +49,13 @@ namespace CSharpTest.Net.Shared.Test
 			Assert.AreEqual(1, args[1].Count);
 			Assert.AreEqual("other", args[1].Name);
 			Assert.AreEqual("value", args[1].Value);
+			
+			string[] keys = args.Keys;
+			Assert.AreEqual(2, keys.Length);
+			Assert.AreEqual("other", keys[0]);//alpha-sorted
+			Assert.AreEqual("test", keys[1]);
+			Assert.AreEqual(0, new ArgumentList("unnamed").Keys.Length);
+			Assert.AreEqual(0, new ArgumentList(/*empty*/).Keys.Length);
 
 			ArgumentList.DefaultComparison = StringComparer.Ordinal;
 			Assert.AreEqual(StringComparer.Ordinal, ArgumentList.DefaultComparison);
@@ -125,7 +132,90 @@ namespace CSharpTest.Net.Shared.Test
 			Assert.AreEqual(3, testkv.Value.Length);
 			Assert.AreEqual("roger was here", String.Join(" ", testkv.Value));
 		}
+		
+		[Test]
+		public void TestUnnamed()
+		{
+			ArgumentList args = new ArgumentList("some", "/thing", "else");
+			Assert.AreEqual(2, args.Unnamed.Count);
+			Assert.AreEqual(1, args.Count);
+			Assert.IsTrue(args.Contains("thing"));
+			Assert.AreEqual("some", args.Unnamed[0]);
+			Assert.AreEqual("else", args.Unnamed[1]);
 
+			args.Unnamed.RemoveAt(0);
+			Assert.AreEqual(1, args.Unnamed.Count);
+			Assert.AreEqual("else", args.Unnamed[0]);
+
+			args.Clear();
+			Assert.AreEqual(0, args.Count);
+			Assert.AreEqual(1, args.Unnamed.Count);
+
+			args.Unnamed.Clear();
+			Assert.AreEqual(0, args.Unnamed.Count);
+		}
+
+		[Test]
+		public void TestParseRemove()
+		{
+			//reset
+			ArgumentList.PrefixChars = new char[] { '/', '-' };
+			ArgumentList.NameDelimeters = new char[] { '=', ':' };
+
+			string[] arguments = new string[] { "bla", "/one=1", "/two", "-", "/", "", "-three:3", "/four : 4", "/5", "/5:" };
+
+			int count = arguments.Length;
+			string value;
+			Assert.IsTrue(ArgumentList.Remove(ref arguments, "one", out value), "found item in array");
+			Assert.AreEqual(--count, arguments.Length, "was removed from array?");
+			Assert.AreEqual("1", value, "Extracted value correctly?");
+
+			Assert.IsTrue(ArgumentList.Remove(ref arguments, "two", out value), "found item in array");
+			Assert.AreEqual(--count, arguments.Length, "was removed from array?");
+			Assert.IsNull(value, "Extracted value correctly?");
+
+			Assert.IsTrue(ArgumentList.Remove(ref arguments, "three", out value), "found item in array");
+			Assert.AreEqual(--count, arguments.Length, "was removed from array?");
+			Assert.AreEqual("3", value, "Extracted value correctly?");
+
+			Assert.IsFalse(ArgumentList.Remove(ref arguments, "four", out value), "not found in array");
+			Assert.IsTrue(ArgumentList.Remove(ref arguments, "four ", out value), "found item in array");
+			Assert.AreEqual(--count, arguments.Length, "was removed from array?");
+			Assert.AreEqual(" 4", value, "Extracted value correctly?");
+
+			Assert.IsTrue(ArgumentList.Remove(ref arguments, "5", out value), "found item in array");
+			Assert.AreEqual(--count, arguments.Length, "was removed from array?");
+			Assert.IsNull(value, "Extracted value correctly?");
+			Assert.IsTrue(ArgumentList.Remove(ref arguments, "5", out value), "found item in array");
+			Assert.AreEqual(--count, arguments.Length, "was removed from array?");
+			Assert.AreEqual("", value, "Extracted value correctly?");
+		}
+		
+		[Test]
+		public void TestParseJoin()
+		{
+			// all of these result in three argument values and should re-join exactly as appears
+			string[] test_valid_strings = new string[] {
+				"a b c",
+				"a b \"c c\"",
+				"a b \" c \"",
+				"a \"b\"\"b\" c",
+				"a \"\"\"b\"\"\" c",
+			};
+
+			foreach (string testinput in test_valid_strings)
+			{
+				string[] result = ArgumentList.Parse(testinput);
+				Assert.AreEqual(3, result.Length, "failed to find three values");
+				string joined = ArgumentList.Join(result);
+				Assert.AreEqual(testinput, joined, "failed to parse/join correctly");
+			}
+
+			//the following do not re-join exactly:
+			Assert.AreEqual("a b c", ArgumentList.Join(ArgumentList.Parse("a \"b\" c")), "failed to parse/join correctly");
+			Assert.AreEqual("a \"b\"\"b\" c", ArgumentList.Join(ArgumentList.Parse("a b\"b c")), "failed to parse/join correctly");
+			Assert.AreEqual("a b c", ArgumentList.Join(ArgumentList.Parse("a b \"c")), "failed to parse/join correctly");
+		}
 	}
 
 	[TestFixture]
@@ -137,6 +227,18 @@ namespace CSharpTest.Net.Shared.Test
 		public void TestCTor()
 		{
 			new ArgumentList((string[])null);
+		}
+		[Test]
+		[ExpectedException(ExceptionType = typeof(ArgumentNullException))]
+		public void TestParseNull()
+		{
+			ArgumentList.Parse(null);
+		}
+		[Test]
+		[ExpectedException(ExceptionType = typeof(ArgumentNullException))]
+		public void TestJoinNull()
+		{
+			ArgumentList.Join(null);
 		}
 		[Test]
 		[ExpectedException(ExceptionType = typeof(ArgumentNullException))]

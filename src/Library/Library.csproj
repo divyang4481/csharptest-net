@@ -28,9 +28,6 @@
     <Optimize>True</Optimize>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="CSharpTest.Net.Logging">
-      <SpecificVersion>False</SpecificVersion>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Data" />
@@ -39,6 +36,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Shared\ArgumentList.cs">
+      <Link>Shared\ArgumentList.cs</Link>
+    </Compile>
     <Compile Include="..\Shared\Check.cs">
       <Link>Shared\Check.cs</Link>
     </Compile>
@@ -48,8 +48,22 @@
     <Compile Include="AppConfig\UserSettingsSection.Upgrade.cs" />
     <Compile Include="AppConfig\UserSettingsSubSection.cs" />
     <Compile Include="AppConfig\UserSettingsSubSectionCollection.cs" />
+    <Compile Include="Commands\Argument.cs" />
+    <Compile Include="Commands\Attributes.cs" />
+    <Compile Include="Commands\Command.cs" />
+    <Compile Include="Commands\CommandFilter.cs" />
+    <Compile Include="Commands\CommandInterpreter.cs" />
+    <Compile Include="Commands\DefaultCommands.cs" />
+    <Compile Include="Commands\Exceptions.cs" />
+    <Compile Include="Commands\HelpDisplay.cs" />
+    <Compile Include="Commands\DisplayInfoBase.cs" />
+    <Compile Include="Commands\Interfaces.cs" />
+    <Compile Include="Commands\Option.cs" />
     <Compile Include="Crypto\CryptoApi.cs" />
     <Compile Include="Crypto\IEncryptDecrypt.cs" />
+    <Compile Include="Delegates\EventHandlerForControl.cs" />
+    <Compile Include="Processes\ProcessOutputEventArgs.cs" />
+    <Compile Include="Processes\ProcessRunner.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Reflection\ObjectSerializer.cs" />
     <Compile Include="Reflection\PropertySerializer.cs" />
@@ -60,6 +74,7 @@
     <Compile Include="Serialization\StorageClasses.cs" />
     <Compile Include="AppConfig\UserSettingsSection.cs" />
     <Compile Include="Utils\Constants.cs" />
+    <Compile Include="Utils\FileUtils.cs" />
     <Compile Include="Utils\RegexPatterns.cs" />
     <Compile Include="Utils\StringCoverter.cs" />
     <Compile Include="Utils\StringUtils.cs" />

@@ -44,6 +44,9 @@ XCOPY /D /R /Y Depend\* .\bin
 %MSBUILD% /nologo /t:Build /v:Minimal Tools\SvnPlugin\SvnPlugin.csproj
 %MSBUILD% /nologo /t:Build /v:Minimal Tools\SvnPlugin\SvnEditor.csproj
 %MSBUILD% /nologo /t:Build /v:Minimal Tools\SvnPlugin\SvnJiraIntegration.csproj
+%MSBUILD% /nologo /t:Build /v:Minimal SslTunnel\Library\SslTunnel.Library.csproj
+%MSBUILD% /nologo /t:Build /v:Minimal SslTunnel\Server\SslTunnel.Server.csproj
+%MSBUILD% /nologo /t:Build /v:Minimal SslTunnel\Test\SslTunnel.Test.csproj
 
 goto exit
 

@@ -43,7 +43,6 @@ namespace CSharpTest.Net.Logging
 	/// </summary>
 	[Serializable]
 	[System.Diagnostics.DebuggerNonUserCode()]
-	[System.Diagnostics.DebuggerStepThrough()]
 	public sealed class LogEventArgs : System.EventArgs, ISerializable, IEnumerable<EventData>
 	{
 		List<EventData> _data;

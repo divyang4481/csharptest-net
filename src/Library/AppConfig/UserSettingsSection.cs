@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Configuration;
+using System.Diagnostics;
 
 namespace CSharpTest.Net.AppConfig
 {
@@ -68,7 +69,7 @@ namespace CSharpTest.Net.AppConfig
 			if (settings.IsModified())
 			{
 				try { config.Save(); }
-				catch (Exception e) { Log.Error(e, "Failed to save configuration."); }
+				catch (Exception e) { Trace.TraceError("{1}\r\n{0}", e, "Failed to save configuration."); }
 			}
 
 			return settings;

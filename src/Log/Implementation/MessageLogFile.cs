@@ -20,7 +20,6 @@ using System.IO.Compression;
 namespace CSharpTest.Net.Logging.Implementation
 {
 	[System.Diagnostics.DebuggerNonUserCode()]
-	[System.Diagnostics.DebuggerStepThrough()]
 	class MessageLogFile : IDisposable
 	{
 		public readonly string CurrentFile;

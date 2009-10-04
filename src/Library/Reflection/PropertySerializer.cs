@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using CSharpTest.Net.Serialization;
+using System.Diagnostics;
 
 namespace CSharpTest.Net.Reflection
 {
@@ -109,7 +110,7 @@ namespace CSharpTest.Net.Reflection
 			Check.NotNull(instance);
 			Check.NotNull(rawstorage);
 
-			Log.Verbose("Saving {0} properties for {1} in {2}", _members.Count, instance.GetType(), rawstorage.GetType());
+			//Log.Verbose("Saving {0} properties for {1} in {2}", _members.Count, instance.GetType(), rawstorage.GetType());
 
 			Storage storage = new Storage(rawstorage, _type.FullName);
 			foreach (string sdatapath in _members)
@@ -121,7 +122,7 @@ namespace CSharpTest.Net.Reflection
 				}
 				catch (Exception e)
 				{
-					Log.Error(e, "Unable to serialize property {0} on {1}", sdatapath, instance.GetType());
+					Trace.TraceError("Unable to serialize property {0} on {1}\r\n{2}", sdatapath, instance.GetType(), e);
 					if (false == _continueOnError)
 						throw;
 				}
@@ -136,7 +137,7 @@ namespace CSharpTest.Net.Reflection
 			Check.NotNull(instance);
 			Check.NotNull(rawstorage);
 
-			Log.Verbose("Reading {0} properties for {1} in {2}", _members.Count, instance.GetType(), rawstorage.GetType());
+			//Log.Verbose("Reading {0} properties for {1} in {2}", _members.Count, instance.GetType(), rawstorage.GetType());
 
 			Storage storage = new Storage(rawstorage, _type.FullName);
 			foreach (string sdatapath in _members)
@@ -150,7 +151,7 @@ namespace CSharpTest.Net.Reflection
 				}
 				catch (Exception e)
 				{
-					Log.Error(e, "Unable to deserialize property {0} on {1}", sdatapath, instance.GetType());
+					Trace.TraceError("Unable to deserialize property {0} on {1}\r\n{2}", sdatapath, instance.GetType(), e);
 					if (false == _continueOnError)
 						throw;
 				}

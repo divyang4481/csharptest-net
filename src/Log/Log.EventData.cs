@@ -27,7 +27,6 @@ namespace CSharpTest.Net.Logging
 	/// </summary>
 	[Serializable]
 	[System.Diagnostics.DebuggerNonUserCode()]
-	[System.Diagnostics.DebuggerStepThrough()]
 	public sealed partial class EventData : ISerializable
 	{
 		#region internal EventData()

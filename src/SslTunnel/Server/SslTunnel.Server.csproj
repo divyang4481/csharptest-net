@@ -1,0 +1,93 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.21022</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{61A72054-0822-401C-BD89-DC3B2ED328A5}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>CSharpTest.Net.SslTunnel.Server</RootNamespace>
+    <AssemblyName>SslTunnel.Server</AssemblyName>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <OutputPath>..\..\bin\</OutputPath>
+    <IntermediateOutputPath>$(OutputPath)obj\$(AssemblyName)\</IntermediateOutputPath>
+    <DocumentationFile Condition="'$(OutputType)' == 'Library'">$(OutputPath)$(AssemblyName).xml</DocumentationFile>
+    <DebugSymbols>True</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>none</ErrorReport>
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <Optimize>False</Optimize>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <Optimize>True</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="CSharpTest.Net.Library">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\bin\CSharpTest.Net.Library.dll</HintPath>
+    </Reference>
+    <Reference Include="CSharpTest.Net.Logging">
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
+    <Reference Include="SslTunnel.Library">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\bin\SslTunnel.Library.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Configuration.Install" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Management" />
+    <Reference Include="System.ServiceProcess" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\..\Shared\ArgumentList.cs">
+      <Link>ArgumentList.cs</Link>
+    </Compile>
+    <Compile Include="CertUtils.cs" />
+    <Compile Include="Commands.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="SslServiceInstall.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="SslServiceInstall.Designer.cs">
+      <DependentUpon>SslServiceInstall.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SslService.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="SslService.Designer.cs">
+      <DependentUpon>SslService.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="LICENSE-2.0.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="makecert.exe" />
+    <EmbeddedResource Include="SslServiceInstall.resx">
+      <DependentUpon>SslServiceInstall.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SslService.resx">
+      <DependentUpon>SslService.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>Copy /Y $(ProjectDir)..\Library\SslTunnel.xsd $(ProjectDir)</PreBuildEvent>
+  </PropertyGroup>
+</Project>

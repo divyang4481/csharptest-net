@@ -29,7 +29,6 @@ using System.Runtime.CompilerServices;
 /// </summary>
 [System.Reflection.Obfuscation(Exclude = true)]
 [System.Diagnostics.DebuggerNonUserCode()]
-[System.Diagnostics.DebuggerStepThrough()]
 public static partial class Log
 {
 	static Log()
@@ -41,7 +40,6 @@ public static partial class Log
 	/// Provides configuration options for the Log subsystem
 	/// </summary>
 	[System.Diagnostics.DebuggerNonUserCode()]
-	[System.Diagnostics.DebuggerStepThrough()]
 	public static class Config
 	{
 		static Config()

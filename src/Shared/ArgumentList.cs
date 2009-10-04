@@ -14,6 +14,8 @@
 #endregion
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
+using System.Text;
 
 namespace CSharpTest.Net.Utils
 {
@@ -22,7 +24,6 @@ namespace CSharpTest.Net.Utils
 	/// reference a library.
 	/// </summary>
 	[System.Diagnostics.DebuggerNonUserCode]
-	[System.Diagnostics.DebuggerStepThrough]
 	internal class ArgumentList : System.Collections.ObjectModel.KeyedCollection<string, ArgumentList.Item>
 	{
 		#region Static Configuration Options
@@ -82,7 +83,7 @@ namespace CSharpTest.Net.Utils
 		/// </summary>
 		public IList<string> Unnamed
 		{
-			get { return new List<string>(_unnamed); }
+			get { return _unnamed; }
 			set 
 			{
 				_unnamed.Clear();
@@ -101,12 +102,11 @@ namespace CSharpTest.Net.Utils
 
 			foreach (string arg in arguments)
 			{
-				string cleaned = CleanArgument(arg);//strip quotes
 				string name, value;
-				if (TryParseNameValue(cleaned, out name, out value))
+				if (TryParseNameValue(arg, out name, out value))
 					Add(name, value);
 				else
-					_unnamed.Add(cleaned);
+					_unnamed.Add(CleanArgument(arg));
 			}
 		}
 
@@ -125,6 +125,17 @@ namespace CSharpTest.Net.Utils
 
 			if (value != null)
 				item.Add(value);
+		}
+
+		public string[] Keys
+		{
+			get
+			{
+				if (Dictionary == null) return new string[0];
+				List<string> list = new List<string>(Dictionary.Keys);
+				list.Sort();
+				return list.ToArray();
+			}
 		}
 
 		/// <summary>
@@ -172,7 +183,7 @@ namespace CSharpTest.Net.Utils
 
 		#region Protected / Private operations...
 
-		private string CleanArgument(string argument)
+		static string CleanArgument(string argument)
 		{
 			if (argument == null) throw new ArgumentNullException();
 			if (argument.Length >= 2 && argument[0] == '"' && argument[argument.Length - 1] == '"')
@@ -180,14 +191,21 @@ namespace CSharpTest.Net.Utils
 			return argument;
 		}
 
-		private bool TryParseNameValue(string argument, out string name, out string value)
+		/// <summary>
+		/// Attempts to parse a name value pair from '/name=value' format
+		/// </summary>
+		public static bool TryParseNameValue(string argument, out string name, out string value)
 		{
+			argument = CleanArgument(argument);//strip quotes
 			name = value = null;
 
-			if (0 != argument.IndexOfAny(_prefix, 0, 1))
+			if (String.IsNullOrEmpty(argument) || 0 != argument.IndexOfAny(_prefix, 0, 1))
 				return false;
 
 			name = argument.Substring(1);
+			if (String.IsNullOrEmpty(name))
+				return false;
+
 			int endName = name.IndexOfAny(_delim, 1);
 
 			if (endName > 0)
@@ -197,6 +215,32 @@ namespace CSharpTest.Net.Utils
 			}
 
 			return true;
+		}
+
+		/// <summary>
+		/// Searches the arguments until it finds a switch or value by the name in find and
+		/// if found it will:
+		/// A) Remove the item from the arguments
+		/// B) Set the out parameter value to any value found, or null if just '/name'
+		/// C) Returns true that it was found and removed.
+		/// </summary>
+		public static bool Remove(ref string[] arguments, string find, out string value)
+		{
+			value = null;
+			for (int i = 0; i < arguments.Length; i++)
+			{
+				string name, setting;
+				if (TryParseNameValue(arguments[i], out name, out setting) &&
+					_defaultCompare.Equals(name, find))
+				{
+					List<string> args = new List<string>(arguments);
+					args.RemoveAt(i);
+					arguments = args.ToArray();
+					value = setting;
+					return true;
+				}
+			}
+			return false;
 		}
 
 		/// <summary>
@@ -215,7 +259,6 @@ namespace CSharpTest.Net.Utils
 		/// can be implicitly assigned to a string, or a string[] array
 		/// </summary>
 		[System.Diagnostics.DebuggerNonUserCode]
-		[System.Diagnostics.DebuggerStepThrough]
 		internal class Item : System.Collections.ObjectModel.Collection<string>
 		{
 			protected readonly string _name;
@@ -303,5 +346,92 @@ namespace CSharpTest.Net.Utils
 		}
 
 		#endregion Item class used for collection
+
+		private class ArgReader
+		{
+			const char CharEmpty = (char)0;
+			char[] _chars;
+			int _pos;
+			public ArgReader(string data)
+			{
+				_chars = data.ToCharArray();
+				_pos = 0;
+			}
+
+			public bool MoveNext() { _pos++; return _pos < _chars.Length; }
+			public char Current { get { return (_pos < _chars.Length) ? _chars[_pos] : CharEmpty; } }
+			public bool IsWhiteSpace { get { return Char.IsWhiteSpace(Current); } }
+			public bool IsQuote { get { return (Current == '"'); } }
+			public bool IsEOF { get { return _pos >= _chars.Length; } }
+		}
+
+		/// <summary> Parses the individual arguments from the given input string. </summary>
+		public static string[] Parse(string rawtext)
+		{
+			List<String> list = new List<string>();
+			if (rawtext == null)
+				throw new ArgumentNullException("rawtext");
+			ArgReader characters = new ArgReader(rawtext.Trim());
+
+			while (!characters.IsEOF)
+			{
+				if (characters.IsWhiteSpace)
+				{
+					characters.MoveNext();
+					continue;
+				}
+				
+				StringBuilder sb = new StringBuilder();
+
+				if (characters.IsQuote)
+				{//quoted string
+					while (characters.MoveNext())
+					{
+						if (characters.IsQuote)
+						{
+							if (!characters.MoveNext() || characters.IsWhiteSpace)
+								break;
+						}
+						sb.Append(characters.Current);
+					}
+				}
+				else
+				{
+					sb.Append(characters.Current);
+					while (characters.MoveNext())
+					{
+						if (characters.IsWhiteSpace)
+							break;
+						sb.Append(characters.Current);
+					}
+				}
+
+				list.Add(sb.ToString());
+			}
+			return list.ToArray();
+		}
+
+		/// <summary> The inverse of Parse, joins the arguments together and properly escapes output </summary>
+		public static string Join(params string[] arguments)
+		{
+			if (arguments == null)
+				throw new ArgumentNullException("arguments");
+			char[] escaped = new char[] { ' ', '\t', '"' };
+
+			StringBuilder sb = new StringBuilder();
+			foreach (string argument in arguments)
+			{
+				string arg = argument;
+
+				if( arg.IndexOfAny(escaped) >= 0 ) 
+					sb.AppendFormat("\"{0}\"", arg.Replace("\"", "\"\""));
+				else
+					sb.Append(arg);
+	
+				sb.Append(' ');
+			}
+
+			return sb.ToString(0, Math.Max(0, sb.Length-1));
+		}
 	}
 }

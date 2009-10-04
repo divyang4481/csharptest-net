@@ -122,6 +122,20 @@ namespace CSharpTest.Net.Shared.Test
 			Assert.AreEqual(5, files.Count);
 			Assert.AreEqual(5, files.ToArray().Length);
 
+			string restoredDir = Environment.CurrentDirectory;
+			try
+			{
+				Environment.CurrentDirectory = BaseDirectory;
+				files = new FileList();
+				files.ProhibitedAttributes = FileAttributes.ReadOnly;
+				files.Add(".");
+				Assert.AreEqual(5, files.Count);
+				files.Add("file1.txt");
+				Assert.AreEqual(5, files.Count);
+				Assert.AreEqual(5, files.ToArray().Length);
+			}
+			finally { Environment.CurrentDirectory = restoredDir; }
+
 			files = new FileList(Path.Combine(BaseDirectory, "*.none"));
 			Assert.AreEqual(0, files.Count);//nothing matching wildcard - does not throw FileNotFound
 		}

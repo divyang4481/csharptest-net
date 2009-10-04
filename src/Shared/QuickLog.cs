@@ -21,7 +21,6 @@ using System.Runtime.CompilerServices;
 /// Quick and dirty logging for components that do not have dependencies.
 /// </summary>
 [System.Diagnostics.DebuggerNonUserCode]
-[System.Diagnostics.DebuggerStepThrough]
 internal static partial class Log
 {
 	#region static Log() -- Opens Log file for writting
@@ -113,7 +112,6 @@ internal static partial class Log
 	}
 
 	[System.Diagnostics.DebuggerNonUserCode]
-	[System.Diagnostics.DebuggerStepThrough]
 	private class TaskInfo : MarshalByRefObject, IDisposable
 	{
 		private readonly DateTime _start;
@@ -187,7 +185,6 @@ internal static partial class Log
 	public static ILog RemoteLog = new LogWrapper();
 
 	[System.Diagnostics.DebuggerNonUserCode]
-	[System.Diagnostics.DebuggerStepThrough]
 	private class LogWrapper : MarshalByRefObject, ILog
 	{
 		[MethodImpl(MethodImplOptions.NoInlining)]

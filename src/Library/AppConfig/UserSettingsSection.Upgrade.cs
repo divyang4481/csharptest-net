@@ -19,6 +19,7 @@ using System.IO;
 using System.Xml;
 using System.Text.RegularExpressions;
 using CSharpTest.Net.Utils;
+using System.Diagnostics;
 
 namespace CSharpTest.Net.AppConfig
 {
@@ -119,7 +120,7 @@ namespace CSharpTest.Net.AppConfig
 				//Hopefully we now have a previous file and version, if not he'll just return.
 				UpgradeSettingsFromFile(config, settings, foundVersion == null ? null : foundVersion.ToString(), myVersion, foundVersionFile);
 			}
-			catch (Exception e) { Log.Error(e, "Failed to upgrade user settings."); }
+			catch (Exception e) { Trace.TraceError("{1}\r\n{0}", e, "Failed to upgrade user settings."); }
 		}
 
 		/// <summary>
@@ -131,7 +132,7 @@ namespace CSharpTest.Net.AppConfig
 			if (String.IsNullOrEmpty(oldVersionConfig) || !File.Exists(oldVersionConfig))
 				return;
 
-			Log.Info("Upgrading settings from version {0} to {1}", oldVersionString, newVersionString);
+			//Log.Info("Upgrading settings from version {0} to {1}", oldVersionString, newVersionString);
 
 			//Copy the config file so that we can modify and read
 			string tempexename = Path.GetTempFileName();
@@ -159,7 +160,7 @@ namespace CSharpTest.Net.AppConfig
 					settings.UpgradedDate = XmlConvert.ToString(DateTime.Now, XmlDateTimeSerializationMode.RoundtripKind);
 
 					//I guess it worked ;)
-					Log.Verbose("Settings upgrade successful.");
+					Trace.WriteLine("Settings upgrade successful.");
 				}
 			}
 			finally

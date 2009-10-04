@@ -45,6 +45,8 @@ namespace CSharpTest.Net
 		public static readonly string ProductName = UNKNOWN;
 		/// <summary> Returns the company name of the entry assembly </summary>
 		public static readonly string CompanyName = UNKNOWN;
+		/// <summary> Returns true if the current process is running a unit test </summary>
+		public static readonly bool IsUnitTest;
 		#endregion
 		#region Misc
 		/// <summary> Returns true if a debugger is attached to the process </summary>
@@ -96,6 +98,8 @@ namespace CSharpTest.Net
 			ApplicationData = info.ApplicationData;
 			LocalApplicationData = info.LocalApplicationData;
 			DefaultLogFile = info.DefaultLogFile;
+
+			IsUnitTest = (ProcessName.IndexOf("NUnit", StringComparison.OrdinalIgnoreCase) >= 0);
 		}
 	}
 }

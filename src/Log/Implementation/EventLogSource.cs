@@ -19,7 +19,6 @@ using System.Security;
 namespace CSharpTest.Net.Logging.Implementation
 {
 	[System.Diagnostics.DebuggerNonUserCode()]
-	[System.Diagnostics.DebuggerStepThrough()]
 	static class EventLogSource
 	{
 		public static bool IsWorking = true;
