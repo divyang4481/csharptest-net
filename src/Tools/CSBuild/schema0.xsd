@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="CSBuildConfig" nillable="true" type="BuildConfig" />
+  <xs:complexType name="BuildConfig">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="target" type="BuildTarget" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="BuildTarget">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="buildTarget" type="xs:string" />
+      <xs:element minOccurs="0" maxOccurs="1" name="output" type="BuildOutput" />
+      <xs:element minOccurs="0" maxOccurs="1" name="console" type="ConsoleOutput" />
+      <xs:element minOccurs="0" maxOccurs="1" name="log" type="LogFileOutput" />
+      <xs:element minOccurs="0" maxOccurs="1" name="xml" type="XmlFileOutput" />
+    </xs:sequence>
+    <xs:attribute default="v3.5" name="framework" type="FrameworkVersions" />
+    <xs:attribute name="configuration" type="xs:string" />
+    <xs:attribute name="platform" type="xs:string" />
+    <xs:attribute default="false" name="forceFramework" type="xs:boolean" />
+  </xs:complexType>
+  <xs:complexType name="BuildOutput">
+    <xs:attribute name="relative-to" type="OutputRelative" use="required" />
+    <xs:attribute name="path" type="xs:string" />
+  </xs:complexType>
+  <xs:simpleType name="OutputRelative">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="absolute-path" />
+      <xs:enumeration value="csbuild.exe" />
+      <xs:enumeration value="project-file" />
+      <xs:enumeration value="working-folder" />
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="ConsoleOutput">
+    <xs:attribute name="level" type="LoggerVerbosity" use="required" />
+  </xs:complexType>
+  <xs:simpleType name="LoggerVerbosity">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Quiet" />
+      <xs:enumeration value="Minimal" />
+      <xs:enumeration value="Normal" />
+      <xs:enumeration value="Detailed" />
+      <xs:enumeration value="Diagnostic" />
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="LogFileOutput">
+    <xs:attribute name="relative-to" type="OutputRelative" use="required" />
+    <xs:attribute name="level" type="LoggerVerbosity" use="required" />
+    <xs:attribute name="path" type="xs:string" />
+  </xs:complexType>
+  <xs:complexType name="XmlFileOutput">
+    <xs:attribute name="relative-to" type="OutputRelative" use="required" />
+    <xs:attribute name="level" type="LoggerVerbosity" use="required" />
+    <xs:attribute name="path" type="xs:string" />
+  </xs:complexType>
+  <xs:simpleType name="FrameworkVersions">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="v2.0.50727" />
+      <xs:enumeration value="v3.0" />
+      <xs:enumeration value="v3.5" />
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:element name="FrameworkVersions" type="FrameworkVersions" />
+  <xs:element name="BuildTarget" nillable="true" type="BuildTarget" />
+  <xs:element name="OutputRelative" type="OutputRelative" />
+  <xs:element name="BuildOutput" nillable="true" type="BuildOutput" />
+  <xs:element name="ConsoleOutput" nillable="true" type="ConsoleOutput" />
+  <xs:element name="LogFileOutput" nillable="true" type="LogFileOutput" />
+  <xs:element name="XmlFileOutput" nillable="true" type="XmlFileOutput" />
+</xs:schema>

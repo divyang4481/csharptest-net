@@ -1,0 +1,8 @@
+  <PropertyGroup>
+    <TargetFrameworkDirectory>C:\WINDOWS\Microsoft.NET\Framework\v1.1.4322</TargetFrameworkDirectory>
+    <TargetFrameworkSDKDirectory>C:\Program Files\Microsoft.NET\SDK\v1.1</TargetFrameworkSDKDirectory>
+    <CscToolPath>$(TargetFrameworkDirectory)</CscToolPath>
+  </PropertyGroup>
+  <Target Condition="'$(TargetFrameworkVersion)' == 'v1.1'" Name="GetFrameworkPaths" DependsOnTargets="$(GetFrameworkPathsDependsOn)">
+    <Message Importance="high" Text="GetFrameworkPaths - Overloaded no-op" />
+  </Target>

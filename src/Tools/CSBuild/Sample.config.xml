@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<CSBuildConfig xsi:noNamespaceSchemaLocation="CSBuild.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+    <options>
+        <console level="Minimal"/>
+        <logfile path=".\CSBuild.log" relative-to="csbuild.exe" />
+        <strict-references enabled="true"/>
+        <continue-on-error enabled="true"/>
+    </options>
+    
+    <projects>
+        <add path=".\" relative-to="csbuild.exe"/>
+        <remove path="CSBuild.csproj"/>
+        <reference path="%SystemRoot%\Microsoft.Net\Framework\v2.0.50727\" relative-to="absolute-path"/>
+        <reference path="%SystemRoot%\assembly\GAC\" recursive="true" relative-to="absolute-path"/>
+    </projects>
+
+    <target tools="v2.0" configuration="Debug" platform="AnyCPU">
+        <framework version="v2.0"/>
+        <output path=".\bin20" relative-to="working-folder"/>
+        <intermediateFiles path=".\bin20\obj" relative-to="working-folder"/>
+        <define value="FRAMEWORK20" />
+        <log relative-to="csbuild.exe" path=".\bin20\msbuild.txt" level="Detailed"/>
+        <xml relative-to="csbuild.exe" path=".\bin20\msbuild.xml" level="Normal"/>
+    </target>
+    <target tools="v3.5" configuration="Debug" platform="AnyCPU">
+        <framework version="v3.5"/>
+        <add path="./35Only" relative-to="csbuild.exe" />
+        <reference path="%ProgramFiles%\Reference Assemblies\Microsoft\Framework\v3.5\" relative-to="absolute-path"/>
+        <output path=".\bin35" relative-to="working-folder"/>
+        <intermediateFiles path=".\bin35\obj" relative-to="working-folder"/>
+        <define value="FRAMEWORK35" />
+        <log relative-to="csbuild.exe" path=".\bin35\msbuild.txt" level="Detailed"/>
+        <xml relative-to="csbuild.exe" path=".\bin35\msbuild.xml" level="Normal"/>
+    </target>
+
+</CSBuildConfig>

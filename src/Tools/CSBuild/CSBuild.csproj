@@ -1,0 +1,122 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration>Debug</Configuration>
+    <Platform>AnyCPU</Platform>
+    <ProductVersion>9.0.21022</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{FC4C5399-3103-4D92-8E95-543C9F2084CB}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>CSharpTest.Net.CSBuild</RootNamespace>
+    <AssemblyName>CSBuild</AssemblyName>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\bin\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <DocumentationFile Condition="'$(OutputType)' == 'Library'">$(OutputPath)\$(AssemblyName).XML</DocumentationFile>
+    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
+    <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.Build.Engine" />
+    <Reference Include="Microsoft.Build.Framework" />
+    <Reference Include="System" />
+    <Reference Include="System.configuration" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\..\Library\Utils\FileUtils.cs">
+      <Link>Shared\FileUtils.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Shared\ArgumentList.cs">
+      <Link>Shared\ArgumentList.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Shared\QuickLog.cs">
+      <Link>Shared\QuickLog.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Shared\Check.cs">
+      <Link>Shared\Check.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Shared\Configuration.cs">
+      <Link>Shared\Configuration.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Shared\FileList.cs">
+      <Link>Shared\FileList.cs</Link>
+    </Compile>
+    <Compile Include="BuildTasks\BuildAll.cs" />
+    <Compile Include="BuildTasks\BuildTask.cs" />
+    <Compile Include="BuildTasks\EnforceReferences.cs" />
+    <Compile Include="BuildTasks\NewerFrameworkReferences.cs" />
+    <Compile Include="BuildTasks\SaveModifiedProjects.cs" />
+    <Compile Include="BuildTasks\SetProjectPathProperty.cs" />
+    <Compile Include="BuildTasks\SetProjectProperty.cs" />
+    <Compile Include="BuildTasks\DefineConstants.cs" />
+    <Compile Include="BuildTasks\SetContinue.cs" />
+    <Compile Include="BuildTasks\LoadProject.cs" />
+    <Compile Include="BuildTasks\Logging.cs" />
+    <Compile Include="BuildTasks\ProjectFinder.cs" />
+    <Compile Include="BuildTasks\SetGlobal.cs" />
+    <Compile Include="BuildTasks\SetSolutionDir.cs" />
+    <Compile Include="BuildTasks\UnloadAllProjects.cs" />
+    <Compile Include="Build\BuildDomain.cs" />
+    <Compile Include="Build\BuildEngine.cs" />
+    <Compile Include="Build\BuildEvents.cs" />
+    <Compile Include="Build\BuildOrder.cs" />
+    <Compile Include="Build\Enumerations.cs" />
+    <Compile Include="Build\MSBuildLog.cs" />
+    <Compile Include="Build\ProjectInfo.Properties.cs" />
+    <Compile Include="Build\ProjectInfo.cs" />
+    <Compile Include="Build\ProjectList.cs" />
+    <Compile Include="Build\PropertyList.cs" />
+    <Compile Include="Build\ReferenceList.cs" />
+    <Compile Include="CmdLineBuilder.cs" />
+    <Compile Include="Config.cs" />
+    <Compile Include="Configuration\BaseFileItem.cs" />
+    <Compile Include="Configuration\BuildConfig.cs" />
+    <Compile Include="Configuration\BuildOptions.cs" />
+    <Compile Include="Configuration\BuildTarget.cs" />
+    <Compile Include="Configuration\EnumeratedTypes.cs" />
+    <Compile Include="Configuration\LogOutput.cs" />
+    <Compile Include="Configuration\Util.cs" />
+    <Compile Include="Configuration\ProjectIncludes.cs" />
+    <Compile Include="Build\ReferenceInfo.cs" />
+    <Compile Include="Build\XmlLogger.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="BuildTasks\TargetBuilder.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="LICENSE-2.0.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <EmbeddedResource Include="v30.config" />
+    <EmbeddedResource Include="v20.config" />
+    <EmbeddedResource Include="v35.config" />
+    <EmbeddedResource Include="CSBuild.xsd">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Sample.config.xml" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>"$(FrameworkSDKDir)bin\xsd.exe" /nologo /t:CSharpTest.Net.CSBuild.Configuration.CSBuildConfig /out:$(TargetDir) $(TargetPath)
+XCOPY /R /Y $(TargetDir)schema0.xsd $(ProjectDir)CSBuild.xsd
+"$(FrameworkSDKDir)bin\sgen.exe" /nologo /force "/c: /platform:$(Platform)" /a:$(TargetPath) /o:$(TargetDir)
+
+XCOPY /R /Y $(TargetDir)$(TargetName).??? $(TargetDir)..\
+XCOPY /R /Y $(TargetDir)$(TargetName).??? C:\Projects\svault\</PostBuildEvent>
+  </PropertyGroup>
+</Project>

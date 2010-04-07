@@ -1,0 +1,86 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.21022</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{DCC57590-F678-431A-8EC2-4F48DB746D44}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>CSharpTest.Net.CSBuild.Test</RootNamespace>
+    <AssemblyName>CSharpTest.Net.CSBuild.Test</AssemblyName>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <OutputPath>..\..\..\bin\</OutputPath>
+    <IntermediateOutputPath>$(OutputPath)obj\$(AssemblyName)\</IntermediateOutputPath>
+    <DocumentationFile Condition="'$(OutputType)' == 'Library'">$(OutputPath)$(AssemblyName).xml</DocumentationFile>
+    <DebugSymbols>True</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <DefineConstants>NET20;TRACE</DefineConstants>
+    <ErrorReport>none</ErrorReport>
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <Optimize>False</Optimize>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+    <Optimize>True</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="CSBuild">
+      <SpecificVersion>False</SpecificVersion>
+      <ExecutableExtension>.exe</ExecutableExtension>
+      <Private>False</Private>
+      <HintPath>..\..\..\bin\CSBuild.exe</HintPath>
+    </Reference>
+    <Reference Include="nunit.framework">
+      <HintPath>..\..\..\depend\nunit.framework.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="TestCase.cs" />
+    <EmbeddedResource Include="Tests\Projects\AssemblyInfo.cs" />
+    <EmbeddedResource Include="Tests\Projects\Class1.cs" />
+    <EmbeddedResource Include="Tests\Projects\Program.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Tests\Projects\SomeExe.csproj.test" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Tests\Projects\SomeLibrary.csproj.test" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Tests\Projects\SomeWinExe.csproj.test" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Tests\Projects\SomeExe.sln" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Tests\Projects\CSBuild.exe.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Tests\BadConfig\CSBuild.exe.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Tests\NoConfig\SomeExe.csproj.test" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Tests\Projects\ExcludedLibrary.csproj.test" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Tests\Projects\nunit_framework.dll" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <StartAction>Program</StartAction>
+    <StartProgram>$(ProjectDir)$(OutputPath)..\Tools\NUnit\nunit-console.exe</StartProgram>
+    <StartArguments>/nologo /noshadow /labels /wait $(AssemblyName).dll</StartArguments>
+    <StartWorkingDirectory>$(ProjectDir)$(OutputPath)</StartWorkingDirectory>
+  </PropertyGroup>
+  <Target Name="Test">
+    <Exec Command="$(StartProgram) /nologo /noshadow $(AssemblyName).dll" WorkingDirectory="$(StartWorkingDirectory)" />
+  </Target>
+</Project>
