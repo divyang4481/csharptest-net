@@ -62,6 +62,6 @@ namespace CSharpTest.Net.CSBuild.Build
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-        { foreach (ReferenceInfo ri in this) yield return ri; }
+        { return this.GetEnumerator(); }
     }
 }

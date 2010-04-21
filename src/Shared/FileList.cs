@@ -29,6 +29,12 @@ namespace CSharpTest.Net.Utils
 		FileAttributes _prohibitAttrib = FileAttributes.Hidden | FileAttributes.Offline | FileAttributes.System;
 
 		/// <summary>
+		/// Creates an empty FileList
+		/// </summary>
+		internal FileList()
+		{ }
+
+		/// <summary>
 		/// Constructs a FileList containing the files specified or found within the directories
 		/// specified.  See Add(string) for more details.
 		/// </summary>
@@ -50,6 +56,15 @@ namespace CSharpTest.Net.Utils
 			Add(filesOrDirectories);
 		}
 
+		/// <summary>
+		/// Creates a list containing the specified FileInfo records.
+		/// </summary>
+		internal FileList(params FileInfo[] copyFrom)
+		{
+			if (copyFrom == null) throw new ArgumentNullException();
+			foreach (FileInfo finfo in copyFrom)
+				AddFile(finfo);
+		}
 		#region Public Properties
 		/// <summary>
 		/// Gets or sets a value that allows traversal of all directories added.
@@ -79,7 +94,7 @@ namespace CSharpTest.Net.Utils
 		/// <summary>
 		/// Adds the specified file to the collection.  If the item specified is a directory
 		/// that directory will be crawled for files, and optionally (RecurseFolders) child
-		/// directories.  If the filename part of the path contains wild-cards they will be
+		/// directories.  If the name part of the path contains wild-cards they will be
 		/// considered throughout the folder tree, i.e: C:\Temp\*.tmp will yeild all files
 		/// having an extension of .tmp.  Again if RecurseFolders is true you will get all
 		/// .tmp files anywhere in the C:\Temp folder.
@@ -114,11 +129,47 @@ namespace CSharpTest.Net.Utils
 		}
 
 		/// <summary>
+		/// Returns true if the given file is in the collection
+		/// </summary>
+		public new bool Contains(FileInfo file)
+		{
+			return Dictionary != null && Dictionary.ContainsKey(file.FullName);
+		}
+
+		/// <summary>
+		/// Adds one or files to the collection
+		/// </summary>
+		public void AddRange(params FileInfo[] files)
+		{
+			foreach (FileInfo f in files)
+			{
+				if (!Contains(f))
+					Add(f);
+			}
+		}
+
+		/// <summary>
+		/// Remove the files specified if they exist in the collection
+		/// </summary>
+		public void Remove(params FileInfo[] files)
+		{
+			foreach (FileInfo finfo in files)
+				base.Remove(finfo.FullName);
+		}
+
+		/// <summary>
 		/// Returns the collection of FileInfo as an array
 		/// </summary>
 		public FileInfo[] ToArray()
 		{
 			return new List<FileInfo>(base.Items).ToArray();
+		}
+
+		public string[] GetFileNames()
+		{
+			if (base.Dictionary == null) 
+				return new string[0];
+			return new List<String>(base.Dictionary.Keys).ToArray();
 		}
 
 		#region Private / Protected Implementation
@@ -167,6 +218,7 @@ namespace CSharpTest.Net.Utils
 
 		protected override string GetKeyForItem(FileInfo item)
 		{
+			if (item == null) throw new ArgumentNullException();
 			return item.FullName;
 		}
 

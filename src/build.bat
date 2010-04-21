@@ -34,6 +34,8 @@ if exist bin\* @rd /s /q bin
 MD bin
 XCOPY /D /R /Y Depend\* .\bin
 
+%MSBUILD% /nologo /t:Build /v:Minimal Tools\CSBuild\CSBuild.csproj
+%MSBUILD% /nologo /t:Build /v:Minimal Tools\CSBuild\Test\CSBuild.Test.csproj
 %MSBUILD% /nologo /t:Build /v:Minimal Tools\StampVersion\StampVersion.csproj
 %MSBUILD% /nologo /t:Build /v:Minimal Log\Logging.csproj
 %MSBUILD% /nologo /t:Build /v:Minimal Log\Test\Logging.Test.csproj
@@ -47,6 +49,7 @@ XCOPY /D /R /Y Depend\* .\bin
 %MSBUILD% /nologo /t:Build /v:Minimal SslTunnel\Library\SslTunnel.Library.csproj
 %MSBUILD% /nologo /t:Build /v:Minimal SslTunnel\Server\SslTunnel.Server.csproj
 %MSBUILD% /nologo /t:Build /v:Minimal SslTunnel\Test\SslTunnel.Test.csproj
+%MSBUILD% /nologo /t:Build /v:Minimal SslTunnel\Server\SslCert.csproj
 
 goto exit
 

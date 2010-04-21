@@ -18,6 +18,7 @@ using System.IO;
 using System.Diagnostics;
 using System.Security.AccessControl;
 using System.Security.Principal;
+using System.Text;
 
 namespace CSharpTest.Net.Utils
 {
@@ -39,6 +40,14 @@ namespace CSharpTest.Net.Utils
 			if (TrySearchPath(location, out result))
 				return result;
 			throw new FileNotFoundException(FileNotFoundMessage, location);
+		}
+
+		/// <summary>
+		/// Expands environment variables into text, i.e. %SystemRoot%, or %ProgramFiles%
+		/// </summary>
+		public static String ExpandEnvironment(string input)
+		{
+			return Environment.ExpandEnvironmentVariables(input);
 		}
 
 		/// <summary>
@@ -72,11 +81,53 @@ namespace CSharpTest.Net.Utils
 					}
 				}
 			}
-			catch (System.Threading.ThreadAbortException) { throw; }
 			catch (Exception error) { Trace.TraceError("{0}", error); }
 
 			return false;
 		}
+
+        /// <summary>
+        /// For this to work for a directory the argument should end with a '\' character
+        /// </summary>
+        public static string MakeRelativePath(string startFile, string targetFile)
+        {
+            StringBuilder newpath = new StringBuilder();
+
+            if (startFile == null || targetFile == null)
+                return null;
+            if (startFile == targetFile)
+                return Path.GetFileName(targetFile);
+            
+            List<string> sfpath = new List<string>(startFile.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+            List<string> tfpath = new List<string>(targetFile.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+
+			for (int i = sfpath.Count - 1; i >= 0; i--)
+				if (sfpath[i] == ".")
+					sfpath.RemoveAt(i);
+
+			for (int i = tfpath.Count - 1; i >= 0; i--)
+				if (tfpath[i] == ".")
+					tfpath.RemoveAt(i);
+
+			int cmpdepth = Math.Min(sfpath.Count - 1, tfpath.Count - 1);
+            int ixdiff = 0;
+            for (; ixdiff < cmpdepth; ixdiff++)
+                if (false == StringComparer.OrdinalIgnoreCase.Equals(sfpath[ixdiff], tfpath[ixdiff]))
+                    break;
+
+			if (ixdiff == 0 && Path.IsPathRooted(targetFile))
+				return targetFile;//new volumes can't be relative
+
+			for (int i = ixdiff; i < (sfpath.Count - 1); i++)
+                newpath.AppendFormat("..{0}", Path.DirectorySeparatorChar);
+			for (int i = ixdiff; i < tfpath.Count; i++)
+            {
+                newpath.Append(tfpath[i]);
+				if ((i + 1) < tfpath.Count)
+                    newpath.Append(Path.DirectorySeparatorChar);
+            }
+            return newpath.ToString();
+        }
 
 		/// <summary> Grants the user FullControl for the file, returns true if modified, false if already present </summary>
 		public static bool GrantFullControlForFile(string filepath, WellKnownSidType sidType)
@@ -111,6 +162,39 @@ namespace CSharpTest.Net.Utils
 			}
 
 			return false;
+		}
+
+		/// <summary> Returns the rights assigned to the given SID for this file's ACL </summary>
+		public static FileSystemRights GetPermissions(string filepath, WellKnownSidType sidType)
+		{
+			SecurityIdentifier domain = null;
+			FileSecurity sec = File.GetAccessControl(filepath);
+			SecurityIdentifier sid = new SecurityIdentifier(sidType, domain);
+
+			FileSystemRights rights = 0;
+			foreach (FileSystemAccessRule rule in sec.GetAccessRules(true, false, typeof(SecurityIdentifier)))
+			{
+				if (sid.Value == rule.IdentityReference.Value)
+				{
+					if (rule.AccessControlType == AccessControlType.Allow)
+						rights |= rule.FileSystemRights;
+					else
+						rights &= ~rule.FileSystemRights;
+				}
+			}
+
+			return rights;
+		}
+
+		/// <summary> Removes any existing access for the user SID supplied and adds the specified rights </summary>
+		public static void ReplacePermissions(string filepath, WellKnownSidType sidType, FileSystemRights allow)
+		{
+			FileSecurity sec = File.GetAccessControl(filepath);
+			SecurityIdentifier sid = new SecurityIdentifier(sidType, null);
+			sec.PurgeAccessRules(sid); //remove existing
+			if(allow != default(FileSystemRights))
+				sec.AddAccessRule(new FileSystemAccessRule(sid, allow, AccessControlType.Allow));
+			File.SetAccessControl(filepath, sec);
 		}
 	}
 }

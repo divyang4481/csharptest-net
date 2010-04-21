@@ -21,6 +21,8 @@ using System.Reflection;
 using System.ComponentModel;
 using System.Threading;
 
+#pragma warning disable 618
+
 namespace CSharpTest.Net.CSBuild.Build
 {
 	[System.Diagnostics.DebuggerDisplay("BuildEngine({Framework}) = {FrameworkPath}")]

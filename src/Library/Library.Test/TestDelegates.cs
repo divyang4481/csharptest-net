@@ -198,7 +198,7 @@ namespace CSharpTest.Net.Library.Test
 			int total = 0, countOnThread = 0, countOffThread = 0;
 			try
 			{
-				for (total = 1; total < 100000; total++)
+				for (total = 1; total < 1000000; total++)
 				{
 					handler.EventHandler(null, args.Reset());
 					Assert.IsTrue(args.Received);
@@ -239,7 +239,7 @@ namespace CSharpTest.Net.Library.Test
 			int total = 0, countOnThread = 0, countOffThread = 0;
 			try
 			{
-				for (total = 1; total < 100000; total++)
+				for (total = 1; total < 1000000; total++)
 				{
 					handler.EventHandler(null, args.Reset());
 					if (args.OnThread)

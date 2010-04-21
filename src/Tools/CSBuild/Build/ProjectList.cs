@@ -143,6 +143,6 @@ namespace CSharpTest.Net.CSBuild.Build
 		public IEnumerator<ProjectInfo> GetEnumerator()
 		{ return _projects.GetEnumerator(); }
 		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-		{ return ((System.Collections.IEnumerable)_projects).GetEnumerator(); }
+		{ return this.GetEnumerator(); }
 	}
 }

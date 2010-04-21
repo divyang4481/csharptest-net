@@ -28,7 +28,7 @@ namespace CSharpTest.Net.Commands
 
 		readonly bool _visible;
 		readonly string _category;
-		readonly string _description;
+		protected string _description;
 
 		public DisplayInfoBase(object target, ICustomAttributeProvider mi)
 		{
@@ -80,15 +80,14 @@ namespace CSharpTest.Net.Commands
 			_allNames = names.ToArray();
 		}
 
-		public bool Visible { get { return _visible; } }
-
 		protected Object Target { get { return _target; } }
 		protected ICustomAttributeProvider Member { get { return _member; } }
 
-		public string DisplayName { get { return _name; } }
-		public string[] AllNames { get { return (string[])_allNames.Clone(); } }
-		public string Category { get { return _category; } }
-		public string Description { get { return _description; } }
+		public virtual bool Visible { get { return _visible; } }
+		public virtual string DisplayName { get { return _name; } }
+		public virtual string[] AllNames { get { return (string[])_allNames.Clone(); } }
+		public virtual string Category { get { return _category; } }
+		public virtual string Description { get { return _description; } }
 
 		/// <summary> Provides the standard type cohersion between types </summary>
 		protected Object ChangeType(Object value, Type type, bool required, Object defaultValue)

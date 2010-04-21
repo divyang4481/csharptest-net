@@ -111,7 +111,7 @@ namespace CSharpTest.Net.SslTunnel
 					IAsyncResult result = listener.BeginAcceptTcpClient(OnConnect, listener);
 					handles[0] = result.AsyncWaitHandle;
 
-					if (0 != WaitHandle.WaitAny(handles))
+					if (0 != WaitHandle.WaitAny(handles, -1, false))
 					{
 						listener.Stop();
 						break;
@@ -207,7 +207,7 @@ namespace CSharpTest.Net.SslTunnel
 
 			public void Close()
 			{
-				_client.Close();
+                _client.Close();
 			}
 
 			public IPEndPoint LocalEndPoint { get { return _server._localEndpoint; } }

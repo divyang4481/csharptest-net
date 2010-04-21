@@ -72,7 +72,7 @@ namespace CSharpTest.Net.Shared.Test
 		}
 		#endregion
 
-		[Test]
+        [Test]
 		public void Test()
 		{
 			FileList files = new FileList(BaseDirectory);
@@ -139,7 +139,34 @@ namespace CSharpTest.Net.Shared.Test
 			files = new FileList(Path.Combine(BaseDirectory, "*.none"));
 			Assert.AreEqual(0, files.Count);//nothing matching wildcard - does not throw FileNotFound
 		}
-	}
+
+        [Test]
+        public void Testv2()
+        {
+            DirectoryInfo root = new DirectoryInfo(BaseDirectory);
+
+            FileList files = new FileList();
+            files.AddRange(root.GetFiles("*", SearchOption.AllDirectories));
+            Assert.AreEqual(7, files.Count);
+
+            FileList txtFiles = new FileList(root.GetFiles("*.txt", SearchOption.AllDirectories));
+            Assert.AreEqual(3, txtFiles.Count);
+            Assert.IsTrue(files.Contains(txtFiles[0]));
+            Assert.IsTrue(files.Contains(txtFiles[1]));
+            Assert.IsTrue(files.Contains(txtFiles[2]));
+
+            files.Remove(txtFiles.ToArray());
+            Assert.AreEqual(4, files.Count);
+            Assert.IsFalse(files.Contains(txtFiles[0]));
+            Assert.IsFalse(files.Contains(txtFiles[1]));
+
+            string[] names = files.GetFileNames();
+            Assert.AreEqual(4, names.Length);
+            foreach(string fpath in names)
+                Assert.IsTrue(files.Contains(new FileInfo(fpath)));
+        }
+
+    }
 
 	[TestFixture]
 	[Category("TestFileList")]
@@ -149,13 +176,19 @@ namespace CSharpTest.Net.Shared.Test
 		[ExpectedException(typeof(ArgumentNullException))]
 		public void TestNullNew()
 		{
-			new FileList(null);
+			new FileList((string[])null);
+		}
+		[Test]
+		[ExpectedException(typeof(ArgumentNullException))]
+		public void TestNullNew2()
+		{
+			new FileList((FileInfo[])null);
 		}
 		[Test]
 		[ExpectedException(typeof(ArgumentNullException))]
 		public void TestAddNull()
 		{
-			new FileList(null);
+			new FileList().Add((FileInfo)null);
 		}
 		[Test]
 		[ExpectedException(typeof(ArgumentNullException))]

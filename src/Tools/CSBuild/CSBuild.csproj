@@ -16,7 +16,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>..\..\bin\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>NET20;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -108,15 +108,16 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Sample.config.xml" />
+    <Content Include="Sample.config.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>"$(FrameworkSDKDir)bin\xsd.exe" /nologo /t:CSharpTest.Net.CSBuild.Configuration.CSBuildConfig /out:$(TargetDir) $(TargetPath)
-XCOPY /R /Y $(TargetDir)schema0.xsd $(ProjectDir)CSBuild.xsd
+COPY /Y $(TargetDir)schema0.xsd $(ProjectDir)CSBuild.xsd
+COPY /Y $(TargetDir)Sample.config.xml $(TargetDir)CSBuild.config
 "$(FrameworkSDKDir)bin\sgen.exe" /nologo /force "/c: /platform:$(Platform)" /a:$(TargetPath) /o:$(TargetDir)
-
-XCOPY /R /Y $(TargetDir)$(TargetName).??? $(TargetDir)..\
-XCOPY /R /Y $(TargetDir)$(TargetName).??? C:\Projects\svault\</PostBuildEvent>
+</PostBuildEvent>
   </PropertyGroup>
 </Project>

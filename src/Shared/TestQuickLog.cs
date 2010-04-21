@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using System.IO;
 
 #pragma warning disable 1591
 namespace CSharpTest.Net.Shared.Test
@@ -25,7 +26,10 @@ namespace CSharpTest.Net.Shared.Test
 	{
 		protected static String _lastTrace;
 		protected static String _lastMessage;
-		private TraceListener _myListener;
+        
+        protected StringWriter _conOut, _conErr;
+        protected TextWriter _conOutSaved, _conErrSaved;
+        private TraceListener _myListener;
 
 		#region TestFixture SetUp/TearDown
 		[TestFixtureSetUp]
@@ -33,6 +37,11 @@ namespace CSharpTest.Net.Shared.Test
 		{
 			Log.LogWrite += new Log.LogEventHandler(Log_LogWrite);
 			System.Diagnostics.Trace.Listeners.Add(_myListener = new TraceListener());
+
+            _conOutSaved = Console.Out;
+            Console.SetOut(_conOut = new StringWriter());
+            _conErrSaved = Console.Error;
+            Console.SetError(_conErr = new StringWriter());
 		}
 
 		void Log_LogWrite(System.Reflection.MethodBase method, System.Diagnostics.TraceLevel level, string message)
@@ -43,7 +52,10 @@ namespace CSharpTest.Net.Shared.Test
 		[TestFixtureTearDown]
 		public virtual void Teardown()
 		{
-			System.Diagnostics.Trace.Listeners.Remove(_myListener);
+            System.Diagnostics.Trace.Listeners.Remove(_myListener);
+
+            Console.SetOut(_conOutSaved);
+            Console.SetError(_conErrSaved);
 		}
 		#endregion
 
@@ -98,47 +110,58 @@ namespace CSharpTest.Net.Shared.Test
 			Log.Close();
 		}
 
-		[Test]
-		public void TestWithRemote()
-		{
-			Log.ILog Log = global::Log.RemoteLog;
-			string prefix = String.Format("{0}: {1:D2}", this.GetType().FullName, System.Threading.Thread.CurrentThread.ManagedThreadId);
+        [Test]
+        public void TestOpenWriter()
+        {
+            using (StringWriter sw = new StringWriter())
+            {
+                Assert.IsFalse(Object.ReferenceEquals(sw, Log.TextWriter));
+                Log.Open(sw);
+                Assert.IsTrue(Object.ReferenceEquals(sw, Log.TextWriter));
 
-			using (Log.AppStart("Hi", "one", "two", null))
-				Assert.AreEqual(prefix + " Verbose - Start Hi   at Void TestWithRemote()", _lastTrace);
+                string temp = Guid.NewGuid().ToString();
+                Log.Write(temp);
+                Assert.IsTrue(sw.ToString().IndexOf(temp) >= 0);
 
-			using (Log.Start("what", "one", "two", null))
-			{
-				Assert.AreEqual(prefix + " Verbose - Start what   at Void TestWithRemote()", _lastTrace);
+                Log.Open(TextWriter.Null);
+            }
+        }
 
-				Log.Error(new Exception());
-				Assert.AreEqual(prefix + "   Error - System.Exception: Exception of type 'System.Exception' was thrown.   at Void TestWithRemote()", _lastTrace);
+        [Test]
+        public void TestConsoleLog()
+        {
+            Assert.AreEqual(System.Diagnostics.TraceLevel.Off, Log.ConsoleLevel);
+            Log.ConsoleLevel = System.Diagnostics.TraceLevel.Warning;
+            Assert.AreEqual(System.Diagnostics.TraceLevel.Warning, Log.ConsoleLevel);
 
-				Log.Warning(new Exception());
-				Assert.AreEqual(prefix + " Warning - System.Exception: Exception of type 'System.Exception' was thrown.   at Void TestWithRemote()", _lastTrace);
+            _conOut.GetStringBuilder().Length = 0;
+            _conErr.GetStringBuilder().Length = 0;
 
-				Log.Error("Test {0}", System.Diagnostics.TraceLevel.Error);
-				Assert.AreEqual(prefix + "   Error - Test Error   at Void TestWithRemote()", _lastTrace);
+            Log.Info("DO NOT FIND");
+            Log.Warning("PLEASE FIND");
 
-				Log.Warning("Test {0}", System.Diagnostics.TraceLevel.Warning);
-				Assert.AreEqual(prefix + " Warning - Test Warning   at Void TestWithRemote()", _lastTrace);
+            Log.ConsoleLevel = System.Diagnostics.TraceLevel.Off;
+            Assert.AreEqual(System.Diagnostics.TraceLevel.Off, Log.ConsoleLevel);
 
-				Log.Info("Test {0}", System.Diagnostics.TraceLevel.Info);
-				Assert.AreEqual(prefix + "    Info - Test Info   at Void TestWithRemote()", _lastTrace);
+            Assert.AreEqual("", _conOut.ToString());
+            Assert.AreEqual("PLEASE FIND" + Environment.NewLine, _conErr.ToString());
 
-				Log.Verbose("Test {0}", System.Diagnostics.TraceLevel.Verbose);
-				Assert.AreEqual(prefix + " Verbose - Test Verbose   at Void TestWithRemote()", _lastTrace);
+            Assert.AreEqual(System.Diagnostics.TraceLevel.Off, Log.ConsoleLevel);
+            Log.ConsoleLevel = System.Diagnostics.TraceLevel.Info;
+            Assert.AreEqual(System.Diagnostics.TraceLevel.Info, Log.ConsoleLevel);
 
-				Log.Write("Test Boom! {5}", 1, 2, 3);
-			}
+            _conOut.GetStringBuilder().Length = 0;
+            _conErr.GetStringBuilder().Length = 0;
 
-			Log.AppStart("{5}", 1, 2).Dispose();
-			Log.Start("{5}", 1, 2).Dispose();
+            Log.Info("INFO FIND");
+            Log.Warning("ERROR FIND");
 
-			Log.Error((Exception)null);
-			Assert.AreEqual(prefix + "   Error -    at Void TestWithRemote()", _lastTrace);
-		}
+            Log.ConsoleLevel = System.Diagnostics.TraceLevel.Off;
+            Assert.AreEqual(System.Diagnostics.TraceLevel.Off, Log.ConsoleLevel);
 
+            Assert.AreEqual("INFO FIND" + Environment.NewLine, _conOut.ToString());
+            Assert.AreEqual("ERROR FIND" + Environment.NewLine, _conErr.ToString());
+        }
 
 		[Test]
 		public void TestReOpenClose()

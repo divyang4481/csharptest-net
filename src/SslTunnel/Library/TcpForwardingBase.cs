@@ -82,7 +82,7 @@ namespace CSharpTest.Net.SslTunnel
 					StreamRedirect send = new StreamRedirect(client.Stream, args.Stream, revConnectionInfo);
 
 					Log.Verbose("Streaming from {0}", connectionInfo);
-					WaitHandle.WaitAny(new WaitHandle[] { send.WaitClosed, recv.WaitClosed });
+					WaitHandle.WaitAny(new WaitHandle[] { send.WaitClosed, recv.WaitClosed }, -1, false);
 				}
 			}
 			catch (ThreadAbortException) { throw; }

@@ -17,6 +17,11 @@ using System.Collections.Generic;
 using System.Reflection;
 using CSharpTest.Net.Utils;
 using System.Diagnostics;
+using System.Text;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.IO;
+using System.Runtime.Serialization;
+using System.Threading;
 
 namespace CSharpTest.Net.Commands
 {
@@ -50,6 +55,16 @@ namespace CSharpTest.Net.Commands
 				tempList.Add(arg);
 			}
 			_arguments = tempList.ToArray();
+
+			if (Description == mi.ToString())
+            {//if no description provided, let's build a better one
+                StringBuilder sb = new StringBuilder();
+                sb.AppendFormat("{0} ", this.DisplayName);
+                foreach(Argument a in tempList)
+					if(a.Visible)
+						sb.AppendFormat("{0} ", a.FormatSyntax(a.DisplayName));
+                _description = sb.ToString(0, sb.Length - 1);
+            }
 		}
 
 		public IArgument[] Arguments { get { return (Argument[])_arguments.Clone(); } }
@@ -59,6 +74,9 @@ namespace CSharpTest.Net.Commands
 		public virtual void Run(ICommandInterpreter interpreter, string[] arguments)
 		{
 			ArgumentList args = new ArgumentList(arguments);
+
+			if (args.Count == 1 && args.Contains("?"))
+			{ Help(); return; }
 
 			//translate ordinal referenced names
 			for (int i = 0; i < _arguments.Length && args.Unnamed.Count > 0; i++)
@@ -79,14 +97,26 @@ namespace CSharpTest.Net.Commands
 			InterpreterException.Assert(names.Count == 0, "Unknown argument(s): {0}", String.Join(", ", names.ToArray()));
 			InterpreterException.Assert(args.Unnamed.Count == 0, "Too many arguments supplied.");
 
+			Invoke(Method, Target, invokeArgs.ToArray());
+		}
+
+		[System.Diagnostics.DebuggerNonUserCode]
+		[System.Diagnostics.DebuggerStepThrough]
+		private static void Invoke(MethodInfo method, Object target, params Object[] invokeArgs)
+		{
 			try
 			{
-				Method.Invoke(Target, invokeArgs.ToArray());
+				method.Invoke(target, invokeArgs);
 			}
 			catch (TargetInvocationException te) 
 			{
-				Trace.TraceError(te.ToString());
-				throw te.InnerException;
+				if (te.InnerException == null)
+					throw;
+				Exception innerException = te.InnerException;
+
+				ThreadStart savestack = Delegate.CreateDelegate(typeof(ThreadStart), innerException, "InternalPreserveStackTrace", false, false) as ThreadStart;
+				if(savestack != null) savestack();
+				throw innerException;// -- now we can re-throw without trashing the stack
 			}
 		}
 	}

@@ -69,14 +69,26 @@ namespace CSharpTest.Net.CSBuild.Build
             ProjectInfo refProj;
             foreach (ProjectInfo pi in projectFiles)
             {
-                WorkItem item = new WorkItem(pi);
-                
-                item.Depends.AddRange(pi.Dependencies);
-                foreach (ReferenceInfo r in pi.References)
-                    if (_projects.TryGetProject(r, out refProj))
-                        item.Depends.Add(refProj.ProjectFile);
+                ReferenceInfo lastRef = null;
+                try
+                {
+                    WorkItem item = new WorkItem(pi);
 
-                working.Add(pi.ProjectFile, item);
+                    item.Depends.AddRange(pi.Dependencies);
+                    foreach (ReferenceInfo r in pi.References)
+                    {
+                        lastRef = r;
+                        if (_projects.TryGetProject(r, out refProj))
+                            item.Depends.Add(refProj.ProjectFile);
+                    }
+                    working.Add(pi.ProjectFile, item);
+                }
+                catch (Exception e)
+                {
+                    throw new ApplicationException(
+                        String.Format("Unable to parse references from {0}, reference={1}, error={2}",
+                            pi.ProjectFile, lastRef, e.Message), e);
+                }
             }
 
             using (Log.Start("Sorting {0} projects", _projects.Count))

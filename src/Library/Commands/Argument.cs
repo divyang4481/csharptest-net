@@ -55,6 +55,7 @@ namespace CSharpTest.Net.Commands
 
 		public Type Type { get { return Parameter.ParameterType; } }
 
+		public override bool Visible { get { return base.Visible && !IsInterpreter && !IsAllArguments; } }
 		public bool Required { get { return _required; } }
 		public bool IsFlag { get { return Parameter.ParameterType == typeof(bool); } }
 		public bool IsInterpreter { get { return Parameter.ParameterType == typeof(ICommandInterpreter); } }

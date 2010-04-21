@@ -69,6 +69,6 @@ namespace CSharpTest.Net.CSBuild.Build
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-        { foreach (KeyValuePair<string, string> prop in this) yield return prop; }
+        { return this.GetEnumerator(); }
     }
 }

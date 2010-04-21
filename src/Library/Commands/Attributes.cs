@@ -35,7 +35,19 @@ namespace CSharpTest.Net.Commands
 		/// <summary> Returns the name of the alias </summary>
 		public string Name { get { return _alias; } }
 	}
-	
+
+    /// <summary>
+    /// Instructs the CommandInterpreter to ignore a specific method/property
+    /// </summary>
+    [Serializable]
+    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, AllowMultiple = false)]
+    public class IgnoreMemberAttribute : Attribute
+    {
+        /// <summary> Constructs an IgnoreMemberAttribute </summary>
+        public IgnoreMemberAttribute()
+        {
+        }
+    }
 	/// <summary>
 	/// Defines that the string[] argument accepts all arguments provided to the command, useage:
 	/// <code>void MyCommand([AllArguments] string[] arguments)</code>

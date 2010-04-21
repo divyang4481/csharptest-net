@@ -39,6 +39,7 @@ namespace CSharpTest.Net.Processes
 		private readonly string[] _arguments;
 
 		private event ProcessOutputEventHandler _outputReceived;
+		private event ProcessExitedEventHandler _processExited;
 
 		private volatile int _exitCode;
 		private Process _running;
@@ -66,8 +67,16 @@ namespace CSharpTest.Net.Processes
 			remove { lock (this) _outputReceived -= value; }
 		}
 
+		/// <summary> Notifies caller when the process exits </summary>
+		public event ProcessExitedEventHandler ProcessExited
+		{
+			add { lock (this) _processExited += value; }
+			remove { lock (this) _processExited -= value; }
+		}
+
 		/// <summary> Allows writes to the std::in for the process </summary>
 		public TextWriter StandardInput { get { return Check.NotNull(_stdIn); } }
+
 		/// <summary> Waits for the process to exit and returns the exit code </summary>
 		public int ExitCode { get { WaitForExit(); return _exitCode; } }
 
@@ -96,7 +105,7 @@ namespace CSharpTest.Net.Processes
 			{ _stdIn.Close(); _stdIn = null; }
 
 			int waitTime = (int)Math.Min(int.MaxValue, timeout.TotalMilliseconds);
-			return WaitHandle.WaitAll(new WaitHandle[] { _mreErrorDone, _mreOutputDone, _mreProcessExit }, waitTime);
+			return WaitHandle.WaitAll(new WaitHandle[] { _mreErrorDone, _mreOutputDone, _mreProcessExit }, waitTime, false);
 		}
 
 		/// <summary> Returns true if this instance is running a process </summary>
@@ -196,9 +205,9 @@ namespace CSharpTest.Net.Processes
 			Trace.TraceInformation("EXEC: {0} {1}", _running.StartInfo.FileName, _running.StartInfo.Arguments);
 			_running.Start();
 
-			_running.BeginOutputReadLine();			
-			_running.BeginErrorReadLine();
 			_stdIn = _running.StandardInput;
+			_running.BeginOutputReadLine();
+			_running.BeginErrorReadLine();
 		}
 
 		private void OnOutputReceived(ProcessOutputEventArgs args)
@@ -210,27 +219,70 @@ namespace CSharpTest.Net.Processes
 			}
 		}
 
+		void TryRaiseExitedEvent(ManualResetEvent completing)
+		{
+			if (completing == null || completing.WaitOne(0, false))
+				return;//bad signal or already complete.
+
+			try
+			{
+				if (_processExited != null)
+				{
+					bool isComplete = false;
+					ProcessExitedEventHandler handler;
+
+					lock (this)
+					{
+						if (null != (handler = _processExited))
+						{
+							if ( //determine if we are 'about' to complete with this signal
+								(Object.ReferenceEquals(completing, _mreProcessExit) || _mreProcessExit.WaitOne(0, false)) &&
+								(Object.ReferenceEquals(completing, _mreOutputDone) || _mreOutputDone.WaitOne(0, false)) &&
+								(Object.ReferenceEquals(completing, _mreErrorDone) || _mreErrorDone.WaitOne(0, false))
+								)
+							{
+								isComplete = true;
+							}
+						}
+					}
+
+					if (isComplete && handler != null)
+						handler(this, new ProcessExitedEventArgs(_exitCode));
+				}
+			}
+			finally
+			{
+				completing.Set();
+			}
+		}
+
 		void process_Exited(object o, EventArgs e)
 		{
 			Trace.TraceInformation("EXIT: {0}", _running.StartInfo.FileName);
 			_exitCode = _running.ExitCode;
-			_mreProcessExit.Set();
+			TryRaiseExitedEvent(_mreProcessExit);
 		}
 
 		void process_OutputDataReceived(object o, DataReceivedEventArgs e)
+		{ InternalOutputDataReceived(e.Data); }
+
+		void InternalOutputDataReceived(string data)
 		{
-			if (e.Data != null)
-				OnOutputReceived(new ProcessOutputEventArgs(e.Data, false));
+			if (data != null)
+				OnOutputReceived(new ProcessOutputEventArgs(data, false));
 			else
-				_mreOutputDone.Set();
+				TryRaiseExitedEvent(_mreOutputDone);
 		}
 
 		void process_ErrorDataReceived(object o, DataReceivedEventArgs e)
+		{ InternalErrorDataReceived(e.Data); }
+
+		void InternalErrorDataReceived(string data)
 		{
-			if (e.Data != null)
-				OnOutputReceived(new ProcessOutputEventArgs(e.Data, true));
+			if (data != null)
+				OnOutputReceived(new ProcessOutputEventArgs(data, true));
 			else
-				_mreErrorDone.Set();
+				TryRaiseExitedEvent(_mreErrorDone);
 		}
 	}
 }

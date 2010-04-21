@@ -55,6 +55,12 @@ namespace CSharpTest.Net.Library.Test
 				set { _data = value; }
 			}
 
+            [Option("Other"), IgnoreMember]
+            public string ThisIsIgnored { get { throw new NotImplementedException(); } set { } }
+
+            [Command("Hidden"), IgnoreMember]
+            public void ThisIsAlsoIgnored() { }
+
 			int _otherdata = 0;
 			[Option("Other")]
 			[AliasName("alias")]
@@ -285,6 +291,35 @@ namespace CSharpTest.Net.Library.Test
 			Assert.IsTrue(helptext.Contains("SOMEDATA"));
 			Assert.IsTrue(helptext.Contains("SD"));
 		}
+        [Test]
+        public void TestSetPersistOption()
+        {
+            Assert.AreEqual(DefaultCommands.Get | DefaultCommands.Set | DefaultCommands.Help, DefaultCommands.Default);
+            TestCommands cmds = new TestCommands();
+            CommandInterpreter ci = new CommandInterpreter(cmds);
+            cmds.OtherData = 42;
+            Assert.AreEqual("42", Capture(ci, "GET Other"));
+            cmds.SomeData = "one-two-three";
+            Assert.AreEqual("one-two-three", Capture(ci, "GET SomeData"));
+
+            string options = Capture(ci, "SET");
+            cmds.OtherData = 0;
+            cmds.SomeData = String.Empty;
+            Assert.AreEqual("0", Capture(ci, "GET Other"));
+            Assert.AreEqual(String.Empty, Capture(ci, "GET SomeData"));
+
+            TextReader input = Console.In;
+            try
+            {
+                Console.SetIn(new StringReader(options));//feed the output of SET back to SET
+                ci.Run("SET", "/readInput");
+            }
+            finally { Console.SetIn(input); }
+
+            //should now be restored
+            Assert.AreEqual("42", Capture(ci, "GET Other"));
+            Assert.AreEqual("one-two-three", Capture(ci, "GET SomeData"));
+        }
 
 		[Test]
 		public void TestGetSetOption()
@@ -384,7 +419,7 @@ namespace CSharpTest.Net.Library.Test
 			Assert.AreEqual("Unknown option specified: MissingProperty", result);
 
 			result = Capture(ci, "ECHO $$(MissingProperty) $$(xx x$$y $$ abc"); // <= escape '$' with '$$'
-			Assert.AreEqual("$(MissingProperty) $(xx x$y $ abc", result); // <= extra '$' was removed.
+			Assert.AreEqual("\"$(MissingProperty)\" \"$(xx\" x$y $ abc", result); // <= extra '$' was removed.
 		}
 
 		class ErrorReader : TextReader

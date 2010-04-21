@@ -97,6 +97,43 @@ namespace CSharpTest.Net.Library.Test
 
 			Assert.AreEqual(0, runner.Run());
 			Assert.IsFalse(outputReceived);
+        }
+
+        [Test]
+        public void TestExitedEvent()
+        {
+            ProcessRunner runner = new ProcessRunner("cmd.exe", "/C", "echo");
+
+            int exitCode = -1;
+            bool receivedExit = false;
+            ProcessExitedEventHandler handler =
+                    delegate(object o, ProcessExitedEventArgs e)
+                    { receivedExit = true; exitCode = e.ExitCode; };
+
+            runner.ProcessExited += handler;
+
+            Assert.AreEqual(0, runner.Run());
+            Assert.IsTrue(receivedExit);
+            Assert.AreEqual(0, exitCode);
+		}
+
+		[Test]
+		public void TestExitedEventUnsubscribe()
+		{
+			ProcessRunner runner = new ProcessRunner("cmd.exe", "/C", "echo");
+
+			int exitCode = -1;
+			bool receivedExit = false;
+			ProcessExitedEventHandler handler =
+					delegate(object o, ProcessExitedEventArgs e)
+					{ receivedExit = true; exitCode = e.ExitCode; };
+
+			runner.ProcessExited += handler;
+			runner.ProcessExited -= handler;
+
+			Assert.AreEqual(0, runner.Run());
+			Assert.IsFalse(receivedExit);
+			Assert.AreEqual(-1, exitCode);
 		}
 
 		[Test]

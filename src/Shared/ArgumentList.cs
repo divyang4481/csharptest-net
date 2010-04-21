@@ -326,7 +326,7 @@ namespace CSharpTest.Net.Utils
 			public void AddRange(IEnumerable<string> items) { _values.AddRange(items); }
 
 			/// <summary>
-			/// Converts this item to key-value pair to add to a dictionary
+			/// Converts this item to key-value pair to rem to a dictionary
 			/// </summary>
 			public static implicit operator KeyValuePair<string, string[]>(Item item)
 			{
@@ -416,7 +416,7 @@ namespace CSharpTest.Net.Utils
 		{
 			if (arguments == null)
 				throw new ArgumentNullException("arguments");
-			char[] escaped = new char[] { ' ', '\t', '"' };
+			char[] escaped = " \t\"&()[]{}^=;!'+,`~".ToCharArray();
 
 			StringBuilder sb = new StringBuilder();
 			foreach (string argument in arguments)

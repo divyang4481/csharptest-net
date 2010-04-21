@@ -101,8 +101,8 @@ namespace CSharpTest.Net.Commands
 
 			//Console.WriteLine();
 			//Console.WriteLine("Category: {0}", this.Category);
-			//Console.WriteLine("Type: {0}", this.Target);
-			//Console.WriteLine("Prototype: {0}", this.Method);
+			//Console.WriteLine("Type: {0}", this.target);
+			//Console.WriteLine("Prototype: {0}", this.method);
 			Console.WriteLine();
 			Console.WriteLine(this.Description);
 			Console.WriteLine();
@@ -167,7 +167,7 @@ namespace CSharpTest.Net.Commands
 
 			//Console.WriteLine();
 			//Console.WriteLine("Category: {0}", this.Category);
-			//Console.WriteLine("Type: {0}", this.Target);
+			//Console.WriteLine("Type: {0}", this.target);
 			//Console.WriteLine("Prototype: {0}", this.Property);
 			Console.WriteLine();
 			Console.WriteLine(this.Description);

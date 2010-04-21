@@ -17,6 +17,8 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using System.IO;
 using CSharpTest.Net.Utils;
+using System.Security.AccessControl;
+using System.Security.Principal;
 
 #pragma warning disable 1591
 namespace CSharpTest.Net.Library.Test
@@ -24,18 +26,6 @@ namespace CSharpTest.Net.Library.Test
 	[TestFixture]
 	public partial class TestFileUtils
 	{
-		#region TestFixture SetUp/TearDown
-		[TestFixtureSetUp]
-		public virtual void Setup()
-		{
-		}
-
-		[TestFixtureTearDown]
-		public virtual void Teardown()
-		{
-		}
-		#endregion
-
 		[Test]
 		public void TestFindFullPath()
 		{
@@ -69,6 +59,116 @@ namespace CSharpTest.Net.Library.Test
 		{
 			FileUtils.FindFullPath("This file hopefully doesn't exist on your hard drive!");
 			Assert.Fail();
+		}
+
+		[Test]
+		public void TestExpandEnvironment()
+		{
+			Assert.AreEqual(
+				Path.GetFullPath(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Test")),
+				Path.GetFullPath(FileUtils.ExpandEnvironment(@"%PROGRAMFILES%\Test"))
+				);
+		}
+
+		[Test]
+		public void TestMakeRelativePath()
+		{
+			Assert.IsNull(FileUtils.MakeRelativePath(null, @"C:\Test\fileb.txt"));
+			Assert.IsNull(FileUtils.MakeRelativePath(@"C:\Test\fileb.txt", null));
+
+			Assert.AreEqual(
+				@"filea.txt",
+				FileUtils.MakeRelativePath(@"C:\Test\filea.txt", @"C:\Test\filea.txt")
+				);
+			Assert.AreEqual(
+				@"fileb.txt",
+				FileUtils.MakeRelativePath(@"C:\Test\filea.txt", @"C:\Test\fileb.txt")
+				);
+			Assert.AreEqual(
+				@"..\fileb.txt",
+				FileUtils.MakeRelativePath(@"C:\Test\filea.txt\", @"C:\Test\fileb.txt")
+				);
+			Assert.AreEqual(
+				@"..\fileb.txt\",
+				FileUtils.MakeRelativePath(@"C:\Test\filea.txt\", @"C:\Test\fileb.txt\")
+				);
+			Assert.AreEqual(
+				@"fileb.txt\",
+				FileUtils.MakeRelativePath(@"C:\Test\filea.txt", @"C:\Test\fileb.txt\")
+				);
+			Assert.AreEqual(
+				@"sub\fileb.txt",
+				FileUtils.MakeRelativePath(@"C:\Test\filea.txt", @"C:\Test\sub\fileb.txt")
+				);
+			Assert.AreEqual(
+				@"..\fileb.txt",
+				FileUtils.MakeRelativePath(@"C:\Test\sub\filea.txt", @"C:\Test\fileb.txt")
+				);
+			Assert.AreEqual(
+				@"C:\Test\sub\fileb.txt",
+				FileUtils.MakeRelativePath(@"E:\Test\sub\filea.txt", @"C:\Test\sub\fileb.txt")
+				);
+			Assert.AreEqual(
+				@"..\test\fileb.txt",
+				FileUtils.MakeRelativePath(@"sub\filea.txt", @"test\fileb.txt")
+				);
+			Assert.AreEqual(
+				@"..\..\test\fileb.txt",
+				FileUtils.MakeRelativePath(@"..\sub\filea.txt", @"test\fileb.txt")
+				);
+			Assert.AreEqual(
+				@"fileb.txt",
+				FileUtils.MakeRelativePath(@"sub\", @"sub\fileb.txt")
+				);
+			Assert.AreEqual(
+				@"sub\fileb.txt",
+				FileUtils.MakeRelativePath(@"sub", @"sub\fileb.txt")
+				);
+			Assert.AreEqual(
+				@"sub\fileb.txt",
+				FileUtils.MakeRelativePath(@".\sub", @"sub\fileb.txt")
+				);
+			Assert.AreEqual(
+				@"..\sub\fileb.txt",
+				FileUtils.MakeRelativePath(@"sub\test", @".\sub\.\..\sub\fileb.txt")
+				);
+		}
+
+		[Test]
+		public void TestGetAndReplacePermission()
+		{
+			string tempFile = Path.GetTempFileName();
+			FileSystemRights rights;
+			try
+			{
+				FileUtils.ReplacePermissions(tempFile, WellKnownSidType.WorldSid, FileSystemRights.Read);
+				rights = FileUtils.GetPermissions(tempFile, WellKnownSidType.WorldSid);
+				Assert.AreEqual(FileSystemRights.Read, FileSystemRights.Read & rights);
+
+				FileUtils.ReplacePermissions(tempFile, WellKnownSidType.WorldSid, 0);
+				rights = FileUtils.GetPermissions(tempFile, WellKnownSidType.WorldSid);
+				Assert.AreEqual(0, (int)rights);
+
+				FileUtils.GrantFullControlForFile(tempFile, WellKnownSidType.WorldSid);
+				rights = FileUtils.GetPermissions(tempFile, WellKnownSidType.WorldSid);
+				Assert.AreEqual(FileSystemRights.FullControl, rights);
+
+				FileUtils.ReplacePermissions(tempFile, WellKnownSidType.WorldSid, FileSystemRights.Read);
+				rights = FileUtils.GetPermissions(tempFile, WellKnownSidType.WorldSid);
+				Assert.AreEqual(FileSystemRights.Read, FileSystemRights.Read & rights);
+
+				FileUtils.GrantFullControlForFile(tempFile, WellKnownSidType.WorldSid);
+				rights = FileUtils.GetPermissions(tempFile, WellKnownSidType.WorldSid);
+				Assert.AreEqual(FileSystemRights.FullControl, rights);
+
+				FileUtils.ReplacePermissions(tempFile, WellKnownSidType.WorldSid, 0);
+				rights = FileUtils.GetPermissions(tempFile, WellKnownSidType.WorldSid);
+				Assert.AreEqual(0, (int)rights);
+			}
+			finally
+			{
+				File.Delete(tempFile);
+			}
 		}
 	}
 }

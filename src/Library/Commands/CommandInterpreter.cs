@@ -61,7 +61,7 @@ namespace CSharpTest.Net.Commands
 
 			_buildInCommands = new BuiltInCommands(
 				Command.Make(this, this.GetType().GetMethod("Get")),
-				Command.Make(this, this.GetType().GetMethod("Set")),
+				Command.Make(this, this.GetType().GetMethod("Set", new Type[] { typeof(string), typeof(object), typeof(bool) } )),
 				Command.Make(this, this.GetType().GetMethod("Help")),
 				Option.Make(this, this.GetType().GetProperty("ErrorLevel")),
 				Option.Make(this, this.GetType().GetProperty("Prompt"))
@@ -101,7 +101,8 @@ namespace CSharpTest.Net.Commands
 			MethodInfo[] methods = type.GetMethods(flags | BindingFlags.InvokeMethod);
 			foreach (MethodInfo method in methods)
 			{
-				if (method.IsSpecialName || method.DeclaringType == typeof(Object))
+				if (method.IsSpecialName || method.DeclaringType == typeof(Object) ||
+                    method.GetCustomAttributes(typeof(IgnoreMemberAttribute),true).Length > 0)
 					continue;
 				ICommand command = Command.Make(targetObject, method);
 				if (command is ICommandFilter)
@@ -112,7 +113,8 @@ namespace CSharpTest.Net.Commands
 			PropertyInfo[] props = type.GetProperties(flags | BindingFlags.GetProperty | BindingFlags.SetProperty);
 			foreach (PropertyInfo prop in props)
 			{
-				if (!prop.CanRead || !prop.CanWrite || prop.GetIndexParameters().Length > 0)
+                if (!prop.CanRead || !prop.CanWrite || prop.GetIndexParameters().Length > 0 ||
+                    prop.GetCustomAttributes(typeof(IgnoreMemberAttribute), true).Length > 0)
 					continue;
 				AddOption(Option.Make(targetObject, prop));
 			}
@@ -170,7 +172,7 @@ namespace CSharpTest.Net.Commands
 		public int ErrorLevel { get { return Environment.ExitCode; } set { Environment.ExitCode = value; } }
 
 		/// <summary> Gets/sets the prompt, use "$(OptionName)" to reference options </summary>
-		[Option(Category = "Built-in", Description = "Gets or sets the text to display to prompt for input.")]
+		[Option(Category = "Built-in", Description = "Gets or sets the text to display to prompt for input use \"$(OptionName)\" to reference options.")]
 		public string Prompt { get { return _prompt; } set { _prompt = Check.NotNull(value); } }
 
 		/// <summary>
@@ -222,25 +224,44 @@ namespace CSharpTest.Net.Commands
 			Console.Out.WriteLine("{0}", value);
 			return value;
 		}
+
+        /// <summary> Command to set the value of an option </summary>
+        [IgnoreMember]
+		public void Set(string property, object value) { Set(property, value, false); }
+
 		/// <summary> Command to set the value of an option </summary>
 		[Command(Category = "Built-in", Description = "Sets a global option by name or lists options available.")]
-		public void Set([DefaultValue(null)] string property, [DefaultValue(null)] object value)
+		public void Set([DefaultValue(null)] string property, [DefaultValue(null)] object value, 
+			[DefaultValue(false),Description("Read from std::in lines formatted as NAME=VALUE")]bool readInput)
 		{
+			if (readInput)
+			{
+				string line;
+				while (null != (line = Console.In.ReadLine()))
+					Set(line, null, false);
+				return;
+			}
 			if (property == null)
 			{
 				foreach (IOption opt in Options)
 					Console.WriteLine("{0}={1}", opt.DisplayName, opt.Value);
+				return;
+			}
+			else if (value == null && property.IndexOf('=') < 0)
+			{
+				Get(property);
+				return;
 			}
 			else if (value == null)
 			{
-				Get(property);
+				string[] args = property.Split(new char[] { '=' }, 2);
+				property = args[0].TrimEnd();
+				value = args[1].TrimStart();
 			}
-			else
-			{
-				IOption opt;
-				InterpreterException.Assert(_options.TryGetValue(property, out opt), "The option {0} was not found.", property);
-				opt.Value = value;
-			}
+
+			IOption option;
+			InterpreterException.Assert(_options.TryGetValue(property, out option), "The option {0} was not found.", property);
+			option.Value = value;
 		}
 
 		/// <summary>

@@ -104,7 +104,11 @@ namespace CSharpTest.Net.Utils
 				if (File.Exists(schemaLocation))
 					schemaIo = File.Open(schemaLocation, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
 				else if (null == (schemaIo = typeof(T).Assembly.GetManifestResourceStream(schemaLocation)))
-					schemaIo = null;
+				{
+					//maybe unqualified:
+					string tmpSchemaName = String.Format("{0}.{1}", typeof(T).Namespace, schemaLocation);
+					schemaIo = typeof(T).Assembly.GetManifestResourceStream(tmpSchemaName);
+				}
 
 				if (schemaIo != null) // if we found an xml schema, use it for validation
 				{
@@ -136,7 +140,7 @@ namespace CSharpTest.Net.Utils
 			{
 				settings.Schemas.Add(schema);
 				//these options would be nice to allow; however, these will cause a duplicate defininition
-				//when the root node already defines a valid xsd and we internally add our own.
+				//when the root node already defines a valid xsd and we internally rem our own.
 				settings.ValidationFlags = XmlSchemaValidationFlags.ReportValidationWarnings; 
 				settings.ValidationType = ValidationType.Schema;
 			}
