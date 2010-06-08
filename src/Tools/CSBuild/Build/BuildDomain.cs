@@ -16,6 +16,7 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using CSharpTest.Net.CSBuild.BuildTasks;
+using System.Reflection;
 
 namespace CSharpTest.Net.CSBuild.Build
 {
@@ -81,7 +82,25 @@ namespace CSharpTest.Net.CSBuild.Build
             FrameworkVersions _framework;
 
             public RemoteDomain()
-            { _framework = FrameworkVersions.v20; }
+            { 
+				_framework = FrameworkVersions.v20;
+				//AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(CurrentDomain_AssemblyResolve);
+			}
+
+            public override object InitializeLifetimeService()
+            { return null; }
+
+			//System.Reflection.Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
+			//{
+			//    AssemblyName asmName = new AssemblyName(args.Name);
+			//    string bin = Util.MakeFrameworkBinPath(_framework);
+
+			//    string testDll = Path.Combine(bin, asmName.Name + ".dll");
+			//    if (File.Exists(testDll))
+			//        return Assembly.LoadFile(testDll);
+			//    return null;
+			//}
+
             public void Dispose() 
             {
                 if (_engine != null)

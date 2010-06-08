@@ -23,18 +23,6 @@ namespace CSharpTest.Net.Shared.Test
 	[Category("TestCheck")]
 	public partial class TestCheck
 	{
-		#region TestFixture SetUp/TearDown
-		[TestFixtureSetUp]
-		public virtual void Setup()
-		{
-		}
-
-		[TestFixtureTearDown]
-		public virtual void Teardown()
-		{
-		}
-		#endregion
-
 		[Test]
 		public void Test()
 		{
@@ -46,6 +34,32 @@ namespace CSharpTest.Net.Shared.Test
 			Assert.AreEqual(items, Check.NotEmpty(items));
 			Assert.AreEqual("a", Check.NotEmpty("a"));
 		}
+
+        [Test]
+        public void TestAsserts()
+        {
+            //pass all
+            Check.Assert(true, delegate() { Assert.Fail(); return (Exception)null; });
+            Check.Assert<Exception>(true);
+            Check.Assert<Exception>(true, String.Empty);
+            Check.Assert<Exception>(true, String.Empty, new Exception());
+        }
+
+        [Test]
+        public void TestArraySizes()
+        {
+            Check.ArraySize(new byte[0], 0, 0);
+            Check.ArraySize(new byte[1], 1, 25);
+            Check.ArraySize(new byte[25], 1, 25);
+        }
+
+        [Test]
+        public void TestInRange()
+        {
+            Check.InRange(0, 0, 0);
+            Check.InRange(1, 1, 25);
+            Check.InRange(25, 1, 25);
+        }
 
 		[Test]
 		public void TestIsEqual()
@@ -269,5 +283,73 @@ namespace CSharpTest.Net.Shared.Test
 		{
 			Check.NotEmpty(new List<TestCheck>());
 		}
+        
+        [Test, ExpectedException(typeof(InsufficientMemoryException))]
+        public void TestAssertFail()
+        {
+            Check.Assert<InsufficientMemoryException>(false);
+        }
+
+        [Test, ExpectedException(typeof(Exception), ExpectedMessage = "This is the message")]
+        public void TestAssertFailWithMessage()
+        {
+            Check.Assert<Exception>(false, "This is the message");
+        }
+
+        [Test, ExpectedException(typeof(ApplicationException))]
+        public void TestAssertFailWithInner()
+        {
+            try { Check.Assert<ApplicationException>(false, "Application Message", new Exception("INNER")); }
+            catch (ApplicationException ae)
+            {
+                Assert.AreEqual("Application Message", ae.Message);
+                Assert.IsNotNull(ae.InnerException);
+                Assert.AreEqual(typeof(Exception), ae.InnerException.GetType());
+                Assert.AreEqual("INNER", ae.InnerException.Message);
+                throw;
+            }
+        }
+
+        [Test, ExpectedException(typeof(ApplicationException), ExpectedMessage = "Custom Message")]
+        public void TestAssertFailWithCustom()
+        {
+            Check.Assert(false, delegate() { return new ApplicationException("Custom Message"); });
+        }
+
+        [Test, ExpectedException(typeof(ArgumentNullException))]
+        public void TestArrayNull()
+        {
+            Check.ArraySize<byte[]>(null, 0, 0);
+        }
+
+        [Test, ExpectedException(typeof(ArgumentOutOfRangeException))]
+        public void TestArrayBelowMin()
+        {
+            Check.ArraySize(new byte[0], 1, 1);
+        }
+
+        [Test, ExpectedException(typeof(ArgumentOutOfRangeException))]
+        public void TestArrayAboveMax()
+        {
+            Check.ArraySize(new byte[2], 1, 1);
+        }
+
+        [Test, ExpectedException(typeof(ArgumentNullException))]
+        public void TestInRangeNull()
+        {
+            Check.InRange<string>(null, "a", "b");
+        }
+
+        [Test, ExpectedException(typeof(ArgumentOutOfRangeException))]
+        public void TestInRangeBelowMin()
+        {
+            Check.InRange(0, 1, 1);
+        }
+
+        [Test, ExpectedException(typeof(ArgumentOutOfRangeException))]
+        public void TestInRangeAboveMax()
+        {
+            Check.InRange(2, 1, 1);
+        }
 	}
 }

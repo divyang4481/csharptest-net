@@ -17,44 +17,170 @@ using System.Text;
 using System.Collections.Generic;
 using NUnit.Framework;
 using CSharpTest.Net.Crypto;
+using System.IO;
+using CSharpTest.Net.IO;
 
 #pragma warning disable 1591
 
 namespace CSharpTest.Net.Library.Test
 {
-	[TestFixture]
-	public partial class TestEncryption
-	{
+    [TestFixture]
+    public class TestRtlProcessKey : TestEncryption
+    { public TestRtlProcessKey() : base(new RtlProcessKey()) { } }
+
+    [TestFixture]
+    public class TestDataPotectionUser : TestEncryption
+    { public TestDataPotectionUser() : base(LocalHostKey.CurrentUser) { } }
+
+    [TestFixture]
+    public class TestDataPotectionUserSalted : TestEncryption
+    { public TestDataPotectionUserSalted() : base(LocalHostKey.CurrentUser.WithSalt(new Salt())) { } }
+
+    [TestFixture]
+    public class TestDataPotectionMachine : TestEncryption
+    { public TestDataPotectionMachine() : base(LocalHostKey.LocalMachine) { } }
+
+    [TestFixture]
+    public class TestDataPotectionMachineSalted : TestEncryption
+    { public TestDataPotectionMachineSalted() : base(LocalHostKey.LocalMachine.WithSalt(new Salt())) { } }
+
+    [TestFixture]
+    public class TestAESEncryption : TestEncryption
+    {
+        public TestAESEncryption() : base(new AESCryptoKey()) { }
+
+        [Test]
+        public void TestCopyKeyAndIV()
+        {
+            byte[] ivrandom = new byte[16];
+            new Random().NextBytes(ivrandom);
+
+            using (AESCryptoKey k1 = new AESCryptoKey())
+            using (AESCryptoKey k2 = new AESCryptoKey(k1.Key, k1.IV))
+            using (AESCryptoKey kBadIv = new AESCryptoKey(k1.Key, ivrandom))
+            {
+                Assert.AreEqual(k1.Key, k2.Key);
+                Assert.AreEqual(k1.IV, k2.IV);
+                Assert.AreEqual("test", k2.Decrypt(k1.Encrypt("test")));
+
+                Assert.AreEqual(k1.Key, kBadIv.Key);
+                Assert.AreNotEqual(k1.IV, kBadIv.IV);
+                try
+                {   //one of two possible outcomes, junk or exception
+                    Assert.AreNotEqual("test", kBadIv.Decrypt(k1.Encrypt("test")));
+                }
+                catch (System.Security.Cryptography.CryptographicException) { }
+            }
+        }
+
+        [Test, ExpectedException(typeof(ArgumentOutOfRangeException))]
+        public void TestBadInputKey()
+        {
+            new AESCryptoKey(new byte[5]);
+        }
+
+        [Test, ExpectedException(typeof(ObjectDisposedException))]
+        public void TestDisposal()
+        {
+            string test;
+            CryptoKey key = new AESCryptoKey();
+            test = key.Encrypt("Test");
+            key.Dispose();
+
+            key.Decrypt(test);
+            Assert.Fail();
+        }
+    }
+
+	public abstract class TestEncryption
+    {
+        protected const string TEST_PASSWORD = "This is the password\u1235!";
+        protected readonly IEncryptDecrypt Encryptor;
+
+        protected TestEncryption(IEncryptDecrypt encryptor) { this.Encryptor = encryptor; }
+
 		[Test]
 		public void TestEncryptDecryptString()
 		{
-			string svalue = "some text value";
+            string svalue = TEST_PASSWORD;
 
-			string esbyuser = Encryption.CurrentUser.Encrypt(svalue);
-			string esbyhost = Encryption.LocalMachine.Encrypt(svalue);
-
+			string esbyuser = Encryptor.Encrypt(svalue);
 			Assert.AreNotEqual(svalue, esbyuser);
-			Assert.AreNotEqual(svalue, esbyhost);
-			Assert.AreNotEqual(esbyhost, esbyuser);
-
-			Assert.AreEqual(svalue, Encryption.CurrentUser.Decrypt(esbyuser));
-			Assert.AreEqual(svalue, Encryption.LocalMachine.Decrypt(esbyhost));
+			Assert.AreEqual(svalue, Encryptor.Decrypt(esbyuser));
 		}
 
 		[Test]
 		public void TestEncryptDecryptBytes()
 		{
-			byte[] svalue = Encoding.ASCII.GetBytes("some text value");
+            byte[] svalue = Encoding.ASCII.GetBytes(TEST_PASSWORD);
 
-			byte[] esbyuser = Encryption.CurrentUser.Encrypt(svalue);
-			byte[] esbyhost = Encryption.LocalMachine.Encrypt(svalue);
-
+			byte[] esbyuser = Encryptor.Encrypt(svalue);
 			Assert.AreNotEqual(Encoding.ASCII.GetString(svalue), Encoding.ASCII.GetString(esbyuser));
-			Assert.AreNotEqual(Encoding.ASCII.GetString(svalue), Encoding.ASCII.GetString(esbyhost));
-			Assert.AreNotEqual(Encoding.ASCII.GetString(esbyhost), Encoding.ASCII.GetString(esbyuser));
-
-			Assert.AreEqual(Encoding.ASCII.GetString(svalue), Encoding.ASCII.GetString(Encryption.CurrentUser.Decrypt(esbyuser)));
-			Assert.AreEqual(Encoding.ASCII.GetString(svalue), Encoding.ASCII.GetString(Encryption.LocalMachine.Decrypt(esbyhost)));
+            Assert.AreEqual(Encoding.ASCII.GetString(svalue), Encoding.ASCII.GetString(Encryptor.Decrypt(esbyuser)));
 		}
+
+        [Test]
+        public void TestEncryptDecryptStream()
+        {
+            byte[] result;
+            byte[] data = new byte[ushort.MaxValue];
+            Random rand = new Random();
+            rand.NextBytes(data);
+
+            using (MemoryStream final = new MemoryStream())
+            using (MemoryStream ms = new MemoryStream())
+            {
+                using (Stream e = Encryptor.Encrypt(new NonClosingStream(ms)))
+                {
+                    for (int i = 0; i < data.Length; )
+                    {
+                        int count = Math.Max(i + 1, Math.Min(data.Length, i + 1 + rand.Next(2000)));
+                        e.Write(data, i, count - i);
+                        i = count;
+                    }
+                    e.Flush();
+                }
+
+                using (Stream d = Encryptor.Decrypt(new MemoryStream(ms.ToArray())))
+                {
+                    for (int i = 0; i < data.Length; )
+                    {
+                        int count = Math.Max(i + 1, Math.Min(data.Length, i + 1 + rand.Next(2000)));
+                        byte[] tmp = IOStream.Read(d, count - i);
+                        final.Write(tmp, 0, tmp.Length);
+                        i = count;
+                    }
+                }
+
+                result = final.ToArray();
+            }
+
+            Assert.AreEqual(data.Length, result.Length);
+            Assert.IsTrue(BinaryComparer.Equals(data, result));
+        }
 	}
+
+    [TestFixture]
+    public class TestPassthrough
+    {
+        protected const string TEST_PASSWORD = "This is the password\u1235!";
+
+        [Test]
+        public void TestExactPaasstrough()
+        {
+            string value = TEST_PASSWORD;
+
+            Encryption.Passthrough.Dispose();//ignores
+
+            Assert.AreEqual(value, Encryption.Passthrough.Encrypt(value));
+            Assert.AreEqual(value, Encryption.Passthrough.Decrypt(value));
+
+            byte[] bytes = Password.Encoding.GetBytes(value);
+            Assert.AreEqual(bytes, Encryption.Passthrough.Encrypt(bytes));
+            Assert.AreEqual(bytes, Encryption.Passthrough.Decrypt(bytes));
+
+            Assert.AreEqual(bytes, IOStream.ReadAllBytes(Encryption.Passthrough.Encrypt(new MemoryStream(bytes))));
+            Assert.AreEqual(bytes, IOStream.ReadAllBytes(Encryption.Passthrough.Decrypt(new MemoryStream(bytes))));
+        }
+    }
 }

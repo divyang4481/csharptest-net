@@ -22,9 +22,11 @@ namespace CSharpTest.Net.CSBuild.BuildTasks
     [Serializable]
 	class SetProjectProperty : BuildTask
     {
-		readonly MSProp _name;
-		readonly string _value;
+		readonly string _name, _value;
 		public SetProjectProperty(MSProp name, string value)
+			: this(name.ToString(), value)
+		{ }
+		public SetProjectProperty(string name, string value)
         {
 			_name = name;
 			_value = value;
@@ -32,7 +34,7 @@ namespace CSharpTest.Net.CSBuild.BuildTasks
         protected override int Run(BuildEngine engine)
         {
 			foreach (ProjectInfo pi in engine.Projects)
-				pi.Properties[_name] = _value;
+				pi.Properties.SetValue(_name, _value);
             return 0;
         }
     }

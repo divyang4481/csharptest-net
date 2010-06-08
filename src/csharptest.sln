@@ -38,6 +38,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SslTunnel.Server", "SslTunn
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SslTunnel.Test", "SslTunnel\Test\SslTunnel.Test.csproj", "{8C8B35B9-9A35-4020-9A86-BA934B718331}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XhtmlValidate", "Web\XhtmlValidate\XhtmlValidate.csproj", "{5E6BCDF3-2286-4A31-ADB0-424EBDA1AD54}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -188,6 +190,16 @@ Global
 		{8C8B35B9-9A35-4020-9A86-BA934B718331}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{8C8B35B9-9A35-4020-9A86-BA934B718331}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{8C8B35B9-9A35-4020-9A86-BA934B718331}.Release|Win32.ActiveCfg = Release|Any CPU
+		{5E6BCDF3-2286-4A31-ADB0-424EBDA1AD54}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5E6BCDF3-2286-4A31-ADB0-424EBDA1AD54}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5E6BCDF3-2286-4A31-ADB0-424EBDA1AD54}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{5E6BCDF3-2286-4A31-ADB0-424EBDA1AD54}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{5E6BCDF3-2286-4A31-ADB0-424EBDA1AD54}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{5E6BCDF3-2286-4A31-ADB0-424EBDA1AD54}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5E6BCDF3-2286-4A31-ADB0-424EBDA1AD54}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5E6BCDF3-2286-4A31-ADB0-424EBDA1AD54}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{5E6BCDF3-2286-4A31-ADB0-424EBDA1AD54}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{5E6BCDF3-2286-4A31-ADB0-424EBDA1AD54}.Release|Win32.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -88,6 +88,9 @@ namespace CSharpTest.Net.SslTunnel
 		[XmlAttribute("serverCertPassword")]
 		public string ServerCertPassword;
 
+        [XmlAttribute("loggingDirectory")]
+        public string MonitoringDirectory;
+
 		[XmlElement("accept")]
 		public ExpectedCertificate[] AllowedClients;
 	}

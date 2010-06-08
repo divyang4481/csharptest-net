@@ -14,6 +14,7 @@
 #endregion
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace CSharpTest.Net.Crypto
 {
@@ -21,8 +22,13 @@ namespace CSharpTest.Net.Crypto
 	/// A simple interface for encrypting and decrypting strings, obtain an instance through the
 	/// static Encryption inteface calss.
 	/// </summary>
-	public interface IEncryptDecrypt
-	{
+	public interface IEncryptDecrypt : IDisposable
+    {
+        /// <summary>Encrypts a stream of data</summary>
+        Stream Encrypt(Stream stream);
+        /// <summary> Decrypts a stream of data </summary>
+        Stream Decrypt(Stream stream);
+
 		/// <summary>Encrypts a raw data block as a set of bytes</summary>
 		byte[] Encrypt(byte[] blob);
 		/// <summary>Encrypts a string and encodes the result in base-64 encoded text</summary>

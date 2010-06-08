@@ -27,6 +27,7 @@
     </xs:sequence>
     <xs:attribute name="serverCertFile" type="xs:string" />
     <xs:attribute name="serverCertPassword" type="xs:string" />
+    <xs:attribute name="loggingDirectory" type="xs:string" />
   </xs:complexType>
   <xs:complexType name="ExpectedCertificate">
     <xs:attribute name="issuedTo" type="xs:string" />

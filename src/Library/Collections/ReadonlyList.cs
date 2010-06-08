@@ -16,6 +16,7 @@ using System;
 using System.Collections;
 using System.Collections.ObjectModel;
 using System.Collections.Generic;
+using CSharpTest.Net.Interfaces;
 
 namespace CSharpTest.Net.Collections
 {

@@ -31,8 +31,9 @@ namespace CSharpTest.Net.CSBuild.Configuration
 		[DefaultValue(4)]
 		public int TimeoutHours = 4;
 
-        [XmlElement("logfile", typeof(LogFilePath))]
-        [XmlElement("strict-references", typeof(BuildStrictReferences))]
+		[XmlElement("logfile", typeof(LogFilePath))]
+		[XmlElement("global-property", typeof(BuildProperty))]
+		[XmlElement("strict-references", typeof(BuildStrictReferences))]
 		[XmlElement("no-standard-references", typeof(NoStdReferences))]
 		[XmlElement("force-file-references", typeof(ProjectReferencesToFile))]
 		[XmlElement("continue-on-error", typeof(BuildContinueOnError))]
@@ -66,6 +67,7 @@ namespace CSharpTest.Net.CSBuild.Configuration
         }
 
 		public bool ContinueOnError { get { return GetOption<BuildContinueOnError>(); } }
+		public IEnumerable<BuildProperty> GlobalProperties { get { foreach (object o in _allItems) if (o is BuildProperty) yield return o as BuildProperty; } }
 
         public string LogPath
         {

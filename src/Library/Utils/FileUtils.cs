@@ -19,6 +19,7 @@ using System.Diagnostics;
 using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Text;
+using System.IO.Compression;
 
 namespace CSharpTest.Net.Utils
 {
@@ -27,13 +28,94 @@ namespace CSharpTest.Net.Utils
 	/// </summary>
 	public static class FileUtils
 	{
-		private static readonly string FileNotFoundMessage = new FileNotFoundException().Message;
-		private static readonly char[] IllegalFileNameChars = new char[] { '/', '\\', ':', '*', '?', '"', '<', '>', '|' };
+		private static readonly string FileNotFoundMessage;
+		private static readonly char[] IllegalFileNameChars;
+
+        static FileUtils()
+        {
+            FileNotFoundMessage = new FileNotFoundException().Message;
+
+            Dictionary<Char, Char> bad = new Dictionary<Char, Char>();
+            foreach (char ch in new char[] { '/', '\\', ':', '*', '?', '"', '<', '>', '|' })
+                bad[ch] = ch;
+            foreach (char ch in Path.GetInvalidFileNameChars())
+                bad[ch] = ch;
+
+            List<Char> badChars = new List<Char>(bad.Keys);
+            badChars.Sort();
+            IllegalFileNameChars = badChars.ToArray();
+        }
+
+        /// <summary>
+        /// Returns true if the extension provided contains only one '.' at the beginning
+        /// of the string and does not contain any path or invalid filename characters.
+        /// </summary>
+        public static bool IsValidExtension(string fileExt)
+        {
+            if (String.IsNullOrEmpty(fileExt) || fileExt.Trim() != fileExt ||
+                fileExt.LastIndexOf('.') != 0 ||
+                fileExt.IndexOfAny(IllegalFileNameChars) >= 0)
+                return false;
+
+            return true;
+        }
+        /// <summary>
+        /// Returns true if the name provided contains only valid filename characters
+        /// </summary>
+        public static bool IsValidFileName(string filename)
+        {
+            if(String.IsNullOrEmpty(filename) || filename.Trim() != filename ||
+                filename.Trim('.', ' ', '\t').Length == 0 ||
+                filename.IndexOfAny(IllegalFileNameChars) >= 0)
+                return false;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Creates a valid filename by removing all invalid characters.
+        /// </summary>
+        public static string MakeValidFileName(string filename)
+        { return MakeValidFileName(filename, String.Empty); }
+
+        /// <summary>
+        /// Creates a valid filename by replacing all invalid characters with the string provided.
+        /// </summary>
+        public static string MakeValidFileName(string filename, string replaceWithChars)
+        {
+            if (Check.NotNull(replaceWithChars).Length > 0 && !IsValidFileName(replaceWithChars))
+                throw new ArgumentException();
+
+            if (IsValidFileName(filename))
+                return filename;
+
+            StringBuilder sbpath = new StringBuilder();
+            bool replaced = false;
+            foreach (Char ch in filename)
+            {
+                bool invalid = Array.BinarySearch(IllegalFileNameChars, ch) >= 0;
+
+                if (!replaced && invalid)
+                    sbpath.Append(replaceWithChars);
+                else if (!invalid)
+                    sbpath.Append(ch);
+
+                replaced = invalid;
+            }
+
+            filename = sbpath.ToString().Trim();
+
+            if (!IsValidFileName(filename))
+                throw new ArgumentException();
+
+            return filename;
+        }
 
 		/// <summary>
 		/// Returns the fully qualified path to the file if it is fully-qualified, exists in the current directory, or 
 		/// in the environment path, otherwise generates a FileNotFoundException exception.
 		/// </summary>
+        [System.Diagnostics.DebuggerNonUserCode]
 		public static string FindFullPath(string location)
 		{
 			string result;
@@ -66,9 +148,7 @@ namespace CSharpTest.Net.Utils
 					return true;
 				}
 
-				if (Path.IsPathRooted(location))
-					return false;
-				if (location.IndexOfAny(IllegalFileNameChars) >= 0 || location.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+				if (!IsValidFileName(location))
 					return false;
 
 				foreach (string pathentry in Environment.GetEnvironmentVariable("PATH").Split(';'))

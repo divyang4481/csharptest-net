@@ -59,7 +59,16 @@ namespace CSharpTest.Net.CSBuild
 
 		internal static string MakeFrameworkBinPath(FrameworkVersions framework)
 		{
-			string frmwrk = framework == FrameworkVersions.v35 ? "v3.5" : "v2.0.50727";
+			string frmwrk;
+			switch (framework)
+			{
+				case FrameworkVersions.v20:
+				case FrameworkVersions.v30: frmwrk = "v2.0.50727"; break;
+				case FrameworkVersions.v35: frmwrk = "v3.5"; break;
+				//case FrameworkVersions.v40: frmwrk = "v4.0.30319"; break;
+				default: throw new ArgumentException("Unknown framework version");
+			}
+
 			string windir = Environment.GetFolderPath(Environment.SpecialFolder.System);
 			string msbuild = Path.Combine(windir, String.Format(@"..\Microsoft.NET\Framework\{0}\MSBuild.exe", frmwrk));
 			if (!File.Exists(msbuild))

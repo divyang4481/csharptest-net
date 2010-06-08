@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration>Debug</Configuration>
     <Platform>AnyCPU</Platform>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{FC4C5399-3103-4D92-8E95-543C9F2084CB}</ProjectGuid>
     <OutputType>Exe</OutputType>
@@ -100,6 +100,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <EmbeddedResource Include="v40.config" />
     <EmbeddedResource Include="v30.config" />
     <EmbeddedResource Include="v20.config" />
     <EmbeddedResource Include="v35.config" />
@@ -118,6 +119,7 @@
 COPY /Y $(TargetDir)schema0.xsd $(ProjectDir)CSBuild.xsd
 COPY /Y $(TargetDir)Sample.config.xml $(TargetDir)CSBuild.config
 "$(FrameworkSDKDir)bin\sgen.exe" /nologo /force "/c: /platform:$(Platform)" /a:$(TargetPath) /o:$(TargetDir)
+REM COPY /Y $(TargetDir)CSBuild.exe E:\Projects\rokserver\src\CsBuild.exe
 </PostBuildEvent>
   </PropertyGroup>
 </Project>

@@ -54,7 +54,7 @@ namespace CSharpTest.Net.CSBuild.Build
             Engine.UnloadAllProjects();
         }
 
-		private bool Is35 { get { return Framework != FrameworkVersions.v20 && Framework != FrameworkVersions.v30; } }
+		private bool Is35OrLater { get { return Framework != FrameworkVersions.v20 && Framework != FrameworkVersions.v30; } }
 		private string FrameworkVersionString { get { return _framework.ToString().TrimStart('v').Insert(1, "."); } }
 
         public FrameworkVersions Framework { get { return _framework; } }
@@ -77,6 +77,11 @@ namespace CSharpTest.Net.CSBuild.Build
 			if (toolsVersion == FrameworkVersions.v20 || toolsVersion == FrameworkVersions.v30)
 				engine.GlobalProperties.SetProperty("MSBuildToolsPath", frameworkPath);
 
+			//<property name="FrameworkSDKDir" value="%ProgramFiles%\Microsoft.NET\SDK\v2.0\" global="true"/>
+			//if (!Directory.Exists(engine.GlobalProperties.SetProperty()))
+			//{ }
+
+
             new MSBuildLog(engine);
             return engine;
         }
@@ -86,7 +91,7 @@ namespace CSharpTest.Net.CSBuild.Build
             Engine.UnregisterAllLoggers();
 			Engine.UnloadAllProjects();
 			Engine.GlobalProperties.Clear();
-			if (!Is35)
+			if (!Is35OrLater)
 				Engine.GlobalProperties.SetProperty("MSBuildToolsPath", FrameworkPath);
 
             this.Projects.Clear();
@@ -98,7 +103,7 @@ namespace CSharpTest.Net.CSBuild.Build
 		public ProjectInfo LoadProject(string projFile)
 		{
 			object[] ctorargs = new object[] { Engine };
-			if (Is35)
+			if (Is35OrLater)
 				ctorargs = new object[] { Engine, FrameworkVersionString };
 
 			Project prj = (Project)typeof(Project).InvokeMember(null, BindingFlags.CreateInstance, null, null, ctorargs);

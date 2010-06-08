@@ -34,6 +34,34 @@ namespace CSharpTest.Net.Utils
 		public static readonly Regex Version = new Regex(@"^[1-2]?[0-9]{1,9}\.[1-2]?[0-9]{1,9}(\.[1-2]?[0-9]{1,9}(\.[1-2]?[0-9]{1,9})?)?$");
 
 		/// <summary>
+        /// Free-form matching of urls in plain text, from http://immike.net/blog/2007/04/06/5-regular-expressions-every-web-programmer-should-know/
+		/// </summary>
+		public static readonly Regex HttpUrl = new Regex(@"https?://[-\w]+(\.\w[-\w]*)+(:\d+)?(/[^.!,?;""\'<>()\[\]\{\}\s\x7F-\xFF]*([.!,?]+[^.!,?;""\'<>\(\)\[\]\{\}\s\x7F-\xFF]+)*)?");
+
+        /// <summary>
+        /// Matches a makefile macro name in text, i.e. "$(field:name=value)" where field is any alpha-numeric + ('_', '-', or '.') text identifier 
+        /// returned from group "field".  the "replace" group contains all after the identifier and before the last ')'.  "name" and "value" groups
+        /// match the name/value replacement pairs.
+        /// </summary>
+        public static readonly Regex MakefileMacro = new Regex(@"\$\((?<field>[\w-_\.]*)(?<replace>(?:\:(?<name>[^:=\)]+)=(?<value>[^:\)]*))+)?\)");
+
+        /// <summary>
+        /// Matches a c-sharp style format specifier in a string "{0,5:n}". The identifier may be any numeric set of characters.  The groups 
+        /// returned will be "field", "suffix", "width", and "format".  Used with StringUtils.Transform() you can provide your own String.Format().
+        /// </summary>
+        public static readonly Regex FormatSpecifier = new Regex(@"(?<!{){(?<field>\d+)(?<suffix>(?:,(?<width>-?\d+))?(?:\:(?<format>[^}{]+))?)}");
+
+        /// <summary>
+        /// Matches a c-sharp style format specifier in a string "{Name-0,5:n}" with some additional changes. Used with StringUtils.Transform() you 
+        /// can provide your own String.Format().  The groups returned will be the following:
+        /// "field" - An identifier may contain any alpha-numeric or one of these special characters: ('_', '-', or '.')
+        /// "suffix" - Everything after the identifer and before the closing brace '}'
+        /// "width" - The width part of the format is a number after a ',' and before ':'
+        /// "format" - Everything after the the ':' and before the closing '}', note: escapes }} are not supported.
+        /// </summary>
+        public static readonly Regex FormatNameSpecifier = new Regex(@"(?<!{){(?<field>[\w-_\.]+)(?<suffix>(?:,(?<width>-?\d+))?(?:\:(?<format>[^}{]+))?)}");
+
+        /// <summary>
 		/// Matches a guid in the common forms used with the string constructor
 		/// of the System.Guid type:
 		///  "ca761232ed4211cebacd00aa0057b223" 

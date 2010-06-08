@@ -45,10 +45,13 @@ namespace CSharpTest.Net.SslTunnel
 
 		private IDisposable MakeRedirect(TunnelListener config)
 		{
-			return new TcpRedirector(
-				MakeListener(config.IpEndpoint, config.Port, config),
-				MakeSender(config.Target)
-				).Start();
+            TcpRedirector redir = new TcpRedirector(
+                MakeListener(config.IpEndpoint, config.Port, config),
+                MakeSender(config.Target)
+                );
+            redir.SetLogDirectory(config.MonitoringDirectory);
+            redir.Start();
+            return redir;
 		}
 
 		private IDisposable MakeDemux(TunnelDemultiplexer config)
@@ -57,7 +60,8 @@ namespace CSharpTest.Net.SslTunnel
 				MakeListener(config.IpEndpoint, config.Port, config)
 				);
 			foreach(TunnelSenderFromPort target in config.Targets)
-				demux.Add(target.OriginalPort, MakeSender(target));
+                demux.Add(target.OriginalPort, MakeSender(target));
+            demux.SetLogDirectory(config.MonitoringDirectory);
 			return demux.Start();
 		}
 
@@ -65,7 +69,8 @@ namespace CSharpTest.Net.SslTunnel
 		{
 			TcpMultiplexer mux = new TcpMultiplexer(MakeSender(config.Target));
 			foreach (AddPort addport in config.Ports)
-				mux.Add(MakeListener(config.IpEndpoint, addport.Port, config));
+                mux.Add(MakeListener(config.IpEndpoint, addport.Port, config));
+            mux.SetLogDirectory(config.MonitoringDirectory);
 			return mux.Start();
 		}
 

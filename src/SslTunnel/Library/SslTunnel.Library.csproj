@@ -42,6 +42,7 @@
     <Compile Include="..\..\Shared\Configuration.cs">
       <Link>Configuration.cs</Link>
     </Compile>
+    <Compile Include="BinaryLogging.cs" />
     <Compile Include="RunConfig.cs" />
     <Compile Include="SslCertValidator.cs" />
     <Compile Include="TcpDemultiplexer.cs" />

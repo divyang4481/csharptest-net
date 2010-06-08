@@ -50,7 +50,8 @@ namespace CSharpTest.Net.CSBuild.Configuration
         [XmlElement("log", typeof(LogFileOutput))]
 		[XmlElement("xml", typeof(XmlFileOutput))]
 		[XmlElement("framework", typeof(TargetFramework))]
-        [XmlElement("output", typeof(BuildOutput))]
+		[XmlElement("output", typeof(BuildOutput))]
+		[XmlElement("property", typeof(BuildProperty))]
         [XmlElement("intermediateFiles", typeof(BuildIntermediateFiles))]
         [XmlElement("define", typeof(BuildDefineConst))]
 		[XmlElement("save-project-changes", typeof(SaveProjectChanges))]
@@ -79,6 +80,7 @@ namespace CSharpTest.Net.CSBuild.Configuration
         public IEnumerable<RemoveProjects> RemoveProjects { get { return FindAll<RemoveProjects>(); } }
         public IEnumerable<ReferenceFolder> ReferenceFolders { get { return FindAll<ReferenceFolder>(); } }
         public BuildDefineConst[] DefineConstants { get { return FindAll<BuildDefineConst>(); } }
+		public BuildProperty[] BuildProperties { get { return FindAll<BuildProperty>(); } }
         public LogFileOutput TextLog { get { return FindOne<LogFileOutput>(); } }
         public XmlFileOutput XmlLog { get { return FindOne<XmlFileOutput>(); } }
     }
@@ -121,6 +123,16 @@ namespace CSharpTest.Net.CSBuild.Configuration
 		public string Name { get { return "OutputPath"; } }
 		public override string AbsolutePath
 		{ get { return base.AbsolutePath.TrimEnd('\\') + "\\"; } }
+	}
+
+    [Serializable]
+	public class BuildProperty : BaseBuildSetting<string>
+	{
+		[XmlAttribute("name")]
+		public new string Name { get { return _name; } set { _name = value; } }
+
+		[XmlAttribute("global"), DefaultValue(false)]
+		public bool IsGlobal = false;
 	}
 
     [Serializable]

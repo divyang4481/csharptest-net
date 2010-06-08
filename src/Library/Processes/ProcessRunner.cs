@@ -104,8 +104,22 @@ namespace CSharpTest.Net.Processes
 			if (_stdIn != null && closeStdInput)
 			{ _stdIn.Close(); _stdIn = null; }
 
-			int waitTime = (int)Math.Min(int.MaxValue, timeout.TotalMilliseconds);
-			return WaitHandle.WaitAll(new WaitHandle[] { _mreErrorDone, _mreOutputDone, _mreProcessExit }, waitTime, false);
+            int waitTime = timeout.TotalMilliseconds >= int.MaxValue ? -1 : (int)timeout.TotalMilliseconds;
+            if (Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
+            {
+                DateTime started = DateTime.Now;
+                if (!_mreProcessExit.WaitOne(waitTime, false))
+                    return false;
+                waitTime = waitTime <= 0 ? waitTime : Math.Max(1, waitTime - (int)(DateTime.Now - started).TotalMilliseconds);
+                if (!_mreErrorDone.WaitOne(waitTime, false))
+                    return false;
+                waitTime = waitTime <= 0 ? waitTime : Math.Max(1, waitTime - (int)(DateTime.Now - started).TotalMilliseconds);
+                if (!_mreOutputDone.WaitOne(waitTime, false))
+                    return false;
+                return true;
+            }
+            else
+    			return WaitHandle.WaitAll(new WaitHandle[] { _mreErrorDone, _mreOutputDone, _mreProcessExit }, waitTime, false);
 		}
 
 		/// <summary> Returns true if this instance is running a process </summary>

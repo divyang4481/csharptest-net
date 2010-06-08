@@ -50,6 +50,7 @@ XCOPY /D /R /Y Depend\* .\bin
 %MSBUILD% /nologo /t:Build /v:Minimal SslTunnel\Server\SslTunnel.Server.csproj
 %MSBUILD% /nologo /t:Build /v:Minimal SslTunnel\Test\SslTunnel.Test.csproj
 %MSBUILD% /nologo /t:Build /v:Minimal SslTunnel\Server\SslCert.csproj
+%MSBUILD% /nologo /t:Build /v:Minimal Web\XhtmlValidate\XhtmlValidate.csproj
 
 goto exit
 

@@ -58,6 +58,12 @@ namespace CSharpTest.Net.CSBuild.BuildTasks
                 if (values.Length == 2)
 					engine.Properties.SetValue(values[0], values[1]);
             }
+			foreach (BuildProperty prop in _config.Options.GlobalProperties)
+				engine.Properties.SetValue(prop.Name, Environment.ExpandEnvironmentVariables(prop.Value));
+			foreach (BuildProperty prop in _target.BuildProperties)
+				if (prop.IsGlobal)
+					engine.Properties.SetValue(prop.Name, Environment.ExpandEnvironmentVariables(prop.Value));
+
 
             Log.Info("CSBuild {0} {1} - Runtime={2}, Configuration={3}, Platform={4}",
                 targetName.ToLower(), _target.GroupName.ToLower(), engine.Framework.ToString().Insert(2,"."),
@@ -82,7 +88,11 @@ namespace CSharpTest.Net.CSBuild.BuildTasks
 				errors += new DefineConstants(defines.ToArray()).Perform(engine);
 
 			//Project configuration
-			if(_target.TargetFramework != null)
+			foreach (BuildProperty property in _target.BuildProperties)
+				if(!property.IsGlobal)
+					errors += new SetProjectProperty(property.Name, Environment.ExpandEnvironmentVariables(property.Value)).Perform(engine);
+
+			if (_target.TargetFramework != null)
 				errors += new SetProjectProperty(MSProp.TargetFrameworkVersion, _target.TargetFramework.Version.ToString().Insert(2, ".")).Perform(engine);
 			if(_target.OutputPath != null)
 				errors += new SetProjectPathProperty(MSProp.OutputPath, _target.OutputPath.AbsolutePath).Perform(engine);

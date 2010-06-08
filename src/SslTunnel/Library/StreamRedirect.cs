@@ -30,10 +30,14 @@ namespace CSharpTest.Net.SslTunnel
 
 		ManualResetEvent _closed;
 		IAsyncResult _result;
+        BinaryLogWrite _logger;
 
-		public StreamRedirect(Stream from, Stream to, string connInfo)
+        public delegate void BinaryLogWrite(byte[] bytes, int length);
+
+        public StreamRedirect(Stream from, Stream to, string connInfo)
 		{
-			_from = from;
+            _logger = null;
+            _from = from;
 			_to = to;
 			_connectionInfo = connInfo;
 
@@ -42,6 +46,12 @@ namespace CSharpTest.Net.SslTunnel
 			_buffer = new byte[BUFF_SIZE];
 			_result = _from.BeginRead(_buffer, 0, _buffer.Length, OnRead, null);
 		}
+
+        public StreamRedirect(Stream from, Stream to, string connInfo, BinaryLogWrite logger)
+            : this(from, to, connInfo)
+        {
+            _logger = logger;
+        }
 
 		void OnRead(IAsyncResult ar)
 		{
@@ -56,8 +66,11 @@ namespace CSharpTest.Net.SslTunnel
 					if(Log.IsVerboseEnabled) 
 						Log.Verbose("Forwarding {0} bytes from {1}", count, _connectionInfo);
 
+                    if (_logger != null)
+                        _logger(buffer, count);
+
 					_to.Write(buffer, 0, count);
-					_result = _from.BeginRead(_buffer, 0, _buffer.Length, OnRead, null);
+                    _result = _from.BeginRead(_buffer, 0, _buffer.Length, OnRead, null);
 				}
 				else
 					Close();

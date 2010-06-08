@@ -15,15 +15,18 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.IO;
 
 namespace CSharpTest.Net.SslTunnel
 {
 	public abstract class TcpForwardingBase : IDisposable
 	{
-		readonly List<TcpServer> _servers;
+        private string _logDirectory;
+        readonly List<TcpServer> _servers;
 
 		protected TcpForwardingBase()
 		{
+            _logDirectory = null;
 			_servers = new List<TcpServer>();
 		}
 
@@ -32,6 +35,13 @@ namespace CSharpTest.Net.SslTunnel
 		{
 			AddServer(server);
 		}
+
+        public void SetLogDirectory(string directory)
+        {
+            if (!String.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+                throw new DirectoryNotFoundException(String.Format("The directory '{0}' does not exist.", directory));
+            _logDirectory = directory;
+        }
 
 		protected void AddServer(TcpServer server)
 		{
@@ -71,6 +81,7 @@ namespace CSharpTest.Net.SslTunnel
 			try
 			{
 				using (TcpClient client = OnConnectTarget(args))
+                using (BinaryLogging logging = new BinaryLogging(_logDirectory, args.RemoteEndPoint, args.LocalEndPoint))
 				{
 					client.Connect();
 					connectionInfo = String.Format("{0} => {1}", args.RemoteEndPoint, client.Client.RemoteEndPoint);
@@ -78,8 +89,8 @@ namespace CSharpTest.Net.SslTunnel
 
 					OnConnectionEstablished(args, client);
 
-					StreamRedirect recv = new StreamRedirect(args.Stream, client.Stream, connectionInfo);
-					StreamRedirect send = new StreamRedirect(client.Stream, args.Stream, revConnectionInfo);
+                    StreamRedirect recv = new StreamRedirect(args.Stream, client.Stream, connectionInfo, logging.FromServer);
+                    StreamRedirect send = new StreamRedirect(client.Stream, args.Stream, revConnectionInfo, logging.FromClient);
 
 					Log.Verbose("Streaming from {0}", connectionInfo);
 					WaitHandle.WaitAny(new WaitHandle[] { send.WaitClosed, recv.WaitClosed }, -1, false);

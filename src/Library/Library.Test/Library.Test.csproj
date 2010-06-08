@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{097601FB-7E62-47DA-8E48-B56C9AD5DF20}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -19,6 +19,7 @@
     <ErrorReport>none</ErrorReport>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
     <WarningLevel>4</WarningLevel>
+    <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <Optimize>False</Optimize>
@@ -34,6 +35,7 @@
     <Reference Include="nunit.framework" />
     <Reference Include="System" />
     <Reference Include="System.configuration" />
+    <Reference Include="System.Data" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.XML" />
   </ItemGroup>
@@ -41,25 +43,51 @@
     <Compile Include="..\..\Shared\ArgumentList.cs">
       <Link>ArgumentList.cs</Link>
     </Compile>
+    <Compile Include="TestHashDerivedBytes.cs" />
+    <Compile Include="TestCsvReader.cs" />
+    <Compile Include="TestHtmlParser.cs" />
+    <Compile Include="TestPassword.cs" />
+    <Compile Include="TestPasswordHash.cs" />
+    <Compile Include="TestAsciiEncoding.cs" />
+    <Compile Include="TestBinaryComparer.cs" />
     <Compile Include="TestCloning.cs" />
     <Compile Include="TestCmdInterpreter.cs" />
     <Compile Include="TestDelegates.cs">
     </Compile>
+    <Compile Include="TestDisposingList.cs" />
     <Compile Include="TestEncryption.cs" />
+    <Compile Include="TestEquatable.cs" />
     <Compile Include="TestFileUtils.cs" />
+    <Compile Include="TestHash.cs" />
+    <Compile Include="TestIOStreamUtils.cs" />
     <Compile Include="TestOrdinalList.cs" />
     <Compile Include="TestProcessRunner.cs" />
     <Compile Include="TestPropertySerializer.cs" />
     <Compile Include="TestPropertyType.cs" />
     <Compile Include="TestPropertyValue.cs" />
     <Compile Include="TestReadOnlyList.cs" />
+    <Compile Include="TestReplaceFile.cs" />
+    <Compile Include="TestRSACrypto.cs" />
+    <Compile Include="TestSalt.cs" />
+    <Compile Include="TestSecureString.cs" />
+    <Compile Include="TestSegmentedStream.cs" />
     <Compile Include="TestSerializers.cs" />
     <Compile Include="TestSetList.cs" />
     <Compile Include="TestStorage.cs" />
+    <Compile Include="TestStreams.cs" />
     <Compile Include="TestStringConvert.cs" />
     <Compile Include="TestStringUtils.cs" />
+    <Compile Include="TestTempFiles.cs" />
     <Compile Include="TestUserSettings.cs" />
+    <Compile Include="TestWhirlpoolHash.cs" />
     <Compile Include="TestWin32Window.cs" />
+    <Compile Include="TestXhtmlValid.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\roktesting.pfx" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\roktesting.cer" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
