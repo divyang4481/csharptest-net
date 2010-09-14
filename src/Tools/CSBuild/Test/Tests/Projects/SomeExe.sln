@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SomeExe", "SomeExe.csproj", "{B1F52752-C051-4814-AE54-AB10C7D95B8A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SomeWinExe", "SomeWinExe.csproj", "{72549166-9E66-422C-8F06-0481096AF91E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SomeLibrary", "SomeLibrary.csproj", "{7E199924-C8ED-41DD-9A6F-9ABA55286FA8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B1F52752-C051-4814-AE54-AB10C7D95B8A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1F52752-C051-4814-AE54-AB10C7D95B8A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72549166-9E66-422C-8F06-0481096AF91E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72549166-9E66-422C-8F06-0481096AF91E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E199924-C8ED-41DD-9A6F-9ABA55286FA8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E199924-C8ED-41DD-9A6F-9ABA55286FA8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
