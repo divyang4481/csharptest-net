@@ -14,6 +14,7 @@
 #endregion
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using NUnit.Framework;
 using System.IO;
 
@@ -108,6 +109,24 @@ namespace CSharpTest.Net.Shared.Test
 			Assert.AreEqual(prefix + "   Error -    at Void Test()", _lastTrace);
 
 			Log.Close();
+		}
+
+		private delegate void debug_write(string fmt, params object[] args);
+
+		[Test]
+		public void TestDebugWrite()
+		{
+			string prefix = String.Format("{0}: {1:D2}", this.GetType().FullName, System.Threading.Thread.CurrentThread.ManagedThreadId);
+			_lastTrace = null;
+			Log.Debug("Test {0}", "DEBUG ONLY");
+#if DEBUG
+			Assert.AreEqual(prefix + " Verbose - Test DEBUG ONLY   at Void TestDebugWrite()", _lastTrace);
+#else
+			Assert.IsNull(_lastTrace);
+#endif
+			debug_write debug = (debug_write)Delegate.CreateDelegate(typeof(debug_write), typeof(Log), "Debug", false, true);
+			debug("Test {0}", "DEBUG");
+			Assert.AreEqual(prefix + " Verbose - Test DEBUG   at Void TestDebugWrite()", _lastTrace);
 		}
 
         [Test]

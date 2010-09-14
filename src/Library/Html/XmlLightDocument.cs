@@ -66,6 +66,15 @@ namespace CSharpTest.Net.Html
                 e.WriteXml(wtr);
         }
 
+		/// <summary>
+		/// Writes the re-constructed document while attempting to preserve formatting
+		/// </summary>
+		public override void WriteUnformatted(TextWriter wtr)
+		{
+			foreach (XmlLightElement e in Children)
+				e.WriteUnformatted(wtr);
+		}
+
 		/// <summary> Begins the processing of an xml input </summary>
 		public virtual void StartDocument()
 		{
@@ -74,23 +83,24 @@ namespace CSharpTest.Net.Html
 		}
 
 		/// <summary> Begins the processing of an xml tag </summary>
-		public virtual void StartTag(string tagName, bool selfClosed, string unparsedTag, IEnumerable<XmlLightAttribute> attributes)
+		public virtual void StartTag(XmlTagInfo tag)
 		{
 			XmlLightElement parent = _parserStack.Peek();
-			XmlLightElement e = new XmlLightElement(parent, selfClosed, tagName, unparsedTag, attributes);
+			XmlLightElement e = new XmlLightElement(parent, tag);
 
 			if (Root == null && _parserStack.Count == 1)
 				Root = e;
-			if (selfClosed == false)
+			if (tag.SelfClosed == false)
 				_parserStack.Push(e);
 		}
 
 		/// <summary> Ends the processing of an xml tag </summary>
-		public virtual void EndTag(string tagName)
+		public virtual void EndTag(XmlTagInfo tag)
 		{
 			XmlLightElement e = _parserStack.Pop();
-			if (e.TagName != tagName)
-				throw new XmlException(String.Format("Incorrect tag closed '</{0}>', expected '</{1}>'", tagName, e.TagName));
+			if (e.TagName != tag.FullName)
+				throw new XmlException(String.Format("Incorrect tag closed '</{0}>', expected '</{1}>'", tag.FullName, e.TagName));
+			e.ClosingTagWhitespace = tag.EndingWhitespace;
 		}
 
 		/// <summary> Encountered text or whitespace in the document </summary>

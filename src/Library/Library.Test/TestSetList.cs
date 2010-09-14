@@ -13,6 +13,8 @@
  */
 #endregion
 using System;
+using System.Diagnostics;
+using CSharpTest.Net.Bases;
 using NUnit.Framework;
 using System.Collections.Generic;
 using CSharpTest.Net.Collections;
@@ -26,7 +28,41 @@ namespace CSharpTest.Net.Library.Test
 	[Category("TestSetList")]
 	public partial class TestSetList
 	{
-        [Test]
+		[Test, Explicit]
+		public void BenchmarkTest()
+		{
+			this.TestBasics();
+			this.TestICollection();
+			this.TestIList();
+			this.TestIntersectUnion();
+			this.TestSubsets();
+
+			long temp = 0;
+			int repeat = 10;
+			for (int i = 0; i < repeat; i++)
+			{
+				Stopwatch sw = new Stopwatch();
+				sw.Start();
+
+				for (int i2 = 0; i2 < 10000; i2++)
+				{
+					this.TestBasics();
+					this.TestICollection();
+					this.TestIList();
+					this.TestIntersectUnion();
+					this.TestSubsets();
+				}
+
+				sw.Stop();
+				Console.Error.WriteLine("Benchmark: {0}", sw.ElapsedMilliseconds);
+				temp += sw.ElapsedMilliseconds;
+			}
+
+			Console.Error.WriteLine("Average over {0}: {1}", repeat, temp / repeat);
+		}
+
+
+		[Test]
         public void TestBasics()
         {
             SetList<int> list = new SetList<int>();
@@ -77,6 +113,48 @@ namespace CSharpTest.Net.Library.Test
             Assert.AreEqual(5, tmp[0]);
             Assert.AreEqual(10, tmp[1]);
         }
+
+		class MyValue : Comparable<MyValue>
+		{
+			public MyValue(int value) { Value = value; }
+			public readonly int Value;
+			public override int CompareTo(MyValue other) { return Value.CompareTo(other.Value); }
+			protected override int HashCode { get { return Value.GetHashCode(); } }
+		}
+
+		[Test]
+		public void TestReplaceOne()
+		{
+			MyValue one = new MyValue(1);
+			MyValue two = new MyValue(2);
+			SetList<MyValue> set = new SetList<MyValue>();
+			set.Add(one);
+			set.Add(two);
+
+			Assert.IsTrue(Object.ReferenceEquals(one, set[0]));
+			Assert.IsTrue(set.Replace(new MyValue(1)));
+			Assert.IsFalse(Object.ReferenceEquals(one, set[0]));
+
+			Assert.AreEqual(2, set.Count);
+			Assert.IsFalse(set.Replace(new MyValue(3))); //not replaced, then added
+			Assert.AreEqual(3, set.Count);
+		}
+
+		[Test]
+		public void TestReplaceAll()
+		{
+			MyValue one = new MyValue(1);
+			MyValue two = new MyValue(2);
+			SetList<MyValue> set = new SetList<MyValue>();
+			set.Add(one);
+			set.Add(two);
+
+			Assert.AreEqual(2, set.Count);
+			Assert.IsTrue(Object.ReferenceEquals(one, set[0]));
+			Assert.IsTrue(set.ReplaceAll(new MyValue[] { new MyValue(1), new MyValue(3) }));
+			Assert.IsFalse(Object.ReferenceEquals(one, set[0]));
+			Assert.AreEqual(3, set.Count);
+		}
 
         [Test]
         public void TestICollection()

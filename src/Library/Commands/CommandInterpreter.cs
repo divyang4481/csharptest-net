@@ -295,7 +295,11 @@ namespace CSharpTest.Net.Commands
 		protected virtual void OnError(Exception error)
 		{
 			Trace.TraceError(error.ToString());
-			Console.Error.WriteLine(error is ApplicationException ? error.Message : error.ToString());
+			if(error is OperationCanceledException || error is QuitException)
+			{/* Silent */}
+			else
+				Console.Error.WriteLine(error is ApplicationException ? error.Message : error.ToString());
+
 			if (ErrorLevel == 0)
 				ErrorLevel = 1;
 		}

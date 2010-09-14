@@ -9,13 +9,13 @@
     <OutputType>Library</OutputType>
     <RootNamespace>CSharpTest.Net.Library.Test</RootNamespace>
     <AssemblyName>CSharpTest.Net.Library.Test</AssemblyName>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <OutputPath>..\..\bin\</OutputPath>
     <IntermediateOutputPath>$(OutputPath)obj\$(AssemblyName)\</IntermediateOutputPath>
     <DocumentationFile Condition="'$(OutputType)' == 'Library'">$(OutputPath)$(AssemblyName).xml</DocumentationFile>
     <DebugSymbols>True</DebugSymbols>
     <DebugType>pdbonly</DebugType>
-    <DefineConstants>NET20;TRACE</DefineConstants>
+    <DefineConstants>NET35;TRACE</DefineConstants>
     <ErrorReport>none</ErrorReport>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
     <WarningLevel>4</WarningLevel>
@@ -39,10 +39,14 @@
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.XML" />
   </ItemGroup>
+  <ItemGroup Condition="'$(TargetFrameworkVersion)' == 'v3.5'">
+    <Reference Include="System.Core" />
+  </ItemGroup>
   <ItemGroup>
     <Compile Include="..\..\Shared\ArgumentList.cs">
       <Link>ArgumentList.cs</Link>
     </Compile>
+    <Compile Include="TestDisposable.cs" />
     <Compile Include="TestHashDerivedBytes.cs" />
     <Compile Include="TestCsvReader.cs" />
     <Compile Include="TestHtmlParser.cs" />
@@ -68,7 +72,9 @@
     <Compile Include="TestReadOnlyList.cs" />
     <Compile Include="TestReplaceFile.cs" />
     <Compile Include="TestRSACrypto.cs" />
+    <Compile Include="TestRwLocking.cs" />
     <Compile Include="TestSalt.cs" />
+    <Compile Include="TestScriptRunner.cs" />
     <Compile Include="TestSecureString.cs" />
     <Compile Include="TestSegmentedStream.cs" />
     <Compile Include="TestSerializers.cs" />
@@ -78,6 +84,7 @@
     <Compile Include="TestStringConvert.cs" />
     <Compile Include="TestStringUtils.cs" />
     <Compile Include="TestTempFiles.cs" />
+    <Compile Include="TestTimeoutAction.cs" />
     <Compile Include="TestUserSettings.cs" />
     <Compile Include="TestWhirlpoolHash.cs" />
     <Compile Include="TestWin32Window.cs" />

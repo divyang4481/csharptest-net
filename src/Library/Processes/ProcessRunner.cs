@@ -22,13 +22,13 @@ using CSharpTest.Net.Utils;
 
 namespace CSharpTest.Net.Processes
 {
-	/// <summary>
+    /// <summary>
 	/// Creates/Spawns a process with the standard error/out/in all mapped.  Subscribe to
 	/// the OutputReceived event prior to start/run to listen to the program output, write
 	/// to the StandardInput for input.
 	/// </summary>
-	public class ProcessRunner
-	{
+	public class ProcessRunner : IRunner
+    {
 		private static readonly string[] EmptyArgList = new string[0];
 
 		private readonly ManualResetEvent _mreProcessExit = new ManualResetEvent(true);
@@ -41,6 +41,7 @@ namespace CSharpTest.Net.Processes
 		private event ProcessOutputEventHandler _outputReceived;
 		private event ProcessExitedEventHandler _processExited;
 
+		private bool _isRunning;
 		private volatile int _exitCode;
 		private Process _running;
 		private TextWriter _stdIn;
@@ -55,9 +56,16 @@ namespace CSharpTest.Net.Processes
 			_executable = Utils.FileUtils.FindFullPath(Check.NotEmpty(executable));
 			_arguments = args == null ? EmptyArgList : args;
 
+			_isRunning = false;
 			_exitCode = 0;
 			_running = null;
 			_stdIn = null;
+		}
+
+		/// <summary> Returns a debug-view string of process/arguments to execute </summary>
+		public override string ToString()
+		{
+			return String.Format("{0} {1}", _executable, ArgumentList.Join(_arguments));
 		}
 
 		/// <summary> Notifies caller of writes to the std::err or std::out </summary>
@@ -83,11 +91,17 @@ namespace CSharpTest.Net.Processes
 		/// <summary> Kills the process if it is still running </summary>
 		public void Kill()
 		{
-			if (IsRunning)
+			int attempt = 3;
+			while (attempt-- >= 0 && _isRunning && !WaitForExit(TimeSpan.Zero, false))
 			{
 				try { if (_running != null && !_running.HasExited) _running.Kill(); }
-				catch (System.InvalidOperationException) { }
+				catch (System.InvalidOperationException) { break; }
 			}
+
+			TryRaiseExitedEvent(_mreErrorDone);
+			TryRaiseExitedEvent(_mreOutputDone);
+			TryRaiseExitedEvent(_mreProcessExit);
+			_isRunning = false;
 		}
 
 		/// <summary> Closes std::in and waits for the process to exit </summary>
@@ -107,23 +121,21 @@ namespace CSharpTest.Net.Processes
             int waitTime = timeout.TotalMilliseconds >= int.MaxValue ? -1 : (int)timeout.TotalMilliseconds;
             if (Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
             {
-                DateTime started = DateTime.Now;
                 if (!_mreProcessExit.WaitOne(waitTime, false))
                     return false;
-                waitTime = waitTime <= 0 ? waitTime : Math.Max(1, waitTime - (int)(DateTime.Now - started).TotalMilliseconds);
                 if (!_mreErrorDone.WaitOne(waitTime, false))
                     return false;
-                waitTime = waitTime <= 0 ? waitTime : Math.Max(1, waitTime - (int)(DateTime.Now - started).TotalMilliseconds);
                 if (!_mreOutputDone.WaitOne(waitTime, false))
                     return false;
                 return true;
             }
-            else
-    			return WaitHandle.WaitAll(new WaitHandle[] { _mreErrorDone, _mreOutputDone, _mreProcessExit }, waitTime, false);
+
+			bool exited = WaitHandle.WaitAll(new WaitHandle[] { _mreErrorDone, _mreOutputDone, _mreProcessExit }, waitTime, false);
+			return exited;
 		}
 
 		/// <summary> Returns true if this instance is running a process </summary>
-		public bool IsRunning { get { return !WaitForExit(TimeSpan.FromTicks(0), false); } }
+		public bool IsRunning { get { return _isRunning && !WaitForExit(TimeSpan.Zero, false); } }
 
 		#region Run, Start, & Overloads
 		/// <summary> Runs the process and returns the exit code. </summary>
@@ -190,6 +202,7 @@ namespace CSharpTest.Net.Processes
 		{
 			if (IsRunning)
 				throw new InvalidOperationException("The running process must first exit.");
+			_isRunning = true;
 
 			_mreProcessExit.Reset();
 			_mreOutputDone.Reset();
@@ -260,8 +273,12 @@ namespace CSharpTest.Net.Processes
 						}
 					}
 
-					if (isComplete && handler != null)
-						handler(this, new ProcessExitedEventArgs(_exitCode));
+					if (isComplete)
+					{
+						_isRunning = false;
+						if (handler != null)
+							handler(this, new ProcessExitedEventArgs(_exitCode));
+					}
 				}
 			}
 			finally

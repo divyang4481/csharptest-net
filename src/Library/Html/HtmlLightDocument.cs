@@ -87,17 +87,17 @@ namespace CSharpTest.Net.Html
         }
 
 		/// <summary> </summary>
-		public override void StartTag(string tagName, bool selfClosed, string unparsedTag, IEnumerable<XmlLightAttribute> attributes)
+		public override void StartTag(XmlTagInfo tag)
 		{
-			if (_nonClosedTags.Contains(tagName))
-				selfClosed = true;
+			if (_nonClosedTags.Contains(tag.FullName))
+				tag.SelfClosed = true;
 
 			XmlLightElement parent = _parserStack.Peek();
 			List<string> allowedParents;
 
-			if (_nonNestingTags.Contains(tagName) && StringComparer.OrdinalIgnoreCase.Equals(parent.TagName, tagName))
+			if (_nonNestingTags.Contains(tag.FullName) && StringComparer.OrdinalIgnoreCase.Equals(parent.TagName, tag.FullName))
 				_parserStack.Pop();
-			else if( _htmlHeirarchy.TryGetValue(tagName, out allowedParents))
+			else if (_htmlHeirarchy.TryGetValue(tag.FullName, out allowedParents))
 			{
 				int depth = 0;
 				XmlLightElement[] stack = _parserStack.ToArray();
@@ -108,33 +108,43 @@ namespace CSharpTest.Net.Html
 					for (; depth > 0; depth--)
 						_parserStack.Pop();
 				else
-					StartTag(allowedParents[0], false, String.Empty, new XmlLightAttribute[0]);
+					StartTag(new XmlTagInfo(allowedParents[0], false));
 			}
 
-			base.StartTag(tagName, selfClosed, unparsedTag, attributes);
+			base.StartTag(tag);
 		}
 
 		/// <summary> </summary>
-		public override void EndTag(string tagName)
+		public override void EndTag(XmlTagInfo tag)
 		{
-			if (_nonClosedTags.Contains(tagName))
+			if (_nonClosedTags.Contains(tag.FullName))
 				return;
 
-			XmlLightElement[] stack = _parserStack.ToArray();
-			if (stack[0].TagName == tagName)
+			XmlLightElement closed = null;
+			try
 			{
-				_parserStack.Pop();
-				return;
-			}
+				XmlLightElement[] stack = _parserStack.ToArray();
+				if (stack[0].TagName == tag.FullName)
+				{
+					closed = _parserStack.Pop();
+					return;
+				}
 
-			//closes any tags left open in these elements
-			bool found = false;
-			for( int i=0; !found && i < stack.Length; i++ )
-				found = found || StringComparer.OrdinalIgnoreCase.Equals(stack[i].TagName, tagName);
-			
-			XmlLightElement parent;
-			while (found && StringComparer.OrdinalIgnoreCase.Equals((parent = _parserStack.Pop()).TagName, tagName) == false)
-			{ }
+				//closes any tags left open in these elements
+				bool found = false;
+				for (int i = 0; !found && i < stack.Length; i++)
+					found = found || StringComparer.OrdinalIgnoreCase.Equals(stack[i].TagName, tag.FullName);
+
+				while (found &&
+				       StringComparer.OrdinalIgnoreCase.Equals((closed = _parserStack.Pop()).TagName, tag.FullName) == false)
+				{
+				}
+			}
+			finally
+			{
+				if(closed != null && StringComparer.OrdinalIgnoreCase.Equals(closed.TagName, tag.FullName))
+					closed.ClosingTagWhitespace = tag.EndingWhitespace;
+			}
 		}
 
 		/// <summary> Ends the processing of an xml input </summary>

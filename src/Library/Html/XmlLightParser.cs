@@ -39,7 +39,7 @@ namespace CSharpTest.Net.Html
 (?:(?<close>/)?(?<tag>" + NameToken + @")
     # Attribute matching format:
     (?<attr>\s+{0})*
-\s*(?<closed>/)?)
+(?<wsattrend>\s*)(?<closed>/)?)
 |# match special :
 (?:\!(?:
     # match comments :
@@ -114,6 +114,8 @@ namespace CSharpTest.Net.Html
         /// </summary>
         public static void Parse(string content, Regex parserExp, IXmlLightReader reader)
         {
+        	XmlTagInfo tagInfo;
+
             int pos = 0;
 			reader.StartDocument();
 
@@ -127,15 +129,21 @@ namespace CSharpTest.Net.Html
 
 				if (tag.Success)
 				{
-					string tagName = tag.Value;
+					tagInfo.UnparsedTag = element.Value;
+					tagInfo.FullName = tag.Value;
+					tagInfo.SelfClosed = element.Groups["closed"].Success;
+					tagInfo.EndingWhitespace = element.Groups["wsattrend"].Value;
+					
+
 					if (element.Groups["close"].Success)
 					{
-						reader.EndTag(tagName);
+						tagInfo.Attributes = XmlLightAttribute.EmptyList;
+						reader.EndTag(tagInfo);
 					}
 					else
 					{
-						bool isclosed = element.Groups["closed"].Success;
-						reader.StartTag(tagName, isclosed, element.Value, AttributeReader(element));
+						tagInfo.Attributes = AttributeReader(element);
+						reader.StartTag(tagInfo);
 					}
 				}
 				else
@@ -173,35 +181,52 @@ namespace CSharpTest.Net.Html
 		private static IEnumerable<XmlLightAttribute> AttributeReader(Match element)
 		{
 			XmlLightAttribute attr;
+			CaptureCollection attrs = element.Groups["attr"].Captures;
 			CaptureCollection names = element.Groups["name"].Captures;
 			CaptureCollection values = element.Groups["value"].Captures;
 
-			if (element.Groups["name"].Success && names.Count == values.Count)//all attributes have values
+			string val = element.Value;
+
+			if (element.Groups["name"].Success && attrs.Count == names.Count && names.Count == values.Count)//all attributes have values
 			{
 				for (int i = 0; i < names.Count; i++)
 				{
+					attr.Ordinal = i;
 					attr.Name = names[i].Value;
 					attr.Value = values[i].Value;
+					attr.Before = attrs[i].Value.Substring(0, names[i].Index - attrs[i].Index);
+
+					char chQuote = element.Value[values[i].Index - element.Index - 1];
+					attr.Quote = chQuote == '"' ? XmlQuoteStyle.Double :
+								 chQuote == '\'' ? XmlQuoteStyle.Single :
+								 chQuote == '=' ? XmlQuoteStyle.Missing : XmlQuoteStyle.None;
 					yield return attr;
 				}
 			}
 			else //if some attributes are missing '=value', we have to reparse
 			{
-				CaptureCollection attrs = element.Groups["attr"].Captures;
 				for (int ix = 0; ix < attrs.Count; ix++)
 				{
-					string[] parts = attrs[ix].Value.Split(EQ, 2);
+					attr.Ordinal = ix;
 
+					string[] parts = attrs[ix].Value.Split(EQ, 2);
 					string name = parts[0].Trim();
 					string value = parts.Length == 1 ? (string)null : parts[1].Trim();
+					attr.Quote = value == null ? XmlQuoteStyle.None : XmlQuoteStyle.Missing;
 
 					if (value != null && value.Length > 0)
 					{
 						if (value[0] == '\'' || value[0] == '"')
+						{
+							attr.Quote = value[0] == '"' ? XmlQuoteStyle.Double : XmlQuoteStyle.Single;
 							value = value.Substring(1, value.Length - 2);
+						}
 					}
+
 					attr.Name = name;
 					attr.Value = value;
+					attr.Before = parts[0].Substring(0, parts[0].Length - name.Length);
+
 					yield return attr;
 				}
 			}

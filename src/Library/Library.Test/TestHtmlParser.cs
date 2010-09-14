@@ -37,7 +37,9 @@ namespace CSharpTest.Net.Library.Test
     <title>Document Title</title>
     <link href=""style.css"" > </link>
 </head><!-- comments included -->
-<body id=one class='cls'><![CDATA[ this 
+<body id=one 
+	class='cls'
+><![CDATA[ this 
 			is > cdata! ]]>
     <div id='two'>Hi</div>,</div>
 <tr><td><p class=1><p class=2><b><td><p><i></table>
@@ -50,6 +52,37 @@ namespace CSharpTest.Net.Library.Test
 			while (text.IndexOf("  ") >= 0)
 				text = text.Replace("  ", " ");
 			return text;
+		}
+
+		[Test]
+		public void TestDocUnformatted()
+		{
+			string docText = @"<doc
+				><some
+				one=""abc""
+				two='123' 
+				/></doc
+				>";
+
+			XmlLightDocument doc = new XmlLightDocument(docText);
+
+			string content;
+			TextWriter sw = new StringWriter();
+			doc.WriteUnformatted(sw);
+			content = sw.ToString();
+			Assert.AreEqual(docText, content);
+
+			using (MemoryStream ms = new MemoryStream())
+			{
+				sw = new StreamWriter(ms);
+				doc.WriteUnformatted(sw);
+
+				sw.Flush();
+				ms.Position = 0;
+				StreamReader sr = new StreamReader(ms);
+				content = sr.ReadToEnd();
+				Assert.AreEqual(docText, content);
+			}
 		}
 
 		[Test]
@@ -224,6 +257,19 @@ namespace CSharpTest.Net.Library.Test
             Assert.AreEqual("bar", xml.Root.Attributes["foo"]);
         }
 
+		[Test]
+		public void TestAttributes()
+		{
+			string xml = "<root id='a'></root>";
+			XmlLightDocument doc = new XmlLightDocument(xml);
+			Assert.AreEqual("root", doc.Root.LocalName);
+			Assert.AreEqual(1, doc.Root.Attributes.Count);
+			Assert.IsTrue(doc.Root.Attributes.GetEnumerator().MoveNext());
+			Assert.IsTrue(((System.Collections.IEnumerable)doc.Root.Attributes).GetEnumerator().MoveNext());
+			Assert.IsTrue(doc.Root.Attributes.Remove("id"));
+			Assert.AreEqual(0, doc.Root.Attributes.Count);
+		}
+
 		[Test, Explicit]
 		public void RunPerfTests()
 		{
@@ -276,9 +322,9 @@ namespace CSharpTest.Net.Library.Test
 			public void AddInstruction(string instruction) { }
 			public void AddText(string content) { }
 			public void EndDocument() { }
-			public void EndTag(string fullName) { }
+			public void EndTag(XmlTagInfo tag) { }
 			public void StartDocument() { }
-			public void StartTag(string fullName, bool selfClosed, string unparsedTag, IEnumerable<XmlLightAttribute> attributes) { }
+			public void StartTag(XmlTagInfo tag) { }
 		}
 
         [Test, ExpectedException(typeof(System.Xml.XmlException))]

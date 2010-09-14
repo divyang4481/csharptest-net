@@ -14,7 +14,6 @@
 #endregion
 using System;
 using System.IO;
-using System.Collections.Generic;
 using System.Globalization;
 using CSharpTest.Net.Collections;
 using CSharpTest.Net.Utils;

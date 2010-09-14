@@ -74,6 +74,12 @@ namespace CSharpTest.Net.Shared.Test
 		}
 
 		[Test]
+		public void TestGuidNotEmpty()
+		{
+			Check.NotEmpty(Guid.NewGuid());
+		}
+
+		[Test]
 		public void TestInstanceNotNull()
 		{
 			Check.NotNull(new object());
@@ -350,6 +356,12 @@ namespace CSharpTest.Net.Shared.Test
         public void TestInRangeAboveMax()
         {
             Check.InRange(2, 1, 1);
-        }
+		}
+
+		[Test, ExpectedException(typeof(ArgumentOutOfRangeException))]
+		public void TestGuidIsEmpty()
+		{
+			Check.NotEmpty(Guid.Empty);
+		}
 	}
 }

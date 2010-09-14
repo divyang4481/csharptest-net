@@ -35,6 +35,49 @@ namespace CSharpTest.Net.IO
             return new TempFile(existingPath);
         }
         /// <summary>
+        /// Creates a temp file having the provided extension
+        /// </summary>
+        [DebuggerNonUserCode]
+        public static TempFile FromExtension(string extensionWithDot)
+        {
+            int attempt = 0;
+            while (true)
+            {
+                try
+                {
+                    string path = Path.GetTempFileName();
+                    if (File.Exists(path))
+                        File.Delete(path);
+                    path = path + extensionWithDot;
+                    File.Open(path, FileMode.CreateNew).Dispose();
+                    return new TempFile(path);
+                }
+                catch (IOException)
+                {
+                    if (++attempt < 10)
+                        continue;
+                    throw;
+                }
+            }
+        }
+        /// <summary>
+        /// Creates a temp file having a copy of the specified file
+        /// </summary>
+        public static TempFile FromCopy(string srcFileName)
+        {
+            TempFile temp = FromExtension(Path.GetExtension(srcFileName));
+            try
+            {
+                File.Copy(srcFileName, temp.TempPath, true);
+                return temp;
+            }
+            catch
+            {
+                temp.Dispose();
+                throw;
+            }
+        }
+        /// <summary>
         /// Safely delete the provided file name
         /// </summary>
         public static void Delete(string path)

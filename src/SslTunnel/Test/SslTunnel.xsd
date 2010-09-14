@@ -4,20 +4,20 @@
   <xs:complexType name="TunnelConfig">
     <xs:sequence>
       <xs:choice minOccurs="0" maxOccurs="unbounded">
-        <xs:element minOccurs="0" maxOccurs="1" name="demultiplexer" type="TunnelDemultiplexer" />
-        <xs:element minOccurs="0" maxOccurs="1" name="listener" type="TunnelListener" />
         <xs:element minOccurs="0" maxOccurs="1" name="multiplexer" type="TunnelMultiplexer" />
+        <xs:element minOccurs="0" maxOccurs="1" name="listener" type="TunnelListener" />
+        <xs:element minOccurs="0" maxOccurs="1" name="demultiplexer" type="TunnelDemultiplexer" />
       </xs:choice>
     </xs:sequence>
   </xs:complexType>
-  <xs:complexType name="TunnelDemultiplexer">
+  <xs:complexType name="TunnelMultiplexer">
     <xs:complexContent mixed="false">
       <xs:extension base="TunnelListenerBase">
         <xs:sequence>
-          <xs:element minOccurs="0" maxOccurs="unbounded" name="target" type="TunnelSenderFromPort" />
+          <xs:element minOccurs="0" maxOccurs="unbounded" name="add" type="AddPort" />
+          <xs:element minOccurs="0" maxOccurs="1" name="target" type="TunnelSender" />
         </xs:sequence>
         <xs:attribute name="ip" type="xs:string" />
-        <xs:attribute name="port" type="xs:int" use="required" />
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
@@ -43,19 +43,23 @@
       <xs:enumeration value="All" />
     </xs:restriction>
   </xs:simpleType>
-  <xs:complexType name="TunnelMultiplexer">
+  <xs:complexType name="TunnelDemultiplexer">
     <xs:complexContent mixed="false">
       <xs:extension base="TunnelListenerBase">
         <xs:sequence>
-          <xs:element minOccurs="0" maxOccurs="unbounded" name="add" type="AddPort" />
-          <xs:element minOccurs="0" maxOccurs="1" name="target" type="TunnelSender" />
+          <xs:element minOccurs="0" maxOccurs="unbounded" name="target" type="TunnelSenderFromPort" />
         </xs:sequence>
         <xs:attribute name="ip" type="xs:string" />
+        <xs:attribute name="port" type="xs:int" use="required" />
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
-  <xs:complexType name="AddPort">
-    <xs:attribute name="port" type="xs:int" use="required" />
+  <xs:complexType name="TunnelSenderFromPort">
+    <xs:complexContent mixed="false">
+      <xs:extension base="TunnelSender">
+        <xs:attribute name="forwardingPort" type="xs:int" use="required" />
+      </xs:extension>
+    </xs:complexContent>
   </xs:complexType>
   <xs:complexType name="TunnelSender">
     <xs:sequence>
@@ -67,13 +71,6 @@
     <xs:attribute name="clientCertPassword" type="xs:string" />
     <xs:attribute default="false" name="ssl" type="xs:boolean" />
   </xs:complexType>
-  <xs:complexType name="TunnelSenderFromPort">
-    <xs:complexContent mixed="false">
-      <xs:extension base="TunnelSender">
-        <xs:attribute name="forwardingPort" type="xs:int" use="required" />
-      </xs:extension>
-    </xs:complexContent>
-  </xs:complexType>
   <xs:complexType name="TunnelListener">
     <xs:complexContent mixed="false">
       <xs:extension base="TunnelListenerBase">
@@ -84,5 +81,8 @@
         <xs:attribute name="port" type="xs:int" use="required" />
       </xs:extension>
     </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="AddPort">
+    <xs:attribute name="port" type="xs:int" use="required" />
   </xs:complexType>
 </xs:schema>

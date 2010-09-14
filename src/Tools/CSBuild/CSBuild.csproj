@@ -10,13 +10,13 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>CSharpTest.Net.CSBuild</RootNamespace>
     <AssemblyName>CSBuild</AssemblyName>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>..\..\bin\</OutputPath>
-    <DefineConstants>NET20;TRACE</DefineConstants>
+    <DefineConstants>NET35;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -118,7 +118,7 @@
     <PostBuildEvent>"$(FrameworkSDKDir)bin\xsd.exe" /nologo /t:CSharpTest.Net.CSBuild.Configuration.CSBuildConfig /out:$(TargetDir) $(TargetPath)
 COPY /Y $(TargetDir)schema0.xsd $(ProjectDir)CSBuild.xsd
 COPY /Y $(TargetDir)Sample.config.xml $(TargetDir)CSBuild.config
-"$(FrameworkSDKDir)bin\sgen.exe" /nologo /force "/c: /platform:$(Platform)" /a:$(TargetPath) /o:$(TargetDir)
+REM "$(FrameworkSDKDir)bin\sgen.exe" /nologo /force "/c: /platform:$(Platform)" /a:$(TargetPath) /o:$(TargetDir)
 REM COPY /Y $(TargetDir)CSBuild.exe E:\Projects\rokserver\src\CsBuild.exe
 </PostBuildEvent>
   </PropertyGroup>

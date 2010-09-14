@@ -61,6 +61,18 @@ namespace CSharpTest.Net.Utils
         /// </summary>
         public static readonly Regex FormatNameSpecifier = new Regex(@"(?<!{){(?<field>[\w-_\.]+)(?<suffix>(?:,(?<width>-?\d+))?(?:\:(?<format>[^}{]+))?)}");
 
+		/// <summary>
+		/// Matches VisualStudio style error/warning format.  The groups returned are as follows:
+		/// path = The file path (due caution should be taken to ensure this is a file path)
+		/// line = The line number if any
+		/// pos = The line position if any
+		/// error = Was it tagged as an error?
+		/// warning = Was it tagged as a warning?
+		/// id = The error/warning id if provided
+		/// message = The remainder of the text line
+		/// </summary>
+		public static Regex VSErrorMessage = new Regex(@"(?imx-:^(?<path>(?:[a-z]\:)?(?:[\\/][^\:\\/]*?)*)(?:\((?<line>\d{1,10})(?:,(?<pos>\d{1,10}))?\))?:(?:\s*(?:(?<error>error)|(?<warning>warning))\s*(?<id>[^:]*):)?\s*(?<message>.*?)\s*$)");
+
         /// <summary>
 		/// Matches a guid in the common forms used with the string constructor
 		/// of the System.Guid type:

@@ -15,10 +15,10 @@
 using System;
 using System.Collections.Generic;
 
-#if NET20
-
 namespace CSharpTest.Net.Delegates
 {
+#if NET20
+
     //Note - 2.0 already defines Action<T>
 
     /// <summary> Encapsulates a method that takes no parameters and does not return a value. </summary>
@@ -29,6 +29,6 @@ namespace CSharpTest.Net.Delegates
     public delegate void Action<T1, T2, T3>(T1 arg1, T2 arg2, T3 arg3);
     /// <summary> Encapsulates a method that has four parameters and does not return a value. </summary>
     public delegate void Action<T1, T2, T3, T4>(T1 arg1, T2 arg2, T3 arg3, T4 arg4);
-}
 
 #endif
+}

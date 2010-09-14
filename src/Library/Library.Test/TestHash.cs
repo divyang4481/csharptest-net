@@ -131,5 +131,48 @@ namespace CSharpTest.Net.Library.Test
             Assert.AreEqual(hash.ToArray(), hash2.ToArray());
             Assert.IsFalse(hash != hash2);
         }
+
+		[Test]
+		public void TestHashStream()
+		{
+			Random r = new Random();
+			byte[][] test =
+			new byte[][]
+				{
+					new byte[300], 
+					new byte[500], 
+					new byte[1000], 
+				};
+			using(HashStream hs = new HashStream(new SHA256Managed()))
+			using(MemoryStream ms = new MemoryStream())
+			{
+				Assert.IsTrue(hs.CanWrite);
+				Assert.IsFalse(hs.CanRead);
+
+				foreach (byte[] bytes in test)
+				{
+					r.NextBytes(bytes);
+					ms.Write(bytes, 0, bytes.Length);
+					hs.Write(bytes, 0, bytes.Length);
+				}
+
+				Hash expect = Hash.SHA256(ms.ToArray());
+				Hash actual = hs.Close();
+
+				Assert.AreEqual(expect, actual);
+				Assert.AreEqual(expect.ToArray(), actual.ToArray());
+				Assert.AreEqual(expect.ToString(), actual.ToString());
+			}
+		}
+
+		[Test, ExpectedException(typeof(ObjectDisposedException))]
+		public void TestHashStreamDisposed()
+		{
+			using(HashStream hs = new HashStream(new SHA256Managed()))
+			{
+				hs.Close();
+				hs.Close(); //<- fails, already closed and/or disposed
+			}
+		}
     }
 }

@@ -10,16 +10,18 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>CSharpTest.Net</RootNamespace>
     <AssemblyName>CSharpTest.Net.Library</AssemblyName>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <OutputPath>..\bin\</OutputPath>
     <IntermediateOutputPath>$(OutputPath)obj\$(AssemblyName)\</IntermediateOutputPath>
     <DocumentationFile Condition="'$(OutputType)' == 'Library'">$(OutputPath)$(AssemblyName).xml</DocumentationFile>
     <DebugSymbols>True</DebugSymbols>
     <DebugType>pdbonly</DebugType>
-    <DefineConstants>NET20;TRACE</DefineConstants>
+    <DefineConstants>NET35;TRACE</DefineConstants>
     <ErrorReport>none</ErrorReport>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
     <WarningLevel>4</WarningLevel>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\keys\csharptest.net.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <Optimize>False</Optimize>
@@ -53,6 +55,7 @@
     <Compile Include="AppConfig\UserSettingsSubSection.cs" />
     <Compile Include="AppConfig\UserSettingsSubSectionCollection.cs" />
     <Compile Include="Bases\Comparable.cs" />
+    <Compile Include="Bases\Disposable.cs" />
     <Compile Include="Bases\Equatable.cs" />
     <Compile Include="Cloning\ClonableExtensions.cs" />
     <Compile Include="Cloning\MemberwiseClone.cs" />
@@ -61,6 +64,7 @@
     <Compile Include="Cloning\SerializerClone.cs" />
     <Compile Include="Collections\DisposingList.cs" />
     <Compile Include="Crypto\AsymmetricKey.cs" />
+    <Compile Include="Crypto\HashStream.cs" />
     <Compile Include="Crypto\IPasswordDerivedBytes.cs" />
     <Compile Include="Crypto\LocalHostKey.cs" />
     <Compile Include="Crypto\PBKDF2.cs" />
@@ -73,7 +77,9 @@
     <Compile Include="Crypto\UnicodeReader.cs" />
     <Compile Include="Crypto\WhirlpoolManaged.cs" />
     <Compile Include="Data\CsvReader.cs" />
+    <Compile Include="Delegates\TimeoutAction.cs" />
     <Compile Include="Html\HtmlLightDocument.cs" />
+    <Compile Include="Html\XmlLightAttributes.cs" />
     <Compile Include="Html\XmlLightDocument.cs" />
     <Compile Include="Html\XmlLightElement.cs" />
     <Compile Include="Html\XhtmlValidation.cs" />
@@ -115,14 +121,18 @@
     <Compile Include="IO\BaseStream.cs" />
     <Compile Include="IO\MarshallingStream.cs" />
     <Compile Include="IO\SegmentedMemoryStream.cs" />
+    <Compile Include="IO\TempDirectory.cs" />
     <Compile Include="IO\TransactFile.cs" />
     <Compile Include="IO\DisposingStream.cs" />
     <Compile Include="IO\IOStream.cs" />
     <Compile Include="IO\CombinedStream.cs" />
     <Compile Include="IO\NonClosingStream.cs" />
+    <Compile Include="Processes\IRunner.cs" />
     <Compile Include="Processes\ProcessExitedEventArgs.cs" />
     <Compile Include="Processes\ProcessOutputEventArgs.cs" />
     <Compile Include="Processes\ProcessRunner.cs" />
+    <Compile Include="Processes\ScriptEngine.cs" />
+    <Compile Include="Processes\ScriptRunner.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Reflection\ObjectSerializer.cs" />
     <Compile Include="Reflection\PropertySerializer.cs" />
@@ -132,6 +142,11 @@
     <Compile Include="Serialization\Storage.cs" />
     <Compile Include="Serialization\StorageClasses.cs" />
     <Compile Include="AppConfig\UserSettingsSection.cs" />
+    <Compile Include="Synchronization\ExclusiveLocking.cs" />
+    <Compile Include="Synchronization\IgnoreLocking.cs" />
+    <Compile Include="Synchronization\ILockStrategy.cs" />
+    <Compile Include="Synchronization\LockStrategyBase.cs" />
+    <Compile Include="Synchronization\ReadWriteLocking.cs" />
     <Compile Include="Utils\Constants.cs" />
     <Compile Include="Utils\FileUtils.cs" />
     <Compile Include="Utils\RegexPatterns.cs" />
@@ -147,6 +162,9 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\keys\csharptest.net.snk">
+      <Link>Properties\csharptest.net.snk</Link>
+    </None>
     <None Include="AppConfig\userSettings.xsd">
     </None>
     <EmbeddedResource Include="Html\Xhtml1_0\xhtml-lat1.ent" />

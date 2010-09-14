@@ -1,4 +1,4 @@
-﻿#region Copyright 2009 by Roger Knapp, Licensed under the Apache License, Version 2.0
+#region Copyright 2009 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,24 +13,16 @@
  */
 #endregion
 using System;
-using System.Collections.Generic;
-using CSharpTest.Net.CoverageReport.Reader;
+using System.Runtime.InteropServices;
 
-namespace CSharpTest.Net.CoverageReport.Model
+namespace CSharpTest.Net.CustomTool.Interfaces
 {
-	class NamespaceInfo : BaseInfo<ClassInfo>
+	[ComImport]
+	[Guid("6D5140C1-7436-11CE-8034-00AA006009FA")]
+	[InterfaceTypeAttribute(ComInterfaceType.InterfaceIsIUnknown)]
+	interface IOleServiceProvider
 	{
-		public NamespaceInfo(string name)
-			: base(name)
-		{ }
-
-		protected override ClassInfo MakeChild(string name)
-		{ return new ClassInfo(name); }
-
-		public override void Add(XmlData item)
-		{
-			base.Add(item);
-			this[item.Method.Class].Add(item);
-		}
+		[PreserveSig]
+		int QueryService([In]ref Guid guidService, [In]ref Guid riid, out IntPtr ppvObject);
 	}
 }

@@ -100,6 +100,8 @@ namespace CSharpTest.Net.Delegates
 		{
 			if (control == null) throw new ArgumentNullException("control");
 			_control = control.TopLevelControl;
+            if (_control == null)
+                _control = control;
 			if (handler == null) throw new ArgumentNullException("handler");
 			_delegate = handler;
 		}
@@ -111,8 +113,10 @@ namespace CSharpTest.Net.Delegates
 		public EventHandlerForControl(Control control, Delegate handler)
 		{
 			if (control == null) throw new ArgumentNullException("control");
-			_control = control.TopLevelControl;
-			if (handler == null) throw new ArgumentNullException("handler");
+            _control = control.TopLevelControl;
+            if (_control == null)
+                _control = control;
+            if (handler == null) throw new ArgumentNullException("handler");
 
 			//_delegate = handler.Convert<EventHandler<TEventArgs>>();
 			_delegate = handler as EventHandler<TEventArgs>;
@@ -198,7 +202,7 @@ namespace CSharpTest.Net.Delegates
 							if (invocation.MethodRunning)
 								complete = handle.WaitOne();//no need to continue polling once running
 							else
-								complete = handle.WaitOne(interval);
+								complete = handle.WaitOne(interval, false);
 						}
 
 						if (complete)

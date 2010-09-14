@@ -43,36 +43,44 @@ namespace CSharpTest.Net.Html
         ///<summary>Provides tag name assigned to processing instruction nodes in the heirarchy</summary>
         public static readonly string PROCESSING = "?";
 
-		/// <summary>
+    	/// <summary>
 		/// Creates a new xml element
 		/// </summary>
 		public XmlLightElement(XmlLightElement parent, string tagName)
 			: this(parent, false, tagName, String.Empty)
 		{ }
-        internal XmlLightElement(XmlLightElement parent, bool closed, string tagName, string tagContent)
-            : this(parent, closed, tagName, tagContent, null)
-        { }
-		internal XmlLightElement(XmlLightElement parent, bool closed, string tagName, string tagContent, IEnumerable<XmlLightAttribute> attrs)
+		internal XmlLightElement(XmlLightElement parent, bool closed, string tagName, string tagContent)
+			: this(parent, closed, tagName, String.Empty, tagContent, null)
+		{ }
+		internal XmlLightElement(XmlLightElement parent, XmlTagInfo tag)
+			: this(parent, tag.SelfClosed, tag.FullName, tag.EndingWhitespace, tag.UnparsedTag, tag.Attributes)
+		{ }
+		internal XmlLightElement(XmlLightElement parent, bool closed, string tagName, string closingWs, string tagContent, IEnumerable<XmlLightAttribute> attrs)
 		{
             this.OriginalTag = tagContent;
 			this.Parent = parent;
 			this.TagName = tagName;
-            this.IsEmpty = closed;
+			this.OpeningTagWhitespace = closingWs;
+			this.ClosingTagWhitespace = String.Empty;
+			this.IsEmpty = closed;
             this.IsSpecialTag = tagName == ROOT || tagName == TEXT || tagName == CDATA || tagName == COMMENT || tagName == CONTROL || tagName == PROCESSING;
 
 			if (parent != null)
 				parent.Children.Add(this);
 
-            if (!IsSpecialTag && attrs != null)
-            {
-				foreach (XmlLightAttribute a in attrs)
-					Attributes[a.Name] = HttpUtility.HtmlDecode(a.Value);
-            }
+			Attributes = new XmlLightAttributes(attrs ?? new XmlLightAttribute[0]);
         }
 
         /// <summary> Returns the tag name of this html element </summary>
 		public readonly string TagName;
-        /// <summary> Returns the text in it's original format </summary>
+		/// <summary> Whitespace appearing before the close of the start tag (&lt;div   &gt;) </summary>
+		public readonly string OpeningTagWhitespace;
+
+    	private string _closingWs;
+    	/// <summary> Whitespace appearing before the close of the end tag (&lt;/div   &gt;) </summary>
+    	public string ClosingTagWhitespace { get { return _closingWs; } internal set { _closingWs = value; } }
+
+    	/// <summary> Returns the text in it's original format </summary>
         public readonly string OriginalTag;
         /// <summary> Returns the value (if any) of this html element </summary>
         public string Value
@@ -175,8 +183,9 @@ namespace CSharpTest.Net.Html
 
 		/// <summary> Returns the children of this html element </summary>
         public readonly List<XmlLightElement> Children = new List<XmlLightElement>();
-        /// <summary> Returns the attributes of this html element </summary>
-		public readonly Dictionary<string, string> Attributes = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+    	/// <summary> Returns the attributes of this html element </summary>
+    	public readonly XmlLightAttributes Attributes;
 
         /// <summary> Returns the inner text of this html element </summary>
         public string InnerText { get { return NormalizeText(GetInnerText()); } }
@@ -283,8 +292,8 @@ namespace CSharpTest.Net.Html
 			}
 
 			wtr.WriteStartElement(this.TagName);
-			foreach (KeyValuePair<string, string> kv in Attributes)
-				wtr.WriteAttributeString(kv.Key, kv.Value);
+			foreach (XmlLightAttribute kv in Attributes.ToArray())
+				wtr.WriteAttributeString(kv.Name, HttpUtility.HtmlDecode(kv.Value));
 
 			foreach (XmlLightElement e in Children)
 				e.WriteXml(wtr);
@@ -308,6 +317,46 @@ namespace CSharpTest.Net.Html
 				WriteXml(xw);
 				xw.Flush();
 			}
+		}
+
+		/// <summary>
+		/// Writes the modified document in it's original formatting
+		/// </summary>
+		public virtual void WriteUnformatted(TextWriter wtr)
+		{
+			if (TagName == TEXT || TagName == CDATA || TagName == COMMENT || IsSpecialTag)
+			{
+				wtr.Write(OriginalTag);
+				return;
+			}
+
+			wtr.Write("<{0}", TagName);
+
+			foreach (XmlLightAttribute kv in Attributes.ToArray())
+			{
+				string quote = kv.Quote == XmlQuoteStyle.Double ? "\"" :
+					kv.Quote == XmlQuoteStyle.Single ? "'" :
+					String.Empty;
+				wtr.Write(kv.Before);
+				wtr.Write(kv.Name);
+				if (kv.Quote != XmlQuoteStyle.None || !String.IsNullOrEmpty(kv.Value))
+				{
+					wtr.Write('=');
+					wtr.Write(quote);
+					wtr.Write(kv.Value);
+					wtr.Write(quote);
+				}
+			}
+			wtr.Write(OpeningTagWhitespace);
+			if (IsEmpty && Children.Count == 0)
+				wtr.Write('/');
+			wtr.Write('>');
+
+			foreach (XmlLightElement e in Children)
+				e.WriteUnformatted(wtr);
+
+			if (!IsEmpty || Children.Count > 0)
+				wtr.Write("</{0}{1}>", TagName, ClosingTagWhitespace);
 		}
 
 		/// <summary>

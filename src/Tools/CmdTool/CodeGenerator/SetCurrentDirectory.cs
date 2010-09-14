@@ -1,4 +1,4 @@
-﻿#region Copyright 2009 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2009-2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,24 +13,22 @@
  */
 #endregion
 using System;
-using System.Collections.Generic;
-using CSharpTest.Net.CoverageReport.Reader;
 
-namespace CSharpTest.Net.CoverageReport.Model
+namespace CSharpTest.Net.CustomTool.CodeGenerator
 {
-	class ClassInfo : BaseInfo<MethodInfo>
+	class SetCurrentDirectory : IDisposable
 	{
-		public ClassInfo(string name)
-			: base(name)
-		{ }
+		private readonly string _envWorkingDir;
 
-		protected override MethodInfo MakeChild(string name)
-		{ return new MethodInfo(name); }
-
-		public override void Add(XmlData item)
+		public SetCurrentDirectory(string newPath)
 		{
-			base.Add(item);
-			this[item.Method.name].Add(item);
+			_envWorkingDir = Environment.CurrentDirectory;
+			Environment.CurrentDirectory = newPath;
+		}
+
+		public void Dispose()
+		{
+			Environment.CurrentDirectory = _envWorkingDir;
 		}
 	}
 }

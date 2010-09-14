@@ -31,11 +31,13 @@ namespace CSharpTest.Net.Library.Test
 		class a : ia 
 		{
 			string privateField = "a"; 
+			[System.ComponentModel.DisplayName("Prop A")]
 			public string PropertyA { get { return privateField; } set { privateField = value; } } 
 		}
 		class b : a, ib 
 		{ 
 			public ia publicField = new a();
+			[System.ComponentModel.DisplayName("Prop B")]
 			ia ib.PropertyB { get { return publicField; } set { publicField = value; } }
 			ia PrivateProperty { get { return publicField; } set { publicField = value; } } 
 		}
@@ -137,6 +139,15 @@ namespace CSharpTest.Net.Library.Test
 			pt.SetValue(classa, "world");
 			Assert.AreEqual("world", pt.GetValue(classa));
 			Assert.AreEqual("world", classa.PropertyA);
+		}
+		[Test]
+		public void TestPropertyTypeAttributes()
+		{
+			PropertyType pt = new PropertyType(typeof(a), "PropertyA");
+			Assert.IsTrue(pt.IsDefined(typeof(System.ComponentModel.DisplayNameAttribute), false));
+			Assert.AreEqual(1, pt.GetCustomAttributes(false).Length);
+			Assert.AreEqual(1, pt.GetCustomAttributes(typeof(System.ComponentModel.DisplayNameAttribute), false).Length);
+			Assert.AreEqual(0, pt.GetCustomAttributes(typeof(System.ComponentModel.DesignOnlyAttribute), false).Length);
 		}
 	}
 }

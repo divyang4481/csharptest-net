@@ -105,7 +105,18 @@ internal static partial class Check
         if (value == null) throw new ArgumentNullException();
         if (value.Length == 0) throw new ArgumentOutOfRangeException();
         return value;
-    }
+	}
+
+	/// <summary>
+	/// Verfies that the Guid is not empty.
+	/// throws ArgumentOutOfRangeException
+	/// </summary>
+	public static Guid NotEmpty(Guid value)
+	{
+		if (value == Guid.Empty)
+			throw new ArgumentOutOfRangeException();
+		return value;
+	}
 
     /// <summary>
     /// Verfies that the collection is not null and not empty and returns the collection.

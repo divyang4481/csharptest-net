@@ -14,7 +14,6 @@
 #endregion
 using System;
 using System.Collections.Generic;
-using CSharpTest.Net.Collections;
 
 namespace CSharpTest.Net.Cloning
 {

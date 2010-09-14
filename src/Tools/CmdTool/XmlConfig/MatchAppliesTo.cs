@@ -14,23 +14,16 @@
 #endregion
 using System;
 using System.Collections.Generic;
-using CSharpTest.Net.CoverageReport.Reader;
+using System.Xml.Serialization;
 
-namespace CSharpTest.Net.CoverageReport.Model
+namespace CSharpTest.Net.CustomTool.XmlConfig
 {
-	class MethodInfo : BaseInfo<LineInfo>
+	/// <summary> Specifies one or more directies where this match applies </summary>
+	[XmlRoot("applies-to")]
+	public sealed class MatchAppliesTo
 	{
-		public MethodInfo(string name)
-			: base(name)
-		{ }
-
-		protected override LineInfo MakeChild(string name)
-		{ return new LineInfo(name); }
-
-		public override void Add(XmlData item)
-		{
-			base.Add(item);
-			this[item.Method.name].Add(item);
-		}
+		/// <summary> the relative (to config file) or abs path the file must be contained within </summary>
+		[XmlAttribute("folder")]
+		public string FolderPath;
 	}
 }

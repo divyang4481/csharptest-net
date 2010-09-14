@@ -21,7 +21,7 @@ namespace CSharpTest.Net.Collections
 {
 	/// <summary> Represents an immutable collection of unique items that can be manipulated as a set, intersect/union/etc. </summary>
 	[System.Diagnostics.DebuggerDisplay("{ToArray()}")]
-    public sealed class SetList<T> : IList<T>, ICollection<T>, IEnumerable<T>, IList, ICollection, IEnumerable, ICloneable<SetList<T>>
+    public class SetList<T> : IList<T>, ICollection<T>, IEnumerable<T>, IList, ICollection, IEnumerable, ICloneable<SetList<T>>
 	{
 		private static SetList<T> __empty;
 		/// <summary> Provides an empty set </summary>
@@ -144,7 +144,35 @@ namespace CSharpTest.Net.Collections
             }
         }
 
-        /// <summary> Not supported, the list is sorted. </summary>
+		/// <summary> Adds or replaces an item in the collection, returns true if an entry was replaced </summary>
+		public bool Replace(T item)
+		{
+			int pos = _list.BinarySearch(item, _comparer);
+			if (pos < 0)
+				_list.Insert(~pos, item);
+			else
+				_list[pos] = item;
+
+			return pos >= 0;
+		}
+
+		/// <summary> Adds or replaces an item in the collection, returns true if any item was replaced </summary>
+		public bool ReplaceAll(IEnumerable<T> items)
+		{
+			bool exists = false;
+			foreach (T item in items)
+			{
+				int pos = _list.BinarySearch(item, _comparer);
+				exists |= pos >= 0;
+				if (pos < 0)
+					_list.Insert(~pos, item);
+				else
+					_list[pos] = item;
+			}
+			return exists;
+		}
+
+		/// <summary> Not supported, the list is sorted. </summary>
         void IList<T>.Insert(int index, T item)
         { throw new NotSupportedException(); }
 
@@ -396,7 +424,7 @@ namespace CSharpTest.Net.Collections
         /// <summary> Returns a shallow clone of this object </summary>
         public SetList<T> Clone()
         {
-            return new SetList<T>(Count, _list, _comparer);
+            return new SetList<T>(new List<T>(_list), _comparer);
         }
 
         object ICloneable.Clone()

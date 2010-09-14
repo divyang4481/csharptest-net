@@ -106,7 +106,9 @@ internal static partial class Log
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void Info(string format, params object[] args) { InternalWrite(TraceLevel.Info, format, args); }
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public static void Verbose(string format, params object[] args) { InternalWrite(TraceLevel.Verbose, format, args); }
+	public static void Verbose(string format, params object[] args) { InternalWrite(TraceLevel.Verbose, format, args); }
+	[MethodImpl(MethodImplOptions.NoInlining), Conditional("DEBUG")]
+	public static void Debug(string format, params object[] args) { InternalWrite(TraceLevel.Verbose, format, args); }
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void Write(string format, params object[] args) { InternalWrite(TraceLevel.Off, format, args); }
     [MethodImpl(MethodImplOptions.NoInlining)]

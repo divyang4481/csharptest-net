@@ -12,33 +12,14 @@
  * limitations under the License.
  */
 #endregion
+
 using System;
-using System.Collections.Generic;
-using CSharpTest.Net.CoverageReport.Reader;
 
-namespace CSharpTest.Net.CoverageReport.Model
+namespace CSharpTest.Net.CustomTool.CodeGenerator
 {
-	class LineInfo : BaseInfo<object>
+	internal interface ICodeGenerator
 	{
-		Dictionary<string, Dictionary<long, long>> _lineNumbers;
-
-		public LineInfo(string name)
-			: base(name)
-		{
-			_lineNumbers = new Dictionary<string, Dictionary<long, long>>();
-		}
-
-		protected override object MakeChild(string name)
-		{ throw new NotImplementedException(); }
-
-		public override void Add(XmlData item)
-		{
-			base.Add(item);
-			if (item.Seqpnt.document != null)
-			{
-				for (long line = item.Seqpnt.line; line <= item.Seqpnt.endline; line++)
-					_lineNumbers[item.Seqpnt.document][line]++;
-			}
-		}
+		void Generate(IGeneratorArguments input);
+		void EnumOutputFiles(IGeneratorArguments input, Action<string> outputFile);
 	}
 }

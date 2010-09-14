@@ -14,23 +14,14 @@
 #endregion
 using System;
 using System.Collections.Generic;
-using CSharpTest.Net.CoverageReport.Reader;
+using CSharpTest.Net.Utils;
+using CSharpTest.Net.CustomTool.XmlConfig;
 
-namespace CSharpTest.Net.CoverageReport.Model
+namespace CSharpTest.Net.CustomTool
 {
-	class ModuleInfo : BaseInfo<NamespaceInfo>
+	class Config : XmlConfiguration<CmdToolConfig>
 	{
-		public ModuleInfo(string name)
-			: base(name)
-		{ }
-
-		protected override NamespaceInfo MakeChild(string name)
-		{ return new NamespaceInfo(name); }
-
-		public override void Add(XmlData item)
-		{
-			base.Add(item);
-			this[item.Method.Namespace].Add(item);
-		}
+		public const string SCHEMA_NAME = "CmdTool.xsd";
+		public Config() : base(SCHEMA_NAME) { }
 	}
 }

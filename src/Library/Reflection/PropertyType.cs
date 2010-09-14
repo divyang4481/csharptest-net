@@ -21,7 +21,7 @@ namespace CSharpTest.Net.Reflection
 	/// <summary>
 	/// Allows reflection upon a property or field by name.
 	/// </summary>
-	public class PropertyType
+    public class PropertyType : ICustomAttributeProvider
 	{
 		private readonly Type _type;
 		private readonly MemberInfo _member;
@@ -123,5 +123,32 @@ namespace CSharpTest.Net.Reflection
 			else //if (_member is FieldInfo)
 				((FieldInfo)_member).SetValue(instance, value);
 		}
-	}
+
+	    /// <summary>
+	    /// Returns an array of all of the custom attributes defined on this member, excluding named 
+	    /// attributes, or an empty array if there are no custom attributes.
+	    /// </summary>
+	    public object[] GetCustomAttributes(bool inherit)
+        {
+	        return _member.GetCustomAttributes(inherit);
+        }
+
+	    /// <summary>
+	    /// Returns an array of custom attributes defined on this member, identified by type, or an
+	    /// empty array if there are no custom attributes of that type.
+	    /// </summary>
+	    public object[] GetCustomAttributes(Type attributeType, bool inherit)
+        {
+            return _member.GetCustomAttributes(attributeType, inherit);
+        }
+
+	    /// <summary>
+	    /// Indicates whether one or more instance of <paramref name="attributeType"/> is defined 
+	    /// on this member.
+	    /// </summary>
+	    public bool IsDefined(Type attributeType, bool inherit)
+        {
+            return _member.IsDefined(attributeType, inherit);
+        }
+    }
 }

@@ -68,6 +68,14 @@ namespace CSharpTest.Net.Library.Test
 		}
 
 		[Test]
+		public void TestToString()
+		{
+			ProcessRunner runner = new ProcessRunner("cmd.exe", "/c", "echo hi");
+			string target = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), @"cmd.exe");
+			Assert.AreEqual(target + " /c \"echo hi\"", runner.ToString());
+		}
+
+		[Test]
 		public void TestStdError()
 		{
 			ProcessRunner runner = new ProcessRunner("cmd.exe");
