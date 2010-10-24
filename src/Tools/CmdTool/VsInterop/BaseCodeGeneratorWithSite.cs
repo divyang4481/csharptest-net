@@ -1,4 +1,4 @@
-#region Copyright 2009 by Roger Knapp, Licensed under the Apache License, Version 2.0
+#region Copyright 2009-2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -202,7 +202,7 @@ namespace CSharpTest.Net.CustomTool.VsInterop
                                                       EnvDTE.vsTaskPriority.vsTaskPriorityMedium,
                                                       pane.Name, EnvDTE.vsTaskIcon.vsTaskIconCompile,
                                                       match.Groups["path"].Value, lineNo,
-                                                      match.Groups["message"].Value, false);
+                                                      match.Groups["message"].Value, true);
                             writeRaw = false;
                         }
                     }

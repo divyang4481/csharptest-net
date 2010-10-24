@@ -1,4 +1,4 @@
-﻿#region Copyright 2009 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2009-2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,6 +14,7 @@
 #endregion
 using System;
 using System.Collections.Generic;
+using CSharpTest.Net.Crypto;
 using NUnit.Framework;
 using CSharpTest.Net.Utils;
 
@@ -21,8 +22,7 @@ using CSharpTest.Net.Utils;
 namespace CSharpTest.Net.Library.Test
 {
 	[TestFixture]
-	[Category("TestStringUtils")]
-	public partial class TestStringUtils
+	public class TestStringUtils
 	{
 		[Test]
 		public void TestAlphaNumericOnly()

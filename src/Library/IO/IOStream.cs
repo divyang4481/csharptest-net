@@ -55,7 +55,7 @@ namespace CSharpTest.Net.IO
         public static void Read(Stream io, byte[] bytes, int length)
         {
             if (length != ReadChunk(io, bytes, length))
-                throw new IOException("Failed to read from input stream.");
+				throw new IOException(Resources.IOStreamFailedToRead);
         }
 
         /// <summary> Attempts to read the number of bytes specified and returns the actual count </summary>
@@ -104,7 +104,7 @@ namespace CSharpTest.Net.IO
                 using (Stream targetStream = replace.Create())
                 {
                     if (sourceStream.Length != IOStream.Compress(sourceStream, targetStream))
-                        throw new System.IO.IOException("Unable to compress file.");
+						throw new System.IO.IOException(Resources.IOStreamCompressionFailed);
                 }
 
                 sourceStream.Dispose();
@@ -129,7 +129,7 @@ namespace CSharpTest.Net.IO
                 using (Stream targetStream = replace.Create())
                     IOStream.Decompress(sourceStream, targetStream);
                 if (sourceStream.Length != sourceStream.Position)
-                    throw new System.IO.IOException("Unable to decompress file.");
+					throw new System.IO.IOException(Resources.IOStreamCompressionFailed);
 
                 sourceStream.Dispose();
                 replace.Commit();

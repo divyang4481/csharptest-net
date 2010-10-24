@@ -1,4 +1,4 @@
-﻿#region Copyright 2009 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2009-2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -43,9 +43,14 @@ namespace CSharpTest.Net.Reflection
 
 			BindingFlags baseFlags = BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy;
 			//see if we can find a property by this name
-			_member = _type.GetProperty(name, baseFlags | BindingFlags.GetProperty | BindingFlags.SetProperty);
-			if (_member == null)
-				_member = _type.GetField(name, baseFlags | BindingFlags.GetField | BindingFlags.SetField);
+			System.Type temp = _type;
+			while (temp != typeof(Object) && _member == null)
+			{
+				_member = temp.GetProperty(name, baseFlags | BindingFlags.GetProperty | BindingFlags.SetProperty);
+				if (_member == null)
+					_member = temp.GetField(name, baseFlags | BindingFlags.GetField | BindingFlags.SetField);
+                temp = temp.BaseType;
+			}
 			if (_member == null)
 				throw new System.MissingMemberException(_type.FullName, name);
 		}

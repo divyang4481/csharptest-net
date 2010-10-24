@@ -28,16 +28,37 @@ namespace CSharpTest.Net.Crypto
 		where THash : HMAC, new()
 	{
 		// Fields
-		private readonly THash _hashAlgo;
+        private readonly HMAC _hashAlgo;
 		private uint _iterations;
 		private byte[] _salt;
 		private int _block;
 
-		/// <summary>
-		/// Constructs the byte generation routine with the specified key, salt, and iteration count
-		/// </summary>
-		public HashDerivedBytes(THash algo, Stream password, Salt salt, int iterations)
-		{
+        #region Create() - Workaround for unpatched .Net 2.0
+        static HMAC Create()
+        {
+            if (typeof(THash) == typeof(global::System.Security.Cryptography.HMACSHA512))
+                return new HMAC<SHA512Managed>();
+            if (typeof(THash) == typeof(global::System.Security.Cryptography.HMACSHA384))
+                return new HMAC<SHA384Managed>();
+            return new THash();
+        }
+
+        class HMAC<T> : HMAC where T : HashAlgorithm, new()
+        {
+            public HMAC()
+            {
+                HashAlgorithm h = new T();
+                
+                HashName = typeof(T).Name.Replace("Managed", "");
+                HashSizeValue = h.HashSize;
+                BlockSizeValue = 128;
+                base.Key = Crypto.Salt.CreateBytes(Crypto.Salt.Size.b128);
+            }
+        }
+        #endregion
+
+        private HashDerivedBytes(HMAC algo, Stream password, Salt salt, int iterations)
+        {
 			_block = 1;
 			_hashAlgo = algo;
 			Check.Assert<ArgumentException>(_hashAlgo.CanReuseTransform);
@@ -47,19 +68,26 @@ namespace CSharpTest.Net.Crypto
 			_salt = salt.ToArray();
 			_iterations = (uint)Check.InRange(iterations, 1, int.MaxValue);
 		}
+
+        /// <summary>
+		/// Constructs the byte generation routine with the specified key, salt, and iteration count
+		/// </summary>
+		public HashDerivedBytes(THash algo, Stream password, Salt salt, int iterations)
+            : this((HMAC)algo, password, salt, iterations)
+		{ }
 		
 		/// <summary>
 		/// Constructs the byte generation routine with the specified key, salt, and iteration count
 		/// </summary>
 		public HashDerivedBytes(Stream password, Salt salt, int iterations)
-			: this(new THash(), password, salt, iterations)
+			: this(Create(), password, salt, iterations)
 		{ }
 
 		/// <summary>
 		/// Constructs the byte generation routine with the specified key, salt, and iteration count
 		/// </summary>
 		public HashDerivedBytes(bool clear, byte[] password, Salt salt, int iterations)
-			: this(new THash(), new MemoryStream(Check.NotEmpty(password), 0, password.Length, false, false), salt, iterations)
+            : this(Create(), new MemoryStream(Check.NotNull(password), 0, password.Length, false, false), salt, iterations)
 		{ 
             if (clear) Array.Clear(password, 0, password.Length);
 		}

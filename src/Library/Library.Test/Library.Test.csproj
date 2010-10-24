@@ -43,16 +43,16 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\..\Shared\ArgumentList.cs">
-      <Link>ArgumentList.cs</Link>
-    </Compile>
     <Compile Include="TestDisposable.cs" />
     <Compile Include="TestHashDerivedBytes.cs" />
     <Compile Include="TestCsvReader.cs" />
+    <Compile Include="TestHexEncoding.cs">
+    </Compile>
     <Compile Include="TestHtmlParser.cs" />
+    <Compile Include="TestModifiedRijndael.cs" />
     <Compile Include="TestPassword.cs" />
     <Compile Include="TestPasswordHash.cs" />
-    <Compile Include="TestAsciiEncoding.cs" />
+    <Compile Include="TestSafe64Encoding.cs" />
     <Compile Include="TestBinaryComparer.cs" />
     <Compile Include="TestCloning.cs" />
     <Compile Include="TestCmdInterpreter.cs" />

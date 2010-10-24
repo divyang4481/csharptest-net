@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.Security.Cryptography;
+using CSharpTest.Net.Formatting;
 
 namespace CSharpTest.Net.Crypto
 {
@@ -68,12 +69,37 @@ namespace CSharpTest.Net.Crypto
         /// <summary>
         /// Encrypts the encoded text and returns the base-64 encoded result
         /// </summary>
-        public string Encrypt(string text)
-        { return Convert.ToBase64String(this.Encrypt(Encoding.UTF8.GetBytes(text))); }
+        public string Encrypt(string text) { return Encrypt(text, ByteEncoding.Base64); }
+        /// <summary>
+        /// Encrypts the encoded text and returns the base-64 encoded result
+        /// </summary>
+        public string Encrypt(string text, ByteEncoding encoding)
+        {
+            try { return Check.NotNull(encoding).EncodeBytes(this.Encrypt(Encoding.UTF8.GetBytes(Check.NotNull(text)))); }
+            catch (InvalidOperationException) { throw; }
+            catch { throw CryptographicException(); }
+        }
         /// <summary>
         /// Decrypts the base-64 encoded bytes, decrypts the data and returns the string
         /// </summary>
-        public string Decrypt(string text)
-        { return Encoding.UTF8.GetString(this.Decrypt(Convert.FromBase64String(text))); }
+        public string Decrypt(string text) { return Decrypt(text, ByteEncoding.Base64); }
+        /// <summary>
+        /// Decrypts the base-64 encoded bytes, decrypts the data and returns the string
+        /// </summary>
+        public string Decrypt(string text, ByteEncoding encoding)
+        {
+            try { return Encoding.UTF8.GetString(this.Decrypt(Check.NotNull(encoding).DecodeBytes(Check.NotNull(text)))); }
+            catch (InvalidOperationException) { throw; }
+            catch { throw CryptographicException(); }
+        }
+
+        /// <summary>
+        /// Used to ensure generality in excpetions raised from cryptographic routines.
+        /// </summary>
+        /// <example>catch { throw CryptographicException(); }</example>
+        protected virtual Exception CryptographicException()
+        {
+            return new CryptographicException();
+        }
     }
 }

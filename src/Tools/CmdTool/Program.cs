@@ -149,15 +149,7 @@ namespace CSharpTest.Net.CustomTool
 				string itemPath = Path.Combine(Path.GetDirectoryName(p.FullFileName), item.Include);
 				if (File.Exists(itemPath))
 				{
-					string ns = p.GetEvaluatedProperty("RootNamespace");
-					string[] parts = item.Include.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-					for (int i = 0; i < parts.Length - 1; i++)
-						ns += '.' + parts[i];
-
-					if (item.HasMetadata("CustomToolNamespace"))
-						ns = item.GetMetadata("CustomToolNamespace");
-
-					GeneratorArguments args = new GeneratorArguments(itemPath, ns, p);
+					GeneratorArguments args = new GeneratorArguments(itemPath, item, p);
 					args.OutputMessage += OutputMessage;
 					try { func(args); }
 					catch { throw new OperationCanceledException(); }

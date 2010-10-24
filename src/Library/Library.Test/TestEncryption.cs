@@ -1,4 +1,4 @@
-﻿#region Copyright 2009 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2009-2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,6 +15,7 @@
 using System;
 using System.Text;
 using System.Collections.Generic;
+using CSharpTest.Net.Formatting;
 using NUnit.Framework;
 using CSharpTest.Net.Crypto;
 using System.IO;
@@ -107,7 +108,37 @@ namespace CSharpTest.Net.Library.Test
 			string esbyuser = Encryptor.Encrypt(svalue);
 			Assert.AreNotEqual(svalue, esbyuser);
 			Assert.AreEqual(svalue, Encryptor.Decrypt(esbyuser));
-		}
+        }
+
+        [Test]
+        public void TestEncryptDecryptStringBase64()
+        {
+            string svalue = TEST_PASSWORD;
+
+            string esbyuser = Encryptor.Encrypt(svalue, ByteEncoding.Base64);
+            Assert.AreNotEqual(svalue, esbyuser);
+            Assert.AreEqual(svalue, Encryptor.Decrypt(esbyuser, ByteEncoding.Base64));
+        }
+
+        [Test]
+        public void TestEncryptDecryptStringSafe64()
+        {
+            string svalue = TEST_PASSWORD;
+
+            string esbyuser = Encryptor.Encrypt(svalue, ByteEncoding.Safe64);
+            Assert.AreNotEqual(svalue, esbyuser);
+            Assert.AreEqual(svalue, Encryptor.Decrypt(esbyuser, ByteEncoding.Safe64));
+        }
+
+        [Test]
+        public void TestEncryptDecryptStringHex()
+        {
+            string svalue = TEST_PASSWORD;
+
+            string esbyuser = Encryptor.Encrypt(svalue, ByteEncoding.Hex);
+            Assert.AreNotEqual(svalue, esbyuser);
+            Assert.AreEqual(svalue, Encryptor.Decrypt(esbyuser, ByteEncoding.Hex));
+        }
 
 		[Test]
 		public void TestEncryptDecryptBytes()
@@ -173,7 +204,9 @@ namespace CSharpTest.Net.Library.Test
             Encryption.Passthrough.Dispose();//ignores
 
             Assert.AreEqual(value, Encryption.Passthrough.Encrypt(value));
+            Assert.AreEqual(value, Encryption.Passthrough.Encrypt(value, ByteEncoding.Hex));
             Assert.AreEqual(value, Encryption.Passthrough.Decrypt(value));
+            Assert.AreEqual(value, Encryption.Passthrough.Decrypt(value, ByteEncoding.Hex));
 
             byte[] bytes = Password.Encoding.GetBytes(value);
             Assert.AreEqual(bytes, Encryption.Passthrough.Encrypt(bytes));

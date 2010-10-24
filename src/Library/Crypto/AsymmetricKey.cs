@@ -45,50 +45,78 @@ namespace CSharpTest.Net.Crypto
         /// <summary>Encrypts a raw data block as a set of bytes</summary>
         public sealed override byte[] Encrypt(byte[] blob)
         {
-            using (MemoryStream ms = new MemoryStream())
+            try
             {
-                using (Stream io = Encrypt(new NonClosingStream(ms)))
-                    io.Write(blob, 0, blob.Length);
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    using (Stream io = Encrypt(new NonClosingStream(ms)))
+                        io.Write(blob, 0, blob.Length);
 
-                return ms.ToArray();
+                    return ms.ToArray();
+                }
             }
+            catch (InvalidOperationException) { throw; }
+            catch { throw CryptographicException(); }
         }
         /// <summary>Decrypts a raw data block as a set of bytes</summary>
         public sealed override byte[] Decrypt(byte[] blob)
         {
-            using (MemoryStream ms = new MemoryStream())
+            try
             {
-                using (Stream io = Decrypt(new MemoryStream(blob)))
-                    IOStream.CopyStream(io, ms);
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    using (Stream io = Decrypt(new MemoryStream(blob)))
+                        IOStream.CopyStream(io, ms);
 
-                return ms.ToArray();
+                    return ms.ToArray();
+                }
             }
+            catch (InvalidOperationException) { throw; }
+            catch { throw CryptographicException(); }
         }
         
         /// <summary> Wraps the stream with a cryptographic stream </summary>
         public sealed override Stream Encrypt(Stream stream)
         {
-            ICryptoTransform xform = new Encryptor(this, BlockSize, TransformSize);
-            return new DisposingStream(new CryptoStream(stream, xform, CryptoStreamMode.Write))
-                .WithDisposeOf(xform);
+            try
+            {
+                ICryptoTransform xform = new Encryptor(this, BlockSize, TransformSize);
+                return new DisposingStream(new CryptoStream(stream, xform, CryptoStreamMode.Write))
+                    .WithDisposeOf(xform);
+            }
+            catch (InvalidOperationException) { throw; }
+            catch { throw CryptographicException(); }
         }
 
         /// <summary> Wraps the stream with a cryptographic stream </summary>
         public sealed override Stream Decrypt(Stream stream)
         {
-            ICryptoTransform xform = new Decryptor(this, TransformSize, BlockSize);
-            return new DisposingStream(new CryptoStream(stream, xform, CryptoStreamMode.Read))
-                .WithDisposeOf(xform);
+            try
+            {
+                ICryptoTransform xform = new Decryptor(this, TransformSize, BlockSize);
+                return new DisposingStream(new CryptoStream(stream, xform, CryptoStreamMode.Read))
+                    .WithDisposeOf(xform);
+            }
+            catch (InvalidOperationException) { throw; }
+            catch { throw CryptographicException(); }
         }
 
 
         #region IBlockTransform Members
 
         byte[] IBlockTransform.EncryptBlock(byte[] blob)
-        { return this.EncryptBlock(blob); }
+        {
+            try { return this.EncryptBlock(blob); }
+            catch (InvalidOperationException) { throw; }
+            catch { throw CryptographicException(); }
+        }
 
         byte[] IBlockTransform.DecryptBlock(byte[] blob)
-        { return this.DecryptBlock(blob); }
+        {
+            try { return this.DecryptBlock(blob); }
+            catch (InvalidOperationException) { throw; }
+            catch { throw CryptographicException(); }
+        }
 
         #endregion
         class Encryptor : ICryptoTransform

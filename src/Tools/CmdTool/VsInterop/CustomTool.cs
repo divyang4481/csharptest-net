@@ -37,6 +37,11 @@ namespace CSharpTest.Net.CustomTool.VsInterop
 
 		protected override byte[] GenerateCode(string defaultNamespace, string inputFileName)
         {
+            if(!base.ProjectItem.ContainingProject.Saved)
+            {
+                //if (!String.IsNullOrEmpty(base.ProjectItem.ContainingProject.FileName))
+                    base.ProjectItem.ContainingProject.Save(String.Empty);
+            }
 		    byte[] resultBytes = null;
 
             BE.Project project = BE.Engine.GlobalEngine.GetLoadedProject(ProjectItem.ContainingProject.FullName);

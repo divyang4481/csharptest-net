@@ -15,8 +15,6 @@
 using System;
 using System.IO;
 using System.Xml;
-using System.Xml.Serialization;
-using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 
@@ -60,12 +58,6 @@ namespace CSharpTest.Net.Crypto
             if (key.PublicOnly)
                 return new RSAPublicKey(key);
             return new RSAPrivateKey(key);
-        }
-        /// <summary> Creates the key from the information provided </summary>
-        public static RSAPublicKey FromXml(XmlReader xrdr)
-        {
-            XmlSerializer xs = new XmlSerializer(typeof(RSAParameters));
-            return FromParameters((RSAParameters)xs.Deserialize(xrdr));
         }
         /// <summary> Creates the key from the information provided </summary>
         public static RSAPublicKey FromXml(string xml)
@@ -120,7 +112,7 @@ namespace CSharpTest.Net.Crypto
         /// <summary> Decrypts the given bytes </summary>
         protected override byte[] DecryptBlock(byte[] blob)
         {
-            Check.Assert<InvalidOperationException>(IsPrivateKey);
+            Check.Assert<InvalidOperationException>(Assert(IsPrivateKey));
             return RSAKey.Decrypt(blob, false);
         }
 
@@ -133,11 +125,29 @@ namespace CSharpTest.Net.Crypto
             return RSAKey.ExportParameters(IsPrivateKey);
         }
 
-        /// <summary> Returns the key information </summary>
-        public void ToXml(XmlWriter xml)
+        /// <summary> Creates the key from the information provided </summary>
+        public static RSAPublicKey FromXml(XmlReader xrdr)
         {
-            XmlSerializer xs = new XmlSerializer(typeof(RSAParameters));
-            xs.Serialize(xml, this.ExportParameters());
+            RSAParameters param = new RSAParameters();
+            while (xrdr.Read())
+            {
+                if (xrdr.NodeType == XmlNodeType.Element)
+                {
+                    if (xrdr.LocalName == "Modulus") param.Modulus = Convert.FromBase64String(xrdr.ReadElementString());
+                    if (xrdr.LocalName == "Exponent") param.Exponent = Convert.FromBase64String(xrdr.ReadElementString());
+                }
+            }
+            Check.Assert<FormatException>(param.Modulus != null && param.Exponent != null);
+            return FromParameters(param);
+        }
+        /// <summary> Returns the key information </summary>
+        public virtual void ToXml(XmlWriter xml)
+        {
+            RSAParameters param = ExportParameters();
+            xml.WriteStartElement("RSAKeyValue");
+            xml.WriteElementString("Modulus", Convert.ToBase64String(param.Modulus));
+            xml.WriteElementString("Exponent", Convert.ToBase64String(param.Exponent));
+            xml.WriteEndElement();
         }
 
         /// <summary> Returns the key information </summary>

@@ -1,4 +1,4 @@
-﻿#region Copyright 2008-2009 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2008-2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Security.Cryptography;
 using System.IO;
+using CSharpTest.Net.Formatting;
 using CSharpTest.Net.IO;
 
 namespace CSharpTest.Net.Crypto
@@ -51,10 +52,16 @@ namespace CSharpTest.Net.Crypto
             public string Encrypt(string text)
             { return text; }
 
+            public string Encrypt(string text, ByteEncoding encoding)
+            { return text; }
+
             public byte[] Decrypt(byte[] blob)
             { return blob; }
 
             public string Decrypt(string text)
+            { return text; }
+
+            public string Decrypt(string text, ByteEncoding encoding)
             { return text; }
         }
     }

@@ -13,14 +13,10 @@
  */
 #endregion
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Security;
 using System.Security.Cryptography;
 using System.IO;
 using CSharpTest.Net.IO;
-using CSharpTest.Net.Utils;
-using System.Runtime.CompilerServices;
 
 namespace CSharpTest.Net.Crypto
 {
@@ -113,45 +109,73 @@ namespace CSharpTest.Net.Crypto
         /// <summary> Encrypts the stream with the current password and salt </summary>
         public override Stream Encrypt(Stream stream)
         {
-            Salt salt = this.Salt;
-            stream.Write(salt.ToArray(), 0, salt.Length);
+            try
+            {
+                Salt salt = this.Salt;
+                stream.Write(salt.ToArray(), 0, salt.Length);
 
-            AESCryptoKey key = CreateKey();
-            return new DisposingStream(key.Encrypt(stream))
-                .WithDisposeOf(key);
+                AESCryptoKey key = CreateKey();
+                return new DisposingStream(key.Encrypt(stream))
+                    .WithDisposeOf(key);
+            }
+            catch (InvalidOperationException) { throw; }
+            catch { throw CryptographicException(); }
         }
         
         /// <summary> Decrypts the stream with the current password and salt </summary>
         public override Stream Decrypt(Stream stream)
-        { return Decrypt(stream, this.Salt.BitSize); }
+        {
+            try { return Decrypt(stream, this.Salt.BitSize); }
+            catch (InvalidOperationException) { throw; }
+            catch { throw CryptographicException(); }
+        }
 
         /// <summary> Decrypts the stream with the current password and salt </summary>
         public Stream Decrypt(Stream stream, Salt.Size szSaltSize)
         {
-            Salt salt = new Salt(IOStream.Read(stream, (int)szSaltSize / 8), false);
-            
-            AESCryptoKey key = CreateKey(salt);
-            return new DisposingStream(key.Decrypt(stream))
-                .WithDisposeOf(key);
+            try
+            {
+                Salt salt = new Salt(IOStream.Read(stream, (int)szSaltSize / 8), false);
+
+                AESCryptoKey key = CreateKey(salt);
+                return new DisposingStream(key.Decrypt(stream))
+                    .WithDisposeOf(key);
+            }
+            catch (InvalidOperationException) { throw; }
+            catch { throw CryptographicException(); }
         }
 
         /// <summary> Encrypts the bytes with the current password and salt </summary>
         public override byte[] Encrypt(byte[] blob)
         {
-            using (AESCryptoKey key = CreateKey())
-                return new SaltedData(Salt, key.Encrypt(blob)).ToArray();
+            try
+            {
+                using (AESCryptoKey key = CreateKey())
+                    return new SaltedData(Salt, key.Encrypt(blob)).ToArray();
+            }
+            catch (InvalidOperationException) { throw; }
+            catch { throw CryptographicException(); }
         }
 
         /// <summary> Decrypts the bytes with the current password and salt </summary>
         public override byte[] Decrypt(byte[] blob)
-        { return Decrypt(blob, this.Salt.BitSize); }
+        {
+            try { return Decrypt(blob, this.Salt.BitSize); }
+            catch (InvalidOperationException) { throw; }
+            catch { throw CryptographicException(); }
+        }
 
         /// <summary> Decrypts the bytes with the current password and salt </summary>
         public byte[] Decrypt(byte[] blob, Salt.Size szSaltSize)
         {
-            using(SaltedData data = new SaltedData(blob, szSaltSize))
+            try
+            {
+                using (SaltedData data = new SaltedData(blob, szSaltSize))
                 using (AESCryptoKey key = CreateKey(data.Salt))
                     return key.Decrypt(data.GetDataBytes());
+            }
+            catch (InvalidOperationException) { throw; }
+            catch { throw CryptographicException(); }
         }
     }
 }

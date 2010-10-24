@@ -1,4 +1,4 @@
-﻿#region Copyright 2009 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2009-2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using CSharpTest.Net.Formatting;
 
 namespace CSharpTest.Net.Crypto
 {
@@ -33,10 +34,14 @@ namespace CSharpTest.Net.Crypto
 		byte[] Encrypt(byte[] blob);
 		/// <summary>Encrypts a string and encodes the result in base-64 encoded text</summary>
 		string Encrypt(string text);
+		/// <summary>Encrypts a string and encodes the result in specified encoding format</summary>
+        string Encrypt(string text, ByteEncoding encoding);
 
 		/// <summary>Decrypts a raw data block as a set of bytes</summary>
 		byte[] Decrypt(byte[] blob);
 		/// <summary>Decrypts a string from base-64 encoded text</summary>
 		string Decrypt(string text);
+		/// <summary>Decrypts a string from the specified encoding format</summary>
+        string Decrypt(string text, ByteEncoding encoding);
 	}
 }

@@ -1,4 +1,18 @@
-﻿using System.Xml.Serialization;
+﻿#region Copyright 2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
+/* Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#endregion
+using System.Xml.Serialization;
 using CSharpTest.Net.Processes;
 
 namespace CSharpTest.Net.CustomTool.XmlConfig
@@ -6,6 +20,7 @@ namespace CSharpTest.Net.CustomTool.XmlConfig
     /// <summary> Defines an executable script </summary>
     public class GeneratorScript
     {
+        private string _text;
         /// <summary> The type of the script content </summary>
         [XmlAttribute("type")] 
         public ScriptEngine.Language Type;
@@ -16,7 +31,11 @@ namespace CSharpTest.Net.CustomTool.XmlConfig
 
         /// <summary> The script content </summary>
         [XmlText]
-        public string Text;
+        public string Text
+        {
+            get { return _text ?? string.Empty; }
+            set { _text = value; }
+        }
     }
 
 	/// <summary> Defines an executable script </summary>

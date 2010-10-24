@@ -22,6 +22,7 @@ namespace CSharpTest.Net.CustomTool.CodeGenerator
     {
         string Namespace { get; }
         string ClassName { get; }
+        string PseudoPath { get; }
         string InputPath { get; }
         string InputName { get; }
         string InputDir { get; }

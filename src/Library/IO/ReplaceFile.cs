@@ -119,7 +119,7 @@ namespace CSharpTest.Net.IO
             try
             {
                 if (!FileUtils.IsValidExtension(backupExtension))
-                    throw new ArgumentException(String.Format("Invalid file extension '{0}'.", backupExtension));
+                    throw new ArgumentException(Resources.InvalidFileExtension(backupExtension));
                 _backupExt = backupExtension;
             }
             catch

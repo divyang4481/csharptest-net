@@ -23,8 +23,8 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyCompany("Roger Knapp")]
 [assembly: AssemblyCopyright("Copyright 2009-2010 by Roger Knapp, Licensed under the Apache License, Version 2.0")]
 
-[assembly: AssemblyVersion("1.10.913.269")]
-[assembly: AssemblyFileVersion("1.10.913.269")]
+[assembly: AssemblyVersion("1.10.1024.336")]
+[assembly: AssemblyFileVersion("1.10.1024.336")]
 
 [assembly: ObfuscateAssembly(false)]
 [assembly: ComVisibleAttribute(false)]

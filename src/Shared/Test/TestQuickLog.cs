@@ -1,4 +1,4 @@
-﻿#region Copyright 2008 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2008-2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,7 +19,7 @@ using NUnit.Framework;
 using System.IO;
 
 #pragma warning disable 1591
-namespace CSharpTest.Net.Shared.Test
+namespace CSharpTest.Net.Utils.Test
 {
 	[TestFixture]
 	[Category("TestQuickLog")]

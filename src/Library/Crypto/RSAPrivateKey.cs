@@ -17,7 +17,6 @@ using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Xml;
-using System.Xml.Serialization;
 using System.IO;
 
 namespace CSharpTest.Net.Crypto
@@ -40,9 +39,6 @@ namespace CSharpTest.Net.Crypto
         /// <summary> Creates the key from the information provided </summary>
         public new static RSAPrivateKey FromBytes(byte[] bytes)
         { return (RSAPrivateKey)RSAPublicKey.FromBytes(bytes); }
-        /// <summary> Creates the key from the information provided </summary>
-        public new static RSAPrivateKey FromXml(XmlReader xrdr)
-        { return (RSAPrivateKey)RSAPublicKey.FromXml(xrdr); }
         /// <summary> Creates the key from the information provided </summary>
         public new static RSAPrivateKey FromXml(string xml)
         { return RSAPrivateKey.FromXml(new XmlTextReader(new StringReader(xml))); }
@@ -94,6 +90,46 @@ namespace CSharpTest.Net.Crypto
         {
             Check.IsEqual(true, cert.HasPrivateKey);
             return Check.IsAssignable<RSACryptoServiceProvider>(cert.PrivateKey);
+        }
+
+        /// <summary> Creates the key from the information provided </summary>
+        public new static RSAPrivateKey FromXml(XmlReader xrdr)
+        {
+            RSAParameters param = new RSAParameters();
+            while (xrdr.Read())
+            {
+                if (xrdr.NodeType == XmlNodeType.Element)
+                {
+                    if (xrdr.LocalName == "Modulus") param.Modulus = Convert.FromBase64String(xrdr.ReadElementString());
+                    if (xrdr.LocalName == "Exponent") param.Exponent = Convert.FromBase64String(xrdr.ReadElementString());
+                    if (xrdr.LocalName == "P") param.P = Convert.FromBase64String(xrdr.ReadElementString());
+                    if (xrdr.LocalName == "Q") param.Q = Convert.FromBase64String(xrdr.ReadElementString());
+                    if (xrdr.LocalName == "DP") param.DP = Convert.FromBase64String(xrdr.ReadElementString());
+                    if (xrdr.LocalName == "DQ") param.DQ = Convert.FromBase64String(xrdr.ReadElementString());
+                    if (xrdr.LocalName == "InverseQ") param.InverseQ = Convert.FromBase64String(xrdr.ReadElementString());
+                    if (xrdr.LocalName == "D") param.D = Convert.FromBase64String(xrdr.ReadElementString());
+                }
+            }
+            Check.Assert<FormatException>(param.Modulus != null && param.Exponent != null
+                 && param.P != null && param.Q != null && param.DP != null
+                 && param.DQ!= null && param.InverseQ != null && param.D != null);
+            return FromParameters(param);
+        }
+
+        /// <summary> Returns the key information </summary>
+        public override void ToXml(XmlWriter xml)
+        {
+            RSAParameters param = ExportParameters();
+            xml.WriteStartElement("RSAKeyValue");
+            xml.WriteElementString("Modulus", Convert.ToBase64String(param.Modulus));
+            xml.WriteElementString("Exponent", Convert.ToBase64String(param.Exponent));
+            xml.WriteElementString("P", Convert.ToBase64String(param.P));
+            xml.WriteElementString("Q", Convert.ToBase64String(param.Q));
+            xml.WriteElementString("DP", Convert.ToBase64String(param.DP));
+            xml.WriteElementString("DQ", Convert.ToBase64String(param.DQ));
+            xml.WriteElementString("InverseQ", Convert.ToBase64String(param.InverseQ));
+            xml.WriteElementString("D", Convert.ToBase64String(param.D));
+            xml.WriteEndElement();
         }
 
         /// <summary>

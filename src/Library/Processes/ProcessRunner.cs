@@ -1,4 +1,4 @@
-﻿#region Copyright 2009 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2009-2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -201,7 +201,8 @@ namespace CSharpTest.Net.Processes
 		private void InternalStart(params string[] arguments)
 		{
 			if (IsRunning)
-				throw new InvalidOperationException("The running process must first exit.");
+				throw new InvalidOperationException(Resources.ProcessRunnerAlreadyRunning);
+
 			_isRunning = true;
 
 			_mreProcessExit.Reset();

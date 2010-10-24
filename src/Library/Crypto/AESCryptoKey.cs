@@ -89,38 +89,58 @@ namespace CSharpTest.Net.Crypto
         /// <summary>Encrypts a stream of data</summary>
         public override Stream Encrypt(Stream stream)
         {
-            ICryptoTransform xform = Algorithm.CreateEncryptor();
-            return new DisposingStream(new CryptoStream(stream, xform, CryptoStreamMode.Write))
-                .WithDisposeOf(xform);
+            try
+            {
+                ICryptoTransform xform = Algorithm.CreateEncryptor();
+                return new DisposingStream(new CryptoStream(stream, xform, CryptoStreamMode.Write))
+                    .WithDisposeOf(xform);
+            }
+            catch (InvalidOperationException) { throw; }
+            catch { throw CryptographicException(); }
         }
         /// <summary> Decrypts a stream of data </summary>
         public override Stream Decrypt(Stream stream)
         {
-            ICryptoTransform xform = Algorithm.CreateDecryptor();
-            return new DisposingStream(new CryptoStream(stream, xform, CryptoStreamMode.Read))
-                .WithDisposeOf(xform);
+            try
+            {
+                ICryptoTransform xform = Algorithm.CreateDecryptor();
+                return new DisposingStream(new CryptoStream(stream, xform, CryptoStreamMode.Read))
+                    .WithDisposeOf(xform);
+            }
+            catch (InvalidOperationException) { throw; }
+            catch { throw CryptographicException(); }
         }
         /// <summary>Encrypts a raw data block as a set of bytes</summary>
         public override byte[] Encrypt(byte[] blob)
         {
-            using (MemoryStream ms = new MemoryStream())
+            try
             {
-                using (Stream io = Encrypt(new NonClosingStream(ms)))
-                    io.Write(blob, 0, blob.Length);
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    using (Stream io = Encrypt(new NonClosingStream(ms)))
+                        io.Write(blob, 0, blob.Length);
 
-                return ms.ToArray();
+                    return ms.ToArray();
+                }
             }
+            catch (InvalidOperationException) { throw; }
+            catch { throw CryptographicException(); }
         }
         /// <summary>Decrypts a raw data block as a set of bytes</summary>
         public override byte[] Decrypt(byte[] blob)
         {
-            using (MemoryStream ms = new MemoryStream())
+            try
             {
-                using (Stream io = Decrypt(new MemoryStream(blob)))
-                    IOStream.CopyStream(io, ms);
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    using (Stream io = Decrypt(new MemoryStream(blob)))
+                        IOStream.CopyStream(io, ms);
 
-                return ms.ToArray();
+                    return ms.ToArray();
+                }
             }
+            catch (InvalidOperationException) { throw; }
+            catch { throw CryptographicException(); }
         }
     }
 }

@@ -1,4 +1,4 @@
-#region Copyright 2008 by Roger Knapp, Licensed under the Apache License, Version 2.0
+#region Copyright 2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,7 +24,7 @@ namespace CSharpTest.Net.Utils
 	/// reference a library.
 	/// </summary>
 	[System.Diagnostics.DebuggerNonUserCode]
-	internal class ArgumentList : System.Collections.ObjectModel.KeyedCollection<string, ArgumentList.Item>
+    partial class ArgumentList : System.Collections.ObjectModel.KeyedCollection<string, ArgumentList.Item>
 	{
 		#region Static Configuration Options
 		static StringComparer _defaultCompare = StringComparer.OrdinalIgnoreCase;
@@ -32,7 +32,10 @@ namespace CSharpTest.Net.Utils
 		static char[] _delim = new char[] { ':', '=' };
 		static readonly string[] EmptyList = new string[0];
 
-		internal static StringComparer DefaultComparison
+        /// <summary>
+        /// Controls the default string comparer used for this class
+        /// </summary>
+        public static StringComparer DefaultComparison
 		{
 			get { return _defaultCompare; }
 			set
@@ -42,7 +45,10 @@ namespace CSharpTest.Net.Utils
 			}
 		}
 
-		internal static char[] PrefixChars
+        /// <summary>
+        /// Controls the allowable prefix characters that will preceed named arguments
+        /// </summary>
+        public static char[] PrefixChars
 		{
 			get { return (char[])_prefix.Clone(); }
 			set
@@ -51,8 +57,11 @@ namespace CSharpTest.Net.Utils
 				if (value.Length == 0) throw new ArgumentOutOfRangeException();
 				_prefix = (char[])value.Clone();
 			}
-		}
-		internal static char[] NameDelimeters
+        }
+        /// <summary>
+        /// Controls the allowable delimeter characters seperate argument names from values
+        /// </summary>
+        public static char[] NameDelimeters
 		{
 			get { return (char[])_delim.Clone(); }
 			set
@@ -68,7 +77,11 @@ namespace CSharpTest.Net.Utils
 		/// <summary>
 		/// Initializes a new instance of the ArgumentList class using the argument list provided
 		/// </summary>
-		public ArgumentList(params string[] arguments) : this(DefaultComparison, arguments) { }
+        public ArgumentList(params string[] arguments) : this(DefaultComparison, arguments) { }
+        /// <summary>
+        /// Initializes a new instance of the ArgumentList class using the argument list provided
+        /// and using the string comparer provided, by default this is case-insensitive
+        /// </summary>
 		public ArgumentList(StringComparer comparer, params string[] arguments)
 			: base(comparer, 0)
 		{
@@ -127,6 +140,9 @@ namespace CSharpTest.Net.Utils
 				item.Add(value);
 		}
 
+        /// <summary>
+        /// A string collection of all keys in the arguments
+        /// </summary>
 		public string[] Keys
 		{
 			get
@@ -259,10 +275,10 @@ namespace CSharpTest.Net.Utils
 		/// can be implicitly assigned to a string, or a string[] array
 		/// </summary>
 		[System.Diagnostics.DebuggerNonUserCode]
-		internal class Item : System.Collections.ObjectModel.Collection<string>
+		public class Item : System.Collections.ObjectModel.Collection<string>
 		{
-			protected readonly string _name;
-			protected readonly List<string> _values;
+			private readonly string _name;
+			private readonly List<string> _values;
 
 			/// <summary>
 			/// Constructs an item for the name and values provided.

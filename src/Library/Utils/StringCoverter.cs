@@ -1,4 +1,4 @@
-﻿#region Copyright 2009 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2009-2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -152,7 +152,7 @@ namespace CSharpTest.Net.Utils
 		{
 			IConvertToFromString cnvt;
 			if (!_converters.TryGetValue(Check.NotNull(value).GetType(), out cnvt))
-				throw new ArgumentOutOfRangeException(String.Format("The type {0} is not convertable to a string.", value.GetType()));
+				throw new ArgumentOutOfRangeException(Resources.StringConverterTryParse(value.GetType()));
 
 			return cnvt.ToString(value);
 		}
@@ -165,7 +165,7 @@ namespace CSharpTest.Net.Utils
 		{
 			IConvertToFromString cnvt;
 			if (!_converters.TryGetValue(typeof(TYPE), out cnvt))
-				throw new ArgumentOutOfRangeException(String.Format("The type {0} is not convertable to a string.", typeof(TYPE)));
+				throw new ArgumentOutOfRangeException(Resources.StringConverterTryParse(typeof(TYPE)));
 
 			return ((ConvertToFromString<TYPE>)cnvt).ToString(Check.NotNull(value));
 		}
@@ -197,7 +197,7 @@ namespace CSharpTest.Net.Utils
 
 			IConvertToFromString cnvt;
 			if (!_converters.TryGetValue(Check.NotNull(type), out cnvt))
-				throw new ArgumentOutOfRangeException(String.Format("The type {0} is not convertable from a string.", type));
+				throw new ArgumentOutOfRangeException(Resources.StringConverterTryParse(type));
 
 			return cnvt.TryParse(Check.NotNull(input), out value);
 		}
@@ -216,7 +216,7 @@ namespace CSharpTest.Net.Utils
 
 			IConvertToFromString cnvt;
 			if (!_converters.TryGetValue(typeof(TYPE), out cnvt))
-				throw new ArgumentOutOfRangeException(String.Format("The type {0} is not convertable from a string.", typeof(TYPE)));
+				throw new ArgumentOutOfRangeException(Resources.StringConverterTryParse(typeof(TYPE)));
 
 			return ((ConvertToFromString<TYPE>)cnvt).TryParse(Check.NotNull(input), out value);
 		}

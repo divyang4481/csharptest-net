@@ -58,7 +58,7 @@ namespace CSharpTest.Net.Library.Test
 	public class TestMD5DerivedBytes : TestPasswordDerivedBytes
 	{
 		protected override IPasswordDerivedBytes DerivedBytes(string input)
-		{ return new HashDerivedBytes<HMACMD5>(Password.Encoding.GetBytes(input), DefaultSalt, DefaultIterations); }
+		{ return new HashDerivedBytes<HMACMD5>(new HMACMD5(), new MemoryStream(Password.Encoding.GetBytes(input)), DefaultSalt, DefaultIterations); }
 	}
 	[TestFixture]
 	public class TestSHA1DerivedBytes : TestPasswordDerivedBytes

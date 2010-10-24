@@ -37,15 +37,6 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\..\Shared\ArgumentList.cs">
-      <Link>Shared\ArgumentList.cs</Link>
-    </Compile>
-    <Compile Include="..\..\Shared\Check.cs">
-      <Link>Shared\Check.cs</Link>
-    </Compile>
-    <Compile Include="..\..\Shared\FileList.cs">
-      <Link>Shared\FileList.cs</Link>
-    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

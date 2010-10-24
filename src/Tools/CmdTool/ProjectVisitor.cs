@@ -55,7 +55,7 @@ namespace CSharpTest.Net.CustomTool
 				}
 				catch (Exception ex)
 				{
-					Log.Warning("Unable to open project: {0}", file);
+					Console.Error.WriteLine("Unable to open project: {0}", file);
 					Log.Verbose(ex.ToString());
 				}
 

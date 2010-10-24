@@ -1,4 +1,4 @@
-﻿#region Copyright 2008 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,7 +22,7 @@ namespace CSharpTest.Net.Utils
 	/// A utility class for gathering files
 	/// </summary>
 	[System.Diagnostics.DebuggerNonUserCode]
-	internal class FileList : System.Collections.ObjectModel.KeyedCollection<string, FileInfo>
+	partial class FileList : System.Collections.ObjectModel.KeyedCollection<string, FileInfo>
 	{
 		bool _recurse = true;
 		bool _ignoreDirAttrs = false;
@@ -31,14 +31,14 @@ namespace CSharpTest.Net.Utils
 		/// <summary>
 		/// Creates an empty FileList
 		/// </summary>
-		internal FileList()
+		public FileList()
 		{ }
 
 		/// <summary>
 		/// Constructs a FileList containing the files specified or found within the directories
 		/// specified.  See Add(string) for more details.
 		/// </summary>
-		internal FileList(params string[] filesOrDirectories)
+        public FileList(params string[] filesOrDirectories)
 			: base(StringComparer.OrdinalIgnoreCase, 0)
 		{
 			Add(filesOrDirectories);
@@ -49,7 +49,7 @@ namespace CSharpTest.Net.Utils
 		/// specified.  See Add(string) for more details.  Files and directories that contain the 
 		/// attribtes defined in prohibitedAttributes will be ignored, use '0' for everything.
 		/// </summary>
-		internal FileList(FileAttributes prohibitedAttributes, params string[] filesOrDirectories)
+        public FileList(FileAttributes prohibitedAttributes, params string[] filesOrDirectories)
 			: base(StringComparer.OrdinalIgnoreCase, 0)
 		{
 			_prohibitAttrib = prohibitedAttributes;
@@ -59,7 +59,7 @@ namespace CSharpTest.Net.Utils
 		/// <summary>
 		/// Creates a list containing the specified FileInfo records.
 		/// </summary>
-		internal FileList(params FileInfo[] copyFrom)
+        public FileList(params FileInfo[] copyFrom)
 		{
 			if (copyFrom == null) throw new ArgumentNullException();
 			foreach (FileInfo finfo in copyFrom)
@@ -165,6 +165,9 @@ namespace CSharpTest.Net.Utils
 			return new List<FileInfo>(base.Items).ToArray();
 		}
 
+        /// <summary>
+        /// Converts all FileInfo elements into their fully-qualified file names
+        /// </summary>
 		public string[] GetFileNames()
 		{
 			if (base.Dictionary == null) 
@@ -216,7 +219,10 @@ namespace CSharpTest.Net.Utils
 			return true;
 		}
 
-		protected override string GetKeyForItem(FileInfo item)
+        /// <summary>
+        /// The key for the specified element.
+        /// </summary>
+		protected sealed override string GetKeyForItem(FileInfo item)
 		{
 			if (item == null) throw new ArgumentNullException();
 			return item.FullName;

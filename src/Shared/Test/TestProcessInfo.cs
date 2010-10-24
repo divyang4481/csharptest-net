@@ -1,4 +1,4 @@
-﻿#region Copyright 2009 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2009-2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,7 +17,7 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using CSharpTest.Net.Utils;
 
-namespace CSharpTest.Net.Shared.Test
+namespace CSharpTest.Net.Utils.Test
 {
 	/// <summary> Test for ProcessInfo class</summary>
 	[TestFixture]
@@ -48,7 +48,7 @@ namespace CSharpTest.Net.Shared.Test
 			Assert.IsTrue(info.LocalApplicationData.EndsWith(@"\NUnit.org\NUnit", StringComparison.OrdinalIgnoreCase));
 			
 			Assert.IsTrue(info.DefaultLogFile.StartsWith(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), StringComparison.OrdinalIgnoreCase));
-			Assert.IsTrue(info.DefaultLogFile.EndsWith(@"\NUnit.org\NUnit\domain-CSharpTest.Net.Shared.Test.dll.txt", StringComparison.OrdinalIgnoreCase));
+            Assert.IsTrue(info.DefaultLogFile.EndsWith(@"\NUnit.org\NUnit\domain-CSharpTest.Net.Shared.Test.dll.txt", StringComparison.OrdinalIgnoreCase));
 		}
 	}
 }

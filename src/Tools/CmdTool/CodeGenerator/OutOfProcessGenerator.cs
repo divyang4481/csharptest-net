@@ -1,4 +1,4 @@
-﻿#region Copyright 2009 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2009-2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -71,13 +71,14 @@ using the '-Command -' argument we avoid signing or setting ExecutionPolicy.");
 					script
 				);
 
+			    string lastErrorMessage = null;
 				using (ScriptRunner runner = new ScriptRunner(_config.Script.Type, script))
 				{
 					runner.OutputReceived +=
 						delegate(object o, ProcessOutputEventArgs args)
 							{
 								if (args.Error)
-									input.WriteLine(args.Data);
+                                    input.WriteLine(lastErrorMessage = args.Data);
 								else if (_config.StandardOut != null)
 								{
 									debug.WriteLine("std::out: {0}", args.Data);
@@ -100,23 +101,22 @@ using the '-Command -' argument we avoid signing or setting ExecutionPolicy.");
 					runner.WaitForExit();
 					debug.WriteLine("Exited = {0}", runner.ExitCode);
 
+				    if (_config.StandardOut != null)
+				    {
+					    string target = Path.ChangeExtension(input.InputPath, _config.StandardOut.Extension);
+					    using (TempFile file = TempFile.FromExtension(_config.StandardOut.Extension))
+					    {
+						    file.WriteAllText(swOutput.ToString());
+						    File.Copy(file.TempPath, target, true);
+						    input.AddOutputFile(target);
+					    }
+				    }
+
 					if (runner.ExitCode != 0)
 					{
-						string output = swOutput.ToString();
-						if (output.Length > 0)
-							input.WriteLine(output);
-						throw new ApplicationException("The script returned a non-zero result: " + runner.ExitCode);
-					}
-				}
-
-				if (_config.StandardOut != null)
-				{
-					string target = Path.ChangeExtension(input.InputPath, _config.StandardOut.Extension);
-					using (TempFile file = TempFile.FromExtension(_config.StandardOut.Extension))
-					{
-						file.WriteAllText(swOutput.ToString());
-						File.Copy(file.TempPath, target, true);
-						input.AddOutputFile(target);
+					    string message = "The script returned a non-zero result: " + runner.ExitCode;
+                        input.WriteLine(message);
+                        throw new ApplicationException(String.IsNullOrEmpty(lastErrorMessage) ? message : lastErrorMessage);
 					}
 				}
 

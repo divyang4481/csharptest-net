@@ -1,4 +1,4 @@
-﻿#region Copyright 2008 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -32,15 +32,27 @@ namespace CSharpTest.Net.Utils
 	/// the static XmlSchema property.
 	/// </summary>
 	[System.Diagnostics.DebuggerNonUserCode]
-	internal class XmlConfiguration<T> : ConfigurationSection
+	partial class XmlConfiguration<T> : ConfigurationSection
 	{
-		public static System.Xml.Schema.XmlSchema XmlSchema = null;// <-- allows external setting
+        /// <summary>
+        /// Allows explicit setting of the XmlSchema to use when validating the xml input.
+        /// </summary>
+		public static XmlSchema XmlSchema = null;// <-- allows external setting
 		static readonly XmlSerializer Serializer = new XmlSerializer(typeof(T));
 		
 		string _schemaName;
 		T _data = default(T);
 
+        /// <summary>
+        /// Constructs the XmlConfiguration element assuming that the derived type name
+        /// is the same name as the xsd file name, i.e. "MyCfg : XmlConfiguration" would
+        /// expect an XSD named "MyCfg.xsd" to either exist on disk or be embeded into
+        /// the type's containing assembly.
+        /// </summary>
 		public XmlConfiguration() : this(typeof(T).FullName + ".xsd"){}
+        /// <summary>
+        /// Explicitly sets the xsd file name to use.
+        /// </summary>
 		public XmlConfiguration(string schemaName)
 		{ 
 			_schemaName = schemaName; 
@@ -154,6 +166,9 @@ namespace CSharpTest.Net.Utils
 			return data;
 		}
 
+        /// <summary>
+        /// Allows implicit casting of the configuration element to the actual type contained.
+        /// </summary>
 		public static implicit operator T(XmlConfiguration<T> o) { return o == null ? default(T) : o._data; }
 	}
 }

@@ -31,6 +31,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Core" Condition="'$(TargetFrameworkVersion)' == 'v3.5'" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Data" />
     <Reference Include="System.Security" />
@@ -38,15 +39,18 @@
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFrameworkVersion)' == 'v3.5'">
-    <Reference Include="System.Core" />
-  </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Shared\ArgumentList.cs">
       <Link>Shared\ArgumentList.cs</Link>
     </Compile>
     <Compile Include="..\Shared\Check.cs">
       <Link>Shared\Check.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\Configuration.cs">
+      <Link>Shared\Configuration.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\FileList.cs">
+      <Link>Shared\FileList.cs</Link>
     </Compile>
     <Compile Include="..\Shared\ProcessInfo.cs">
       <Link>Shared\ProcessInfo.cs</Link>
@@ -67,6 +71,7 @@
     <Compile Include="Crypto\HashStream.cs" />
     <Compile Include="Crypto\IPasswordDerivedBytes.cs" />
     <Compile Include="Crypto\LocalHostKey.cs" />
+    <Compile Include="Crypto\ModifiedRijndael.cs" />
     <Compile Include="Crypto\PBKDF2.cs" />
     <Compile Include="Crypto\RSAPrivateKey.cs" />
     <Compile Include="Crypto\RSAPublicKey.cs" />
@@ -78,6 +83,11 @@
     <Compile Include="Crypto\WhirlpoolManaged.cs" />
     <Compile Include="Data\CsvReader.cs" />
     <Compile Include="Delegates\TimeoutAction.cs" />
+    <Compile Include="Formatting\ByteEncoding.cs" />
+    <Compile Include="Formatting\Base64Stream.cs" />
+    <Compile Include="Formatting\Safe64Stream.cs" />
+    <Compile Include="Formatting\HexEncoding.cs" />
+    <Compile Include="Formatting\Safe64Encoding.cs" />
     <Compile Include="Html\HtmlLightDocument.cs" />
     <Compile Include="Html\XmlLightAttributes.cs" />
     <Compile Include="Html\XmlLightDocument.cs" />
@@ -119,6 +129,7 @@
     <Compile Include="Delegates\Functions.cs" />
     <Compile Include="IO\AggregateStream.cs" />
     <Compile Include="IO\BaseStream.cs" />
+    <Compile Include="Formatting\HexStream.cs" />
     <Compile Include="IO\MarshallingStream.cs" />
     <Compile Include="IO\SegmentedMemoryStream.cs" />
     <Compile Include="IO\TempDirectory.cs" />
@@ -138,10 +149,16 @@
     <Compile Include="Reflection\PropertySerializer.cs" />
     <Compile Include="Reflection\PropertyType.cs" />
     <Compile Include="Reflection\PropertyValue.cs" />
+    <Compile Include="Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Serialization\INameValueStore.cs" />
     <Compile Include="Serialization\Storage.cs" />
     <Compile Include="Serialization\StorageClasses.cs" />
     <Compile Include="AppConfig\UserSettingsSection.cs" />
+    <Compile Include="Shared\PublicShared.cs" />
     <Compile Include="Synchronization\ExclusiveLocking.cs" />
     <Compile Include="Synchronization\IgnoreLocking.cs" />
     <Compile Include="Synchronization\ILockStrategy.cs" />
@@ -173,6 +190,10 @@
     <EmbeddedResource Include="Html\Xhtml1_0\xhtml1-frameset.dtd" />
     <EmbeddedResource Include="Html\Xhtml1_0\xhtml1-strict.dtd" />
     <EmbeddedResource Include="Html\Xhtml1_0\xhtml1-transitional.dtd" />
+    <EmbeddedResource Include="Resources.resx">
+      <Generator>CmdTool</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

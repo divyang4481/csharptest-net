@@ -1,4 +1,4 @@
-﻿#region Copyright 2008 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,14 +13,13 @@
  */
 #endregion
 using System;
-using System.Collections.Generic;
 using System.Reflection;
 
 /// <summary>
 /// provides a set of runtime validations for inputs
 /// </summary>
 [System.Diagnostics.DebuggerNonUserCode]
-internal static partial class Check
+static partial class Check
 {
     /// <summary>
     /// Verifies that the condition is true and if it fails constructs the specified type of

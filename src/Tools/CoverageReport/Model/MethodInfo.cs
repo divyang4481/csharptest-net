@@ -1,4 +1,4 @@
-﻿#region Copyright 2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2009 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,18 +14,23 @@
 #endregion
 using System;
 using System.Collections.Generic;
+using CSharpTest.Net.CoverageReport.Reader;
 
-namespace CSharpTest.Net.Collections
+namespace CSharpTest.Net.CoverageReport.Model
 {
-    /// <summary>
-    /// Provides a strongly typed shallow copy of the current object
-    /// </summary>
-    public interface ICloneable<T> : ICloneable
-        where T : ICloneable<T>
-    {
-        /// <summary>
-        /// Returns a shallow clone of this object.
-        /// </summary>
-        new T Clone();
-    }
+	class MethodInfo : BaseInfo<LineInfo>
+	{
+		public MethodInfo(string name)
+			: base(name)
+		{ }
+
+		protected override LineInfo MakeChild(string name)
+		{ return new LineInfo(name); }
+
+		public override void Add(XmlData item)
+		{
+			base.Add(item);
+			this[item.Method.name].Add(item);
+		}
+	}
 }

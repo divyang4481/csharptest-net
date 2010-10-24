@@ -16,9 +16,11 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Resources.Tools;
 using System.Text.RegularExpressions;
 using CSharpTest.Net.Utils;
 using Microsoft.Build.BuildEngine;
+using Microsoft.CSharp;
 
 namespace CSharpTest.Net.CustomTool.CodeGenerator
 {
@@ -29,25 +31,79 @@ namespace CSharpTest.Net.CustomTool.CodeGenerator
     	private readonly StringWriter _help;
 
         public GeneratorArguments(string inputFile, string nameSpace, Project project)
+            : this(inputFile, FindProjectItem(project, inputFile, nameSpace), project)
+        { }
+
+        public GeneratorArguments(string inputFile, BuildItem item, Project project)
         {
         	_help = new StringWriter();
             _files = new List<OutputFile>();
+            Check.NotNull(item);
             _variables = new Dictionary<string, string>(GetProjectVariables(Check.NotNull(project)), StringComparer.OrdinalIgnoreCase);
 
             inputFile = Path.GetFullPath(inputFile);
 
-            _variables["Namespace"] = nameSpace;
+            _variables["CmdToolDir"] = Path.GetDirectoryName(GetType().Assembly.Location).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+            _variables["DefaultNamespace"] = FindDefaultNamespace(project, item);
 
-            _variables["ClassName"] = StringUtils.AlphaNumericOnly(Path.GetFileNameWithoutExtension(inputFile));
-            if (String.IsNullOrEmpty(_variables["ClassName"]) || Char.IsNumber(_variables["ClassName"][0]))
-                _variables["ClassName"] = String.Format("_{0}", _variables["ClassName"]);
+            _variables["Namespace"] = item.HasMetadata("CustomToolNamespace") ? item.GetMetadata("CustomToolNamespace") : _variables["DefaultNamespace"];
+            _variables["ClassName"] = StronglyTypedResourceBuilder.VerifyResourceName(Path.GetFileNameWithoutExtension(inputFile), new CSharpCodeProvider());
+
+            _variables["PseudoPath"] = inputFile;
+            if (item.HasMetadata("Link"))
+                _variables["PseudoPath"] = Path.Combine(Path.GetDirectoryName(project.FullFileName), item.GetMetadata("Link"));
 
             _variables["InputPath"] = inputFile;
             _variables["InputName"] = Path.GetFileName(inputFile);
             _variables["InputDir"] = Path.GetDirectoryName(inputFile).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
         }
 
-    	public bool DisplayHelp = false;
+    	public bool DisplayHelp;
+
+        public static BuildItem FindProjectItem(Project project, string filename, string nameSpace)
+        {
+            if( File.Exists(filename) )
+                filename = Path.GetFullPath(filename);
+
+            foreach (BuildItemGroup grp in project.ItemGroups)
+            {
+                if(grp.IsImported) continue;
+                foreach (BuildItem item in grp)
+                {
+                    if (item.IsImported) continue;
+                    if (!StringComparer.OrdinalIgnoreCase.Equals("CmdTool", item.GetMetadata("Generator")))
+                        continue;
+                    try
+                    {
+						foreach (string itemPath in new string[] { Path.Combine(Path.GetDirectoryName(project.FullFileName), item.Include), item.GetEvaluatedMetadata("FullPath") })
+                        if (File.Exists(itemPath) &&
+                            StringComparer.OrdinalIgnoreCase.Equals(Path.GetFullPath(itemPath), filename))
+                        {
+                            if (item.HasMetadata("CustomToolNamespace") &&
+                                nameSpace == item.GetMetadata("CustomToolNamespace"))
+                                return item;
+                            if (nameSpace == FindDefaultNamespace(project, item))
+                                return item;
+                        }
+                    }
+                    catch(Exception ex)
+                    { System.Diagnostics.Trace.WriteLine(ex.ToString()); }
+                }
+            }
+            throw new ApplicationException(String.Format("Unable to locate project item for: {0}", filename));
+        }
+
+        static string FindDefaultNamespace(Project project, BuildItem item)
+        {
+            string ns = project.GetEvaluatedProperty("RootNamespace");
+            string relName = item.Include;
+            if (item.HasMetadata("Link")) relName = item.GetMetadata("Link");
+
+		    string[] parts = relName.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+		    for (int i = 0; i < parts.Length - 1; i++)
+			    ns += '.' + parts[i];
+            return ns.Trim('.');
+        }
 
         private static Dictionary<string, string> GetProjectVariables(Project project)
         {
@@ -112,6 +168,11 @@ namespace CSharpTest.Net.CustomTool.CodeGenerator
         public string ClassName
         {
             get { return _variables["ClassName"]; }
+        }
+
+        public string PseudoPath
+        {
+            get { return _variables["PseudoPath"]; }
         }
 
         public string InputPath
