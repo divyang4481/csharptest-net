@@ -120,9 +120,9 @@ namespace CSharpTest.Net.Html
             settings.IgnoreComments = true;
             settings.NameTable = _nameTable;
             settings.ValidationFlags = XmlSchemaValidationFlags.ReportValidationWarnings;
-#pragma warning disable 618
+#pragma warning disable 612, 618
             settings.ValidationType = _requiresDtd == XhtmlDTDSpecification.None ? ValidationType.Auto : ValidationType.DTD;
-#pragma warning restore 618
+#pragma warning restore 612, 618
             settings.ValidationEventHandler += errorHandler;
             settings.ProhibitDtd = false;
             settings.XmlResolver = resolver;
