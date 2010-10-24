@@ -1,4 +1,4 @@
-﻿#region Copyright 2009 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2009-2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -313,7 +313,7 @@ namespace CSharpTest.Net.Html
 			{
 				xw.Indentation = 2;
 				xw.IndentChar = ' ';
-				xw.Formatting = Formatting.Indented;
+				xw.Formatting = System.Xml.Formatting.Indented;
 				WriteXml(xw);
 				xw.Flush();
 			}
