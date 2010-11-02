@@ -43,6 +43,13 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <EmbeddedResource Include="Resources\AssemblyRunnerSampleApp.cs" />
+    <Compile Include="TestAssemblyRunner.cs" />
     <Compile Include="TestDisposable.cs" />
     <Compile Include="TestHashDerivedBytes.cs" />
     <Compile Include="TestCsvReader.cs" />
@@ -94,6 +101,10 @@
     <EmbeddedResource Include="Resources\roktesting.pfx" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\roktesting.cer" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

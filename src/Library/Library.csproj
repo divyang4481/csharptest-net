@@ -138,6 +138,7 @@
     <Compile Include="IO\IOStream.cs" />
     <Compile Include="IO\CombinedStream.cs" />
     <Compile Include="IO\NonClosingStream.cs" />
+    <Compile Include="Processes\AssemblyRunner.cs" />
     <Compile Include="Processes\IRunner.cs" />
     <Compile Include="Processes\ProcessExitedEventArgs.cs" />
     <Compile Include="Processes\ProcessOutputEventArgs.cs" />

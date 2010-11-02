@@ -30,9 +30,10 @@ namespace CSharpTest.Net.CustomTool.CodeGenerator
 		public void WriteLine(string format, params object[] args)
 		{
 			if (_enabled)
+			{
 				_output(String.Format("Verbose - {0}", String.Format(format, args)));
-			else
-				Log.Verbose(format, args);
+				//Log.Verbose(format, args);
+			}
 		}
 
 		public void Dispose()

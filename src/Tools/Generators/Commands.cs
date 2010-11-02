@@ -13,6 +13,7 @@
  */
 #endregion
 using System;
+using System.IO;
 using CSharpTest.Net.Commands;
 using CSharpTest.Net.Generators.ResX;
 
@@ -41,11 +42,17 @@ namespace CSharpTest.Net.Generators
             [Argument("partial", Description = "Markes generated resource classes partial.", DefaultValue = true)]
             bool makePartial,
             [Argument("test", Description = "Attempts to run String.Format over all formatting strings.", DefaultValue = true)]
-            bool testFormat
+            bool testFormat,
+			[Argument("sealed", Description = "Generates exceptions as sealed classes.", DefaultValue = false)]
+            bool sealedExceptions,
+            [Argument("base", Description = "The default base exception to derive from.", DefaultValue = "ApplicationException")]
+            string baseException
+			//[Argument("extension", "ext", Description = "The output extension to use, otherwise '.Generated.cs'.", DefaultValue = ".Generated.cs")]
+			//string extension
             )
         {
-            ResxGenWriter writer = new ResxGenWriter(inputFile, nameSpace, resxNamespace ?? nameSpace, makePublic, makePartial, className);
-            writer.Write(Console.Out);
+			ResxGenWriter writer = new ResxGenWriter(inputFile, nameSpace, resxNamespace ?? nameSpace, makePublic, makePartial, sealedExceptions, className, baseException);
+			writer.Write(Console.Out);
 
             if (testFormat && !writer.Test(Console.Error))
                 throw new ApplicationException("One or more String.Format operations failed.");

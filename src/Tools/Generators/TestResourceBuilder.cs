@@ -75,7 +75,7 @@ namespace CSharpTest.Net.Generators.Test
                     using (TextWriter tw = new StreamWriter(rescs.Open()))
                     {
                         Console.SetOut(tw);
-                        Commands.ResX(resx.TempPath, Namespace, ClassName, ResxNamespace, Public, Partial, Test);
+                        Commands.ResX(resx.TempPath, Namespace, ClassName, ResxNamespace, Public, Partial, Test, false, typeof(ApplicationException).FullName);
                     }
                 }
                 finally

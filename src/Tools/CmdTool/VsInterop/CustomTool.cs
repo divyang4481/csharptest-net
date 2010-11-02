@@ -17,6 +17,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using CSharpTest.Net.CustomTool.CodeGenerator;
+using CSharpTest.Net.CustomTool.Projects;
 using BE=Microsoft.Build.BuildEngine;
 
 namespace CSharpTest.Net.CustomTool.VsInterop
@@ -52,7 +53,7 @@ namespace CSharpTest.Net.CustomTool.VsInterop
 				catch(Exception ex) { WriteLine(ex.ToString()); }
 			}
 
-            GeneratorArguments arguments = new GeneratorArguments(inputFileName, defaultNamespace, project);
+            GeneratorArguments arguments = new GeneratorArguments(false, inputFileName, defaultNamespace, new MsBuildProject(project));
             arguments.OutputMessage += base.WriteLine;
 
             using (CmdToolBuilder builder = new CmdToolBuilder())

@@ -22,6 +22,7 @@ namespace CSharpTest.Net.CustomTool.XmlConfig
 	[XmlRoot("generator")]
 	public sealed class GeneratorConfig
 	{
+        private bool _debug;
 		private string _basePath;
 		GeneratorInput _standardOut;
         GeneratorOutput[] _output;
@@ -30,12 +31,13 @@ namespace CSharpTest.Net.CustomTool.XmlConfig
 		[XmlIgnore]
 		internal string BaseDirectory { get { return _basePath; } set { _basePath = value; } }
 
-		[XmlAttribute("debug")]
-		public bool Debug;
+        [XmlAttribute("debug")]
+        public bool Debug { get { return Config.VERBOSE || _debug; } set { _debug = value; } }
 
 		/// <summary> The format of the execute command-line, expanding environment variable with %var% </summary>
 		[XmlElement("script", typeof(GeneratorScript))]
 		[XmlElement("execute", typeof(GeneratorExecute))]
+		[XmlElement("assembly", typeof(AssemblyExecute))]
 		public GeneratorScript Script;
 
 	    /// <summary> Additional arguments for the process </summary>

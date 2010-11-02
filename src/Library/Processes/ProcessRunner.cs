@@ -42,6 +42,7 @@ namespace CSharpTest.Net.Processes
 		private event ProcessExitedEventHandler _processExited;
 
 		private bool _isRunning;
+		private string _workingDir;
 		private volatile int _exitCode;
 		private Process _running;
 		private TextWriter _stdIn;
@@ -62,7 +63,16 @@ namespace CSharpTest.Net.Processes
 			_stdIn = null;
 		}
 
-		/// <summary> Returns a debug-view string of process/arguments to execute </summary>
+		/// <summary> Detaches event handlers and closes input streams </summary>
+		public void Dispose()
+		{
+			_outputReceived = null;
+			_processExited = null;
+			TextWriter w = _stdIn;
+			if(w != null) w.Dispose();
+		}
+
+    	/// <summary> Returns a debug-view string of process/arguments to execute </summary>
 		public override string ToString()
 		{
 			return String.Format("{0} {1}", _executable, ArgumentList.Join(_arguments));
@@ -85,7 +95,10 @@ namespace CSharpTest.Net.Processes
 		/// <summary> Allows writes to the std::in for the process </summary>
 		public TextWriter StandardInput { get { return Check.NotNull(_stdIn); } }
 
-		/// <summary> Waits for the process to exit and returns the exit code </summary>
+		/// <summary> Gets or sets the initial working directory for the process. </summary>
+		public string WorkingDirectory { get { return _workingDir ?? Environment.CurrentDirectory; } set { _workingDir = value; } }
+
+			/// <summary> Waits for the process to exit and returns the exit code </summary>
 		public int ExitCode { get { WaitForExit(); return _exitCode; } }
 
 		/// <summary> Kills the process if it is still running </summary>
@@ -139,15 +152,17 @@ namespace CSharpTest.Net.Processes
 
 		#region Run, Start, & Overloads
 		/// <summary> Runs the process and returns the exit code. </summary>
-		public int Run()
-		{ return InternalRun(_arguments); }
+		public int Run() { return Run(null, EmptyArgList); }
 
 		/// <summary> Runs the process with additional arguments and returns the exit code. </summary>
-		public int Run(params string[] moreArguments)
+		public int Run(params string[] moreArguments) { return Run(null, moreArguments); }
+
+		/// <summary> Runs the process with additional arguments and returns the exit code. </summary>
+		public int Run(TextReader input, params string[] arguments)
 		{
 			List<string> args = new List<string>(_arguments);
-			args.AddRange(moreArguments == null ? EmptyArgList : moreArguments);
-			return InternalRun(args.ToArray());
+			args.AddRange(arguments ?? EmptyArgList);
+			return InternalRun(input, args.ToArray());
 		}
 
 		/// <summary> 
@@ -161,18 +176,17 @@ namespace CSharpTest.Net.Processes
 			List<string> args = new List<string>();
 			foreach (string arg in _arguments)
 				args.Add(String.Format(arg, formatArgs));
-			return InternalRun(args.ToArray());
+			return InternalRun(null, args.ToArray());
 		}
 
 		/// <summary> Starts the process and returns. </summary>
-		public void Start()
-		{ InternalStart(_arguments); }
+		public void Start() { Start(EmptyArgList); }
 
 		/// <summary> Starts the process with additional arguments and returns. </summary>
 		public void Start(params string[] moreArguments)
 		{
 			List<string> args = new List<string>(_arguments);
-			args.AddRange(moreArguments == null ? EmptyArgList : moreArguments);
+			args.AddRange(moreArguments ?? EmptyArgList);
 			InternalStart(args.ToArray());
 		}
 
@@ -191,9 +205,16 @@ namespace CSharpTest.Net.Processes
 		}
 		#endregion Run, Start, & Overloads
 		
-		private int InternalRun(string[] arguments)
+		private int InternalRun(TextReader input, string[] arguments)
 		{
 			InternalStart(arguments);
+			if (input != null)
+			{
+				char[] buffer = new char[1024];
+				int count;
+				while (0 != (count = input.Read(buffer, 0, buffer.Length)))
+					StandardInput.Write(buffer, 0, count);
+			}
 			WaitForExit();
 			return ExitCode;
 		}
@@ -214,7 +235,7 @@ namespace CSharpTest.Net.Processes
 
 			string stringArgs = ArgumentList.Join(arguments);
 			ProcessStartInfo psi = new ProcessStartInfo(_executable, stringArgs);
-			psi.WorkingDirectory = Environment.CurrentDirectory;
+			psi.WorkingDirectory = this.WorkingDirectory;
 
 			psi.RedirectStandardInput = true;
 			psi.RedirectStandardError = true;

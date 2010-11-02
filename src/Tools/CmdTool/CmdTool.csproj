@@ -67,6 +67,7 @@
       <Name>System.Data</Name>
     </Reference>
     <Reference Include="System.Design" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Xml">
       <Name>System.XML</Name>
     </Reference>
@@ -120,8 +121,29 @@
     <Compile Include="..\..\Library\Delegates\Actions.cs">
       <Link>Library\Actions.cs</Link>
     </Compile>
+    <Compile Include="..\..\Library\Html\XmlLightAttributes.cs">
+      <Link>Library\Html\XmlLightAttributes.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Library\Html\XmlLightDocument.cs">
+      <Link>Library\Html\XmlLightDocument.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Library\Html\XmlLightElement.cs">
+      <Link>Library\Html\XmlLightElement.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Library\Html\XmlLightInterfaces.cs">
+      <Link>Library\Html\XmlLightInterfaces.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Library\Html\XmlLightNavigator.cs">
+      <Link>Library\Html\XmlLightNavigator.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Library\Html\XmlLightParser.cs">
+      <Link>Library\Html\XmlLightParser.cs</Link>
+    </Compile>
     <Compile Include="..\..\Library\IO\TempFile.cs">
       <Link>Library\IO\TempFile.cs</Link>
+    </Compile>
+    <Compile Include="..\..\Library\Processes\AssemblyRunner.cs">
+      <Link>Library\Processes\AssemblyRunner.cs</Link>
     </Compile>
     <Compile Include="..\..\Library\Processes\IRunner.cs">
       <Link>Library\Processes\IRunner.cs</Link>
@@ -178,7 +200,12 @@
       <Link>Shared\QuickLog.cs</Link>
     </Compile>
     <Compile Include="CodeGenerator\DebuggingOutput.cs" />
-    <Compile Include="CodeGenerator\SetCurrentDirectory.cs" />
+    <Compile Include="CodeGenerator\AssemblyRunnerCache.cs" />
+    <Compile Include="Projects\FauxProject.cs" />
+    <Compile Include="Projects\FauxProjectItem.cs" />
+    <Compile Include="Projects\Interfaces.cs" />
+    <Compile Include="Projects\MsBuildProject.cs" />
+    <Compile Include="Projects\MsBuildProjectItem.cs" />
     <Compile Include="ProjectVisitor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="CmdToolBuilder.cs" />

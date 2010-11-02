@@ -12,33 +12,32 @@
  * limitations under the License.
  */
 #endregion
-
 using System;
 using System.Collections.Generic;
+using System.IO;
+using CSharpTest.Net.Processes;
 
 namespace CSharpTest.Net.CustomTool.CodeGenerator
 {
-    internal interface IGeneratorArguments
-    {
-		bool AllowAppDomains { get; }
-        string Namespace { get; }
-        string ClassName { get; }
-        string PseudoPath { get; }
-        string InputPath { get; }
-        string InputName { get; }
-        string InputDir { get; }
-		string ConfigDir { get; set; }
+	static class AssemblyRunnerCache
+	{
+		[ThreadStatic]
+		static Dictionary<string, WeakReference> _domains;
 
-    	string ReplaceVariables(string input);
+		public static IRunner Fetch(string exe)
+		{
+			if (_domains == null)
+				_domains = new Dictionary<string, WeakReference>(StringComparer.OrdinalIgnoreCase);
 
-        void AddOutputFile(string fileName);
+			exe = Path.GetFullPath(exe);
+			WeakReference wref;
+			AssemblyRunner worker;
 
-        event Action<string> OutputMessage;
+			if (!_domains.TryGetValue(exe, out wref) || !wref.IsAlive || null == (worker = wref.Target as AssemblyRunner) || worker.IsDisposed)
+				_domains[exe] = new WeakReference(worker = new AssemblyRunner(exe));
 
-        void WriteLine(string message);
-        void WriteLine(string format, params object[] args);
-        void WriteError(int line, string message);
-        void WriteError(int line, string format, params object[] args);
-    	string Help();
-    }
+			GC.KeepAlive(worker);
+			return worker;
+		}
+	}
 }

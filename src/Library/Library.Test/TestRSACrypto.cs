@@ -40,17 +40,13 @@ namespace CSharpTest.Net.Library.Test
         #region TestCertPrivateKey() / TestCertPublicKey()
         public static X509Certificate2 TestCertPrivateKey()
         {
-            byte[] rawdata;
-            using (Stream io = typeof(TestRSACrypto).Assembly.GetManifestResourceStream(typeof(TestRSACrypto).Namespace + ".Resources.roktesting.pfx"))
-                rawdata = IOStream.ReadAllBytes(io);
+            byte[] rawdata = Resources.roktesting_pfx;
             return new X509Certificate2(rawdata, "password");
         }
 
         public static X509Certificate2 TestCertPublicKey()
         {
-            byte[] rawdata;
-            using (Stream io = typeof(TestRSACrypto).Assembly.GetManifestResourceStream(typeof(TestRSACrypto).Namespace + ".Resources.roktesting.cer"))
-                rawdata = IOStream.ReadAllBytes(io);
+            byte[] rawdata = Resources.roktesting_cer;
             return new X509Certificate2(rawdata);
         }
         #endregion

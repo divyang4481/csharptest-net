@@ -48,6 +48,12 @@ namespace CSharpTest.Net.IO
                     Directory.CreateDirectory(path);
                     return path;
                 }
+				catch (UnauthorizedAccessException)
+				{
+					if (++attempt < 10)
+						continue;
+					throw;
+				}
                 catch (IOException)
                 {
                     if(++attempt < 10)

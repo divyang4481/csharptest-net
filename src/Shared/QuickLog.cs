@@ -209,7 +209,7 @@ internal static partial class Log
 
         lock (typeof(Console))
         {
-            if (level >= TraceLevel.Info)
+            if (level != TraceLevel.Warning && level != TraceLevel.Error)
             {
                 Console.Out.WriteLine(message);
             }

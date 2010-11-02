@@ -75,7 +75,7 @@ namespace CSharpTest.Net.Generators
 			WriteLine("/// <summary>");
 			using (StringReader sr = new StringReader(content))
 				while (null != (line = sr.ReadLine()))
-					WriteLine("/// {0}", line.Replace("<", "&lt;").Replace(">", "&gt;"));
+					WriteLine("/// {0}", System.Web.HttpUtility.HtmlEncode(line));
 			WriteLine("/// </summary>");
 		}
 
