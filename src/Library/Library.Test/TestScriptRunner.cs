@@ -16,6 +16,7 @@
 using System;
 using System.IO;
 using System.Threading;
+using CSharpTest.Net.IO;
 using CSharpTest.Net.Processes;
 using NUnit.Framework;
 
@@ -23,7 +24,45 @@ namespace CSharpTest.Net.Library.Test
 {
 	[TestFixture]
 	public class TestScriptRunner
-	{
+    {
+        [Test]
+        public void TestScriptInfo()
+        {
+            using (ScriptRunner runner = new ScriptRunner(ScriptEngine.Language.Cmd, "@ECHO From CMD.exe"))
+            {
+                Assert.AreEqual(ScriptEngine.Language.Cmd, runner.ScriptEngine.ScriptType);
+                Assert.IsTrue(File.Exists(runner.ScriptFile));
+                Assert.AreEqual("@ECHO From CMD.exe", File.ReadAllText(runner.ScriptFile));
+                Assert.AreEqual("/C " + runner.ScriptFile, String.Join(" ", runner.ScriptArguments));
+            }
+        }
+        [Test]
+        public void TestScriptInfoExe()
+        {
+            using (TempFile file = TempFile.FromExtension(".exe"))
+            using (ScriptRunner runner = new ScriptRunner(ScriptEngine.Language.Exe, file.TempPath))
+            {
+                Assert.AreEqual(ScriptEngine.Language.Exe, runner.ScriptEngine.ScriptType);
+                Assert.AreEqual(file.TempPath, runner.ScriptEngine.Executable);
+                Assert.IsFalse(File.Exists(runner.ScriptFile));
+            }
+        }
+        [Test]
+        public void TestWorkingDir()
+        {
+            using (TempDirectory dir = new TempDirectory())
+            using (ScriptRunner runner = new ScriptRunner(ScriptEngine.Language.Cmd, "@ECHO %cd%"))
+            {
+                string output = String.Empty;
+                runner.OutputReceived += delegate(object o, ProcessOutputEventArgs e) { output += e.Data; };
+
+                Assert.AreNotEqual(dir.TempPath, runner.WorkingDirectory);
+                runner.WorkingDirectory = dir.TempPath;
+                Assert.AreEqual(dir.TempPath, runner.WorkingDirectory);
+                runner.Run();
+                Assert.AreEqual(dir.TempPath.TrimEnd('\\', '/'), output.TrimEnd('\\', '/'));
+            }
+        }
 		[Test]
 		public void TestCmdScript()
 		{

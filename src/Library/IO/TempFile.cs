@@ -33,12 +33,20 @@ namespace CSharpTest.Net.IO
         public static TempFile Attach(string existingPath)
         {
             return new TempFile(existingPath);
-        }
-        /// <summary>
+		}
+		/// <summary>
+		/// Creates a temp file having the provided extension
+		/// </summary>
+		[DebuggerNonUserCode]
+		public static TempFile FromExtension(string extensionWithDot)
+		{
+			return new TempFile(CreateTempPath(extensionWithDot));
+		}
+    	/// <summary>
         /// Creates a temp file having the provided extension
         /// </summary>
         [DebuggerNonUserCode]
-        public static TempFile FromExtension(string extensionWithDot)
+		public static string CreateTempPath(string extensionWithDot)
         {
             int attempt = 0;
             while (true)
@@ -46,12 +54,24 @@ namespace CSharpTest.Net.IO
                 try
                 {
                     string path = Path.GetTempFileName();
-                    if (File.Exists(path))
+					if (string.IsNullOrEmpty(extensionWithDot))
+					{
+						if (!File.Exists(path))
+							File.Open(path, FileMode.CreateNew).Dispose();
+						return path;
+					}
+                	if (File.Exists(path))
                         File.Delete(path);
-                    path = path + extensionWithDot;
+                    path = Path.ChangeExtension(path, extensionWithDot);
                     File.Open(path, FileMode.CreateNew).Dispose();
-                    return new TempFile(path);
-                }
+                    return path;
+				}
+				catch (UnauthorizedAccessException)
+				{
+					if (++attempt < 10)
+						continue;
+					throw;
+				}
                 catch (IOException)
                 {
                     if (++attempt < 10)

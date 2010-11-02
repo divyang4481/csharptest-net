@@ -14,6 +14,7 @@
 #endregion
 using System;
 using System.Collections.Generic;
+using CSharpTest.Net.IO;
 using NUnit.Framework;
 using CSharpTest.Net.Processes;
 using System.IO;
@@ -23,49 +24,37 @@ using CSharpTest.Net.Utils;
 namespace CSharpTest.Net.Library.Test
 {
 	[TestFixture]
-	[Category("TestProcessRunner")]
-	public partial class TestProcessRunner
+	public class TestProcessRunner
 	{
-		#region TestFixture SetUp/TearDown
-		[TestFixtureSetUp]
-		public virtual void Setup()
-		{
-		}
+        [Test]
+        public void TestStdOutput()
+        {
+            using (ProcessRunner runner = new ProcessRunner("cmd.exe"))
+            {
+                StringWriter wtr = new StringWriter();
+                StringWriter err = new StringWriter();
+                ProcessOutputEventHandler handler =
+                        delegate(object o, ProcessOutputEventArgs e)
+                        { if (e.Error) err.WriteLine(e.Data); else wtr.WriteLine(e.Data); };
 
-		[TestFixtureTearDown]
-		public virtual void Teardown()
-		{
-		}
-		#endregion
+                runner.OutputReceived += handler;
 
-		[Test]
-		public void TestStdOutput()
-		{
-			ProcessRunner runner = new ProcessRunner("cmd.exe");
+                Assert.AreEqual(0, runner.Run("/C", "dir", "/b", "/on", "/ad-h-s", "c:\\"));
+                Assert.AreEqual(String.Empty, err.ToString());
 
-			StringWriter wtr = new StringWriter();
-			StringWriter err = new StringWriter();
-			ProcessOutputEventHandler handler = 
-					delegate(object o, ProcessOutputEventArgs e)
-					{ if (e.Error) err.WriteLine(e.Data); else wtr.WriteLine(e.Data); };
+                StringReader rdr = new StringReader(wtr.ToString());
+                List<DirectoryInfo> rootdirs = new List<DirectoryInfo>(new DirectoryInfo("C:\\").GetDirectories());
+                rootdirs.Sort(delegate(DirectoryInfo x, DirectoryInfo y) { return StringComparer.OrdinalIgnoreCase.Compare(x.Name, y.Name); });
+                foreach (DirectoryInfo di in rootdirs)
+                {
+                    if ((di.Attributes & (FileAttributes.Hidden | FileAttributes.System)) != 0)
+                        continue;
+                    Assert.AreEqual(di.Name, rdr.ReadLine());
+                }
 
-			runner.OutputReceived += handler;
-
-			Assert.AreEqual(0, runner.Run("/C", "dir", "/b", "/on", "/ad-h-s", "c:\\"));
-			Assert.AreEqual(String.Empty, err.ToString());
-
-			StringReader rdr = new StringReader(wtr.ToString());
-			List<DirectoryInfo> rootdirs = new List<DirectoryInfo>(new DirectoryInfo("C:\\").GetDirectories());
-			rootdirs.Sort(delegate(DirectoryInfo x, DirectoryInfo y) { return StringComparer.OrdinalIgnoreCase.Compare(x.Name, y.Name); });
-			foreach (DirectoryInfo di in rootdirs)
-			{
-				if ((di.Attributes & (FileAttributes.Hidden | FileAttributes.System)) != 0)
-					continue;
-				Assert.AreEqual(di.Name, rdr.ReadLine());
-			}
-
-			Assert.AreEqual(null, rdr.ReadLine());
-		}
+                Assert.AreEqual(null, rdr.ReadLine());
+            }
+        }
 
 		[Test]
 		public void TestToString()
@@ -105,6 +94,40 @@ namespace CSharpTest.Net.Library.Test
 
 			Assert.AreEqual(0, runner.Run());
 			Assert.IsFalse(outputReceived);
+        }
+
+        [Test]
+        public void TestRunWithInput()
+        {
+            using (ProcessRunner runner = new ProcessRunner("cmd.exe", "/C", "sort"))
+            {
+                List<string> lines = new List<string>();
+                runner.OutputReceived += delegate(Object o, ProcessOutputEventArgs e) { lines.Add(e.Data); };
+                int exitCode = runner.Run(new StringReader("Hello World\r\nWhatever!\r\nA line that goes first."));
+                Assert.AreEqual(0, exitCode);
+                Assert.AreEqual("A line that goes first.", lines[0]);
+                Assert.AreEqual("Hello World", lines[1]);
+                Assert.AreEqual("Whatever!", lines[2]);
+            }
+        }
+
+        [Test]
+        public void TestRunWithWorkingDirectory()
+        {
+            using (TempDirectory dir = new TempDirectory())
+            using (ProcessRunner runner = new ProcessRunner("cmd.exe", "/C", "echo %CD%"))
+            {
+                List<string> lines = new List<string>();
+                runner.OutputReceived += delegate(Object o, ProcessOutputEventArgs e) { lines.Add(e.Data); };
+
+                Assert.AreNotEqual(dir.TempPath, runner.WorkingDirectory);
+                runner.WorkingDirectory = dir.TempPath;
+                Assert.AreEqual(dir.TempPath, runner.WorkingDirectory);
+                
+                int exitCode = runner.Run();
+                Assert.AreEqual(0, exitCode);
+                Assert.AreEqual(dir.TempPath.TrimEnd('\\', '/'), lines[0].TrimEnd('\\', '/'));
+            }
         }
 
         [Test]

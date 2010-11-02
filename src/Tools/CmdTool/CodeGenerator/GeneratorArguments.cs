@@ -13,13 +13,12 @@
  */
 #endregion
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Resources.Tools;
 using System.Text.RegularExpressions;
+using CSharpTest.Net.CustomTool.Projects;
 using CSharpTest.Net.Utils;
-using Microsoft.Build.BuildEngine;
 using Microsoft.CSharp;
 
 namespace CSharpTest.Net.CustomTool.CodeGenerator
@@ -29,99 +28,36 @@ namespace CSharpTest.Net.CustomTool.CodeGenerator
         private readonly List<OutputFile> _files;
         private readonly IDictionary<string, string> _variables;
     	private readonly StringWriter _help;
+    	public bool DisplayHelp;
+		private bool _domainsAllowed;
 
-        public GeneratorArguments(string inputFile, string nameSpace, Project project)
-            : this(inputFile, FindProjectItem(project, inputFile, nameSpace), project)
+        public GeneratorArguments(bool domainsAllowed, string inputFile, string nameSpace, IProjectInfo projectInfo)
+			: this(domainsAllowed, inputFile, Check.NotNull(projectInfo).FindProjectItem(inputFile, nameSpace), projectInfo)
         { }
 
-        public GeneratorArguments(string inputFile, BuildItem item, Project project)
+        public GeneratorArguments(bool domainsAllowed, string inputFile, IProjectItem item, IProjectInfo projectInfo)
         {
+			_domainsAllowed = domainsAllowed;
         	_help = new StringWriter();
             _files = new List<OutputFile>();
             Check.NotNull(item);
-            _variables = new Dictionary<string, string>(GetProjectVariables(Check.NotNull(project)), StringComparer.OrdinalIgnoreCase);
+            _variables = new Dictionary<string, string>(Check.NotNull(projectInfo).GetProjectVariables(), StringComparer.OrdinalIgnoreCase);
 
             inputFile = Path.GetFullPath(inputFile);
 
             _variables["CmdToolDir"] = Path.GetDirectoryName(GetType().Assembly.Location).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
-            _variables["DefaultNamespace"] = FindDefaultNamespace(project, item);
-
-            _variables["Namespace"] = item.HasMetadata("CustomToolNamespace") ? item.GetMetadata("CustomToolNamespace") : _variables["DefaultNamespace"];
+			_variables["DefaultNamespace"] = item.DefaultNamespace;
+            _variables["Namespace"] = item.Namespace;
             _variables["ClassName"] = StronglyTypedResourceBuilder.VerifyResourceName(Path.GetFileNameWithoutExtension(inputFile), new CSharpCodeProvider());
-
-            _variables["PseudoPath"] = inputFile;
-            if (item.HasMetadata("Link"))
-                _variables["PseudoPath"] = Path.Combine(Path.GetDirectoryName(project.FullFileName), item.GetMetadata("Link"));
-
+			_variables["PseudoPath"] = item.FullPseudoPath;
             _variables["InputPath"] = inputFile;
             _variables["InputName"] = Path.GetFileName(inputFile);
             _variables["InputDir"] = Path.GetDirectoryName(inputFile).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
         }
 
-    	public bool DisplayHelp;
-
-        public static BuildItem FindProjectItem(Project project, string filename, string nameSpace)
-        {
-            if( File.Exists(filename) )
-                filename = Path.GetFullPath(filename);
-
-            foreach (BuildItemGroup grp in project.ItemGroups)
-            {
-                if(grp.IsImported) continue;
-                foreach (BuildItem item in grp)
-                {
-                    if (item.IsImported) continue;
-                    if (!StringComparer.OrdinalIgnoreCase.Equals("CmdTool", item.GetMetadata("Generator")))
-                        continue;
-                    try
-                    {
-						foreach (string itemPath in new string[] { Path.Combine(Path.GetDirectoryName(project.FullFileName), item.Include), item.GetEvaluatedMetadata("FullPath") })
-                        if (File.Exists(itemPath) &&
-                            StringComparer.OrdinalIgnoreCase.Equals(Path.GetFullPath(itemPath), filename))
-                        {
-                            if (item.HasMetadata("CustomToolNamespace") &&
-                                nameSpace == item.GetMetadata("CustomToolNamespace"))
-                                return item;
-                            if (nameSpace == FindDefaultNamespace(project, item))
-                                return item;
-                        }
-                    }
-                    catch(Exception ex)
-                    { System.Diagnostics.Trace.WriteLine(ex.ToString()); }
-                }
-            }
-            throw new ApplicationException(String.Format("Unable to locate project item for: {0}", filename));
-        }
-
-        static string FindDefaultNamespace(Project project, BuildItem item)
-        {
-            string ns = project.GetEvaluatedProperty("RootNamespace");
-            string relName = item.Include;
-            if (item.HasMetadata("Link")) relName = item.GetMetadata("Link");
-
-		    string[] parts = relName.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-		    for (int i = 0; i < parts.Length - 1; i++)
-			    ns += '.' + parts[i];
-            return ns.Trim('.');
-        }
-
-        private static Dictionary<string, string> GetProjectVariables(Project project)
-        {
-            Dictionary<string, string> values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-
-            ArrayList groups = new ArrayList();
-            groups.Add(project.GlobalProperties);
-            groups.AddRange(project.PropertyGroups);
-
-            foreach (BuildPropertyGroup grp in groups)
-            {
-                foreach (BuildProperty prop in grp)
-                    values[prop.Name] = project.GetEvaluatedProperty(prop.Name);
-            }
-            return values;
-        }
-
         public event Action<string> OutputMessage;
+
+		public bool AllowAppDomains { get { return _domainsAllowed; } }
 
         public void WriteLine(string message) { OutputMessage(message); }
         public void WriteLine(string format, params object[] args) { OutputMessage(String.Format(format, args)); }

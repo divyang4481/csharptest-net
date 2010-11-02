@@ -32,20 +32,23 @@ namespace CSharpTest.Net.Generators.ResX
 		private readonly string _nameSpace;
 		private readonly string _className;
 		private readonly string _resxNameSpace;
-		private readonly bool _public, _partial;
+        private readonly string _baseException;
+		private readonly bool _public, _partial, _sealed;
 		private readonly ResxGenItemLookup _items;
 		private readonly List<ResXDataNode> _xnodes;
 
-		public ResxGenWriter(string filename, string nameSpace, string resxNameSpace, bool asPublic, bool asPartial, string className)
+        public ResxGenWriter(string filename, string nameSpace, string resxNameSpace, bool asPublic, bool asPartial, bool asSealed, string className, string baseException)
 		{
 			_fileName = filename;
 			_nameSpace = nameSpace;
 			_resxNameSpace = resxNameSpace;
 			_public = asPublic;
 		    _partial = asPartial;
+			_sealed = asSealed;
 			_className = className;
+            _baseException = baseException;
 
-			Environment.CurrentDirectory = Path.GetDirectoryName(_fileName);
+			//Environment.CurrentDirectory = Path.GetDirectoryName(_fileName);
 			Parse(out _items, out _xnodes);
 		}
 
@@ -53,6 +56,7 @@ namespace CSharpTest.Net.Generators.ResX
 		{
 			items = new ResxGenItemLookup();
 			xnodes = new List<ResXDataNode>();
+			string relPath = Path.GetDirectoryName(_fileName);
 
 			using (ResXResourceReader r = new ResXResourceReader(_fileName))
 			{
@@ -61,6 +65,8 @@ namespace CSharpTest.Net.Generators.ResX
 				while (enumerator.MoveNext())
 				{
 					ResXDataNode node = (ResXDataNode)enumerator.Value;
+					if( node.FileRef != null && !Path.IsPathRooted(node.FileRef.FileName))
+						node = new ResXDataNode(node.Name, new ResXFileRef(Path.Combine(relPath, node.FileRef.FileName), node.FileRef.TypeName, node.FileRef.TextFileEncoding));
 
 					string identifier = StronglyTypedResourceBuilder.VerifyResourceName(node.Name, Csharp);
 
@@ -102,10 +108,10 @@ namespace CSharpTest.Net.Generators.ResX
 
 				WriteExceptions(code);
 
-				Console.WriteLine(code.ToString());
+				output.WriteLine(code.ToString());
 			}
 
-			Console.WriteLine(resxCode.Substring(lastBrace));
+			output.WriteLine(resxCode.Substring(lastBrace));
 		}
 
         int LineFromText(string text)
@@ -235,7 +241,7 @@ namespace CSharpTest.Net.Generators.ResX
 					continue;
 				string exName = StronglyTypedResourceBuilder.VerifyResourceName(first.ItemName, Csharp);
 
-				string baseName = ": ApplicationException";
+                string baseName = ": " + _baseException;
 				foreach (ResxGenItem item in lst)
 					if (item.Comments.StartsWith(":"))
 						baseName = item.Comments;
@@ -249,10 +255,11 @@ namespace CSharpTest.Net.Generators.ResX
 				code.WriteLine("[global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]");
                 code.WriteLine("[global::System.CodeDom.Compiler.GeneratedCodeAttribute(\"{0}\", \"{1}\")]", me.GetName().Name, me.GetName().Version);
 
-				using (code.WriteBlock("public partial class {0} {1}", exName, baseName))
+				using (code.WriteBlock("public {2}{3}class {0} {1}", exName, baseName, _sealed ? "sealed " : "", _partial ? "partial " : ""))
 				{
 					code.WriteSummaryXml("Serialization constructor");
-					code.WriteBlock("protected {0}(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) : base(info, context)", exName)
+					code.WriteBlock("{1} {0}(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) : base(info, context)",
+                        exName, _sealed ? "internal" : "protected")
 						.Dispose();
 
 					Dictionary<string, ResxGenArgument> publicData = new Dictionary<string, ResxGenArgument>();
@@ -263,6 +270,9 @@ namespace CSharpTest.Net.Generators.ResX
 
 					foreach (ResxGenArgument pd in publicData.Values)
 					{
+                        if (pd.Name == "HResult" || pd.Name == "HelpLink" || pd.Name == "Source")
+                            continue;//uses base properties
+
 						code.WriteLine();
 						code.WriteSummaryXml("The {0} parameter passed to the constructor", pd.ParamName);
 						code.WriteLine("public {1} {0} {{ get {{ if (Data[\"{0}\"] is {1}) return ({1})Data[\"{0}\"]; else return default({1}); }} }}", pd.Name, pd.Type);
@@ -273,23 +283,21 @@ namespace CSharpTest.Net.Generators.ResX
 					{
 						string formatNm = String.Format("global::{0}.{1}.ExceptionStrings.{2}", _nameSpace, _className, item.Identifier);
 						string baseArgs = item.IsFormatter ? "String.Format({0}, {1})" : "{0}";
-						string argList = item.IsFormatter ? ", " + item.Parameters(true) : "";
+                        string argList = item.HasArguments ? ", " + item.Parameters(true) : "";
 
 						code.WriteSummaryXml(item.Value);
 						code.WriteLine("public {0}({1})", exName, item.Parameters(true));
 						using (code.WriteBlock("\t: base({0})", String.Format(baseArgs, formatNm, item.Parameters(false))))
 						{
 							foreach (ResxGenArgument arg in item.Args)
-								if (arg.IsPublic)
-                                    code.WriteLine("base.Data[\"{0}\"] = {1};", arg.Name, arg.ParamName);
-						}
+                                WriteSetProperty(code, arg);
+                        }
 						code.WriteSummaryXml(item.Value);
-						code.WriteLine("public {0}({1}{2}Exception innerException)", exName, item.Parameters(true), item.IsFormatter ? ", " : "");
+                        code.WriteLine("public {0}({1}{2}Exception innerException)", exName, item.Parameters(true), item.HasArguments ? ", " : "");
 						using (code.WriteBlock("\t: base({0}, innerException)", String.Format(baseArgs, formatNm, item.Parameters(false))))
 						{
 							foreach (ResxGenArgument arg in item.Args)
-								if (arg.IsPublic)
-                                    code.WriteLine("base.Data[\"{0}\"] = {1};", arg.Name, arg.ParamName);
+								WriteSetProperty(code, arg);
 						}
 						code.WriteSummaryXml("if(condition == false) throws {0}", item.Value);
 						using (code.WriteBlock("public static void Assert(bool condition{0})", argList))
@@ -299,5 +307,15 @@ namespace CSharpTest.Net.Generators.ResX
 			}
 		}
 
+        public void WriteSetProperty(CsWriter code, ResxGenArgument arg)
+        {
+            if (arg.IsPublic)
+            {
+                if (arg.Name == "HResult" || arg.Name == "HelpLink" || arg.Name == "Source")
+                    code.WriteLine("base.{0} = {1};", arg.Name, arg.ParamName);
+                else
+                    code.WriteLine("base.Data[\"{0}\"] = {1};", arg.Name, arg.ParamName);
+            }
+        }
 	}
 }

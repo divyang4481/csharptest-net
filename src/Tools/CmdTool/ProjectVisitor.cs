@@ -13,8 +13,11 @@
  */
 #endregion
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading;
+using CSharpTest.Net.CustomTool.Projects;
 using CSharpTest.Net.Delegates;
 using CSharpTest.Net.Utils;
 using Microsoft.Build.BuildEngine;
@@ -23,28 +26,43 @@ using Microsoft.Build.BuildEngine;
 
 namespace CSharpTest.Net.CustomTool
 {
+	public delegate bool ProjectFileFilter(FileInfo file);
+
 	public class ProjectVisitor
 	{
-		private FileList _projects;
-		public ProjectVisitor(string[] projects)
+		private readonly bool _fastLoader;
+		private readonly FileList _projects;
+		public ProjectVisitor(bool fastLoader, string[] projects) : this(fastLoader, projects, null) { }
+		public ProjectVisitor(bool fastLoader, string[] projects, ProjectFileFilter filter)
 		{
+			_fastLoader = fastLoader;
 			_projects = new FileList();
 			_projects.ProhibitedAttributes = FileAttributes.Hidden;
-			_projects.FileFound += new EventHandler<FileList.FileFoundEventArgs>(FileFound);
+			_projects.FileFound += FileFound;
+			if (filter != null)
+				_projects.FileFound += delegate(object o, FileList.FileFoundEventArgs e) { e.Ignore |= filter(e.File); };
 			_projects.Add(projects);
 		}
 
 		public int Count { get { return _projects.Count; } }
 
-		void FileFound(object sender, FileList.FileFoundEventArgs e)
+		static void FileFound(object sender, FileList.FileFoundEventArgs e)
 		{
 			e.Ignore = false == StringComparer.OrdinalIgnoreCase.Equals(e.File.Extension, ".csproj");
 		}
 
-		public void VisitProjects(Action<Project> visitor)
+		public void VisitProjects(Action<IProjectInfo> visitor)
+		{
+			if (_fastLoader) FastVisitProjects(visitor);
+			else MsVisitProjects(visitor);
+		}
+
+		void MsVisitProjects(Action<IProjectInfo> visitor)
 		{
 			Engine e = new Engine(RuntimeEnvironment.GetRuntimeDirectory());
-			e.GlobalProperties.SetProperty("MSBuildToolsPath", RuntimeEnvironment.GetRuntimeDirectory());
+            if(e.GetType().Assembly.GetName().Version.Major == 2)
+				try { e.GlobalProperties.SetProperty("MSBuildToolsPath", RuntimeEnvironment.GetRuntimeDirectory()); }
+				catch { }
 
 			foreach (FileInfo file in _projects)
 			{
@@ -57,41 +75,66 @@ namespace CSharpTest.Net.CustomTool
 				{
 					Console.Error.WriteLine("Unable to open project: {0}", file);
 					Log.Verbose(ex.ToString());
+					continue;
 				}
 
-				visitor(prj);
+				visitor(new MsBuildProject(prj));
 				e.UnloadProject(prj);
 			}
 		}
 
-		public void VisitProjectItems(Action<Project, BuildItemGroup, BuildItem> visitor)
+		delegate void VisitProjectList(IEnumerable<FileInfo> projects, Action<IProjectInfo> visitor);
+		void FastVisitProjects(Action<IProjectInfo> visitor)
 		{
-			VisitProjects(
-				delegate(Project p)
-				{
-					foreach (BuildItemGroup group in p.ItemGroups)
-						foreach (BuildItem item in group)
-						{
-							if (group.IsImported) break;
-							if (item.IsImported) continue;
-							visitor(p, group, item);
-						}
-				}
-			);
+			VisitProjectList proc = FauxVisitProjects;
+			List<IAsyncResult> results = new List<IAsyncResult>();
+			List<FileInfo> projects = new List<FileInfo>(_projects);
+			int count = Math.Max(1, projects.Count / Math.Max(1, Environment.ProcessorCount));
+			while (projects.Count > 0)
+			{
+				FileInfo[] set = new FileInfo[Math.Min(count, projects.Count)];
+				projects.CopyTo(0, set, 0, set.Length);
+				projects.RemoveRange(0, set.Length);
+
+				results.Add(proc.BeginInvoke(set, visitor, null, null));
+			}
+
+			foreach (IAsyncResult r in results)
+				proc.EndInvoke(r);
 		}
 
-		public void VisitProjectProperties(Action<Project, BuildPropertyGroup, BuildProperty> visitor)
+		static void FauxVisitProjects(IEnumerable<FileInfo> projects, Action<IProjectInfo> visitor)
+		{
+			foreach (FileInfo file in projects)
+				FauxVisit(file, visitor);
+		}
+
+		static void FauxVisit(FileInfo file, Action<IProjectInfo> visitor)
+		{
+			IProjectInfo prj;
+			try
+			{
+				prj = new FauxProject(file.FullName);
+			}
+			catch (Exception ex)
+			{
+				Console.Error.WriteLine("Unable to open project: {0}", file);
+				Log.Verbose(ex.ToString());
+				return;
+			}
+
+			visitor(prj);
+		}
+
+		public void VisitProjectItems(Action<IProjectInfo, IProjectItem> visitor)
 		{
 			VisitProjects(
-				delegate(Project p)
+				delegate(IProjectInfo p)
 				{
-					foreach (BuildPropertyGroup group in p.PropertyGroups)
-						foreach (BuildProperty item in group)
-						{
-							if (group.IsImported) break;
-							if (item.IsImported) continue;
-							visitor(p, group, item);
-						}
+					foreach (IProjectItem item in p)
+					{
+						visitor(p, item);
+					}
 				}
 			);
 		}

@@ -58,9 +58,21 @@ namespace CSharpTest.Net.CustomTool.CodeGenerator
 			foreach (FileInfo file in cfgfiles)//0 or 1
 			{
 				CmdToolConfig config;
-				using( XmlReader reader = new XmlTextReader(file.FullName) )
-					config = Config.ReadXml(reader);
+                try
+                {
+                    using (XmlReader reader = new XmlTextReader(file.FullName))
+                        config = Config.ReadXml(reader);
+                }
+                catch (Exception e)
+                {
+                    int line = 0, pos = 0;
+                    XmlException xe = e as XmlException ?? e.InnerException as XmlException;
+                    if (xe != null) { line = xe.LineNumber; pos = xe.LinePosition; }
 
+                    _args.WriteLine("{0}({1},{2}): error: {3}", file.FullName, line, pos, e.GetBaseException().Message);
+                    Log.Verbose("Error in xml file {0}: {1}", file.FullName, e.ToString());
+                    throw new ApplicationException(String.Format("Unable to load configuration file: {0}\r\nReason: {1}", file.FullName, e.Message), e);
+                }
 				config.MakeFullPaths(dir.FullName);
 				PerformMatch(generators, config);
 			}

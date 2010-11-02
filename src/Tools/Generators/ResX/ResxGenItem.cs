@@ -28,8 +28,9 @@ namespace CSharpTest.Net.Generators.ResX
 		static readonly Regex FormatingMatch = RegexPatterns.FormatSpecifier;
 
 		public readonly List<ResxGenArgument> Args;
-		public readonly bool IsFormatter;
-		public readonly bool IsException;
+        public readonly bool IsFormatter;
+        public readonly bool HasArguments;
+        public readonly bool IsException;
 
 		public readonly string Namespace;
 		public readonly string Identifier;
@@ -46,6 +47,7 @@ namespace CSharpTest.Net.Generators.ResX
 			Args = new List<ResxGenArgument>();
 			try 
 			{
+				if (node.FileRef != null) return;
 				Type type = Type.GetType(node.GetValueTypeName(AllowedNames));
 				if (type == null || type != typeof(String))
 					return;
@@ -61,8 +63,8 @@ namespace CSharpTest.Net.Generators.ResX
 
 			IsFormatter = FormatingMatch.IsMatch(Value);
 			IsException = ExceptionMatch.IsMatch(node.Name);
-			if (!IsFormatter && !IsException)
-				return;
+            //if (!IsFormatter && !IsException)
+            //    return;
 
 			int pos;
 			if ((pos = ItemName.IndexOf('(')) > 0)
@@ -86,10 +88,15 @@ namespace CSharpTest.Net.Generators.ResX
 				}
 			);
 
-			Ignored = false;
+            if (Comments.StartsWith(":") && Comments.IndexOf("Exception") > 0)
+                IsException = true;
+
+            HasArguments = Args.Count > 0;
+            if (HasArguments || IsFormatter || IsException)
+                Ignored = false;
 		}
 
-		public bool Hidden { get { return IsFormatter || IsException; } }
+        public bool Hidden { get { return HasArguments || IsFormatter || IsException; } }
 
 		public string Parameters(bool includeTypes)
 		{

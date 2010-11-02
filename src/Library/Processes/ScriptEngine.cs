@@ -80,17 +80,19 @@ namespace CSharpTest.Net.Processes
 			return new Cloning.MemberwiseClone().Clone(Engines[(int)type]);
 		}
 
+		private readonly string _argumentFormat;
+		private readonly Options _runOptions;
+		private readonly Language _language;
+		private readonly Converter<string, TempFile> _compile;
 		private string _executable;
-		private string _argumentFormat;
 		private string _fileExtension;
-		private Options _runOptions;
-		private Converter<string, TempFile> _compile;
 
         private ScriptEngine(Language type, string executable, string argumentFormat, string fileExtension, Options options)
             : this(type, executable, argumentFormat, fileExtension, options, null) { }
 
 		private ScriptEngine(Language type, string executable, string argumentFormat, string fileExtension, Options options, Converter<string, TempFile> compiler)
         {
+			_language = type;
 			_executable = Check.NotEmpty(executable ?? FindExecutable(type));
 			_argumentFormat = argumentFormat ?? String.Empty;
 			_fileExtension = fileExtension ?? ".";
@@ -108,6 +110,9 @@ namespace CSharpTest.Net.Processes
 					_compile = ScriptWriter;
 			}
         }
+
+		/// <summary> Returns the type/language of the script </summary>
+		public Language ScriptType { get { return _language; } }
 
 		/// <summary> The script engine executable </summary>
 		public string Executable

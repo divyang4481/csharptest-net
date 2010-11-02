@@ -13,6 +13,7 @@
  */
 #endregion
 using System;
+using System.IO;
 using CSharpTest.Net.IO;
 using CSharpTest.Net.Utils;
 
@@ -26,6 +27,7 @@ namespace CSharpTest.Net.Processes
         private readonly ProcessRunner _runner;
         private readonly ScriptEngine _engine;
         private readonly TempFile _scriptFile;
+		private readonly string[] _arguments;
 
         /// <summary>
         /// Creates a runnable script with the specified language
@@ -40,13 +42,20 @@ namespace CSharpTest.Net.Processes
         public ScriptRunner(ScriptEngine engine, string script)
         {
 			_engine = engine;
-			_scriptFile = engine.Compile(script);
+			_scriptFile = _engine.Compile(script);
 
-			string[] arguments = ArgumentList.Parse(engine.ArgumentFormat.Replace("{SCRIPT}", _scriptFile.TempPath));
-            _runner = new ProcessRunner(engine.Executable, arguments);
+			_arguments = ArgumentList.Parse(engine.ArgumentFormat.Replace("{SCRIPT}", _scriptFile.TempPath));
+			_runner = new ProcessRunner(engine.Executable, _arguments);
         }
 
-        /// <summary>
+		/// <summary> Return teh script engine being used </summary>
+		public ScriptEngine ScriptEngine { get { return _engine; } }
+		/// <summary> Return teh arguments to pass to script engine exe </summary>
+		public string[] ScriptArguments { get { return _arguments; } }
+		/// <summary> Returns the temp file of the script </summary>
+		public string ScriptFile { get { return _scriptFile.TempPath; } }
+
+			/// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
         public void Dispose() 
@@ -85,6 +94,9 @@ namespace CSharpTest.Net.Processes
             get { return _runner.ExitCode; }
         }
 
+		/// <summary> Gets or sets the initial working directory for the process. </summary>
+		public string WorkingDirectory { get { return _runner.WorkingDirectory; } set { _runner.WorkingDirectory = value; } }
+
         /// <summary> Returns true if this instance is running a process </summary>
         public bool IsRunning
         {
@@ -92,34 +104,29 @@ namespace CSharpTest.Net.Processes
         }
 
         /// <summary> Kills the process if it is still running </summary>
-        public void Kill()
-        {
-            _runner.Kill();
-        }
+        public void Kill() { _runner.Kill(); }
 
         /// <summary> Closes std::in and waits for the process to exit </summary>
-        public void WaitForExit()
-        {
-            _runner.WaitForExit();
-        }
+        public void WaitForExit() { _runner.WaitForExit(); }
 
         /// <summary> Closes std::in and waits for the process to exit, returns false if the process did not exit in the time given </summary>
         public bool WaitForExit(TimeSpan timeout)
-        {
-            return _runner.WaitForExit(timeout);
-        }
+        { return _runner.WaitForExit(timeout); }
 
 		/// <summary> Runs the process and returns the exit code. </summary>
 		public int Run() { return Run(new string[0]); }
         /// <summary> Runs the process and returns the exit code. </summary>
-        public int Run(params string[] args)
-        {
-            Start(args);
-            _runner.WaitForExit();
-            return _runner.ExitCode;
-        }
-
+		public int Run(params string[] args) { return Run(null, args); }
 		/// <summary> Runs the process and returns the exit code. </summary>
+		public int Run(TextReader input, params string[] arguments)
+		{
+			if (input == null && _engine.UsesStandardInputScript)
+				input = new StringReader(_scriptFile.ReadAllText());
+
+			return _runner.Run(input, arguments);
+		}
+
+    	/// <summary> Runs the process and returns the exit code. </summary>
 		public void Start() { Start(new string[0]); }
         /// <summary> Starts the process and returns. </summary>
 		public void Start(params string[] args)

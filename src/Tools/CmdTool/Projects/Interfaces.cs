@@ -1,4 +1,4 @@
-﻿#region Copyright 2009-2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,18 +12,26 @@
  * limitations under the License.
  */
 #endregion
-using System;
+
 using System.Collections.Generic;
-using CSharpTest.Net.Utils;
-using CSharpTest.Net.CustomTool.XmlConfig;
 
-namespace CSharpTest.Net.CustomTool
+namespace CSharpTest.Net.CustomTool.Projects
 {
-	class Config : XmlConfiguration<CmdToolConfig>
+	public interface IProjectInfo : IEnumerable<IProjectItem>
 	{
-		public const string SCHEMA_NAME = "CmdTool.xsd";
-		public Config() : base(SCHEMA_NAME) { }
+		string FullFileName { get; }
+		IProjectItem FindProjectItem(string filename, string nameSpace);
+		Dictionary<string, string> GetProjectVariables();
+	}
 
-        public static bool VERBOSE = false;
+	public interface IProjectItem
+	{
+		string BuildAction { get; }
+		string FullFileName { get; }
+		string FullPseudoPath { get; }
+		string DefaultNamespace { get; }
+		string Namespace { get; }
+		string CustomTool { get; }
+		string CustomNamespace { get; }
 	}
 }

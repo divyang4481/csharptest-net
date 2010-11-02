@@ -13,13 +13,14 @@
  */
 #endregion
 using System;
+using System.IO;
 
 namespace CSharpTest.Net.Processes
 {
     /// <summary>
     /// The common interface between spawning processes, and spawning scripts.
     /// </summary>
-    public interface IRunner
+    public interface IRunner : IDisposable
     {
         /// <summary> Notifies caller of writes to the std::err or std::out </summary>
         event ProcessOutputEventHandler OutputReceived;
@@ -45,11 +46,17 @@ namespace CSharpTest.Net.Processes
         /// <summary> Closes std::in and waits for the process to exit, returns false if the process did not exit in the time given </summary>
         bool WaitForExit(TimeSpan timeout);
 
+		/// <summary> Gets or sets the initial working directory for the process. </summary>
+		string WorkingDirectory { get; set; }
+
         /// <summary> Runs the process and returns the exit code. </summary>
         int Run();
 
         /// <summary> Runs the process and returns the exit code. </summary>
 		int Run(params string[] args);
+
+		/// <summary> Runs the process and returns the exit code. </summary>
+		int Run(TextReader input, params string[] arguments);
 
         /// <summary> Starts the process and returns. </summary>
         void Start();

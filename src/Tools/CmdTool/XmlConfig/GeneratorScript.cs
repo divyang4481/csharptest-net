@@ -12,6 +12,8 @@
  * limitations under the License.
  */
 #endregion
+
+using System.ComponentModel;
 using System.Xml.Serialization;
 using CSharpTest.Net.Processes;
 
@@ -20,8 +22,13 @@ namespace CSharpTest.Net.CustomTool.XmlConfig
     /// <summary> Defines an executable script </summary>
     public class GeneratorScript
     {
+		protected bool _invoke = false;
         private string _text;
-        /// <summary> The type of the script content </summary>
+
+		[XmlIgnore]
+		public bool InvokeAssembly { get { return _invoke; } }
+
+			/// <summary> The type of the script content </summary>
         [XmlAttribute("type")] 
         public ScriptEngine.Language Type;
 
@@ -44,6 +51,24 @@ namespace CSharpTest.Net.CustomTool.XmlConfig
 		public GeneratorExecute()
 		{
 			Type = ScriptEngine.Language.Exe;
+		}
+
+		/// <summary> The type of the script content </summary>
+		[XmlAttribute("exe")]
+		public string Exe
+		{
+			get { return Text; }
+			set { Text = (value ?? string.Empty).Trim(); }
+		}
+	}
+
+	/// <summary> Defines an executable script </summary>
+	public class AssemblyExecute : GeneratorScript
+	{
+		public AssemblyExecute()
+		{
+			Type = ScriptEngine.Language.Exe;
+			_invoke = true;
 		}
 
 		/// <summary> The type of the script content </summary>

@@ -38,6 +38,25 @@ namespace CSharpTest.Net.CustomTool.CodeGenerator
             return _config.Script.Text.Trim();
         }
 
+		public string CreateFullPath(string path)
+		{
+			path = path.Trim();
+			path = FileUtils.ExpandEnvironment(path);
+			if (!Path.IsPathRooted(path))
+			{
+				string found;
+				if (File.Exists(Path.Combine(_config.BaseDirectory, path)))
+					path = Path.GetFullPath(Path.Combine(_config.BaseDirectory, path));
+				else if (File.Exists(path))
+					path = Path.GetFullPath(path);
+				else if (FileUtils.TrySearchPath(path, out found))
+					path = found;
+				else
+					throw new FileNotFoundException(new FileNotFoundException().Message, path.Trim());
+			}
+			return path;
+		}
+
 		public void Generate(IGeneratorArguments input)
 		{
 			//Couple of assertions about PowerShell
@@ -49,15 +68,17 @@ Primarily this is due to circumventing the script-signing requirements. By
 using the '-Command -' argument we avoid signing or setting ExecutionPolicy.");
 
 			using (DebuggingOutput debug = new DebuggingOutput(_config.Debug, input.WriteLine))
-			using (new SetCurrentDirectory(_config.BaseDirectory))
 			{
-				debug.WriteLine("Environment.CurrentDirectory = {0}", Environment.CurrentDirectory);
+				debug.WriteLine("ConfigDir = {0}", _config.BaseDirectory);
 				input.ConfigDir = _config.BaseDirectory;
 
 				//Inject arguments into the script
 				string script = input.ReplaceVariables(Check.NotNull(_config.Script).Text.Trim());
+
 				if (!String.IsNullOrEmpty(_config.Script.Include))
-					script = File.ReadAllText(_config.Script.Include);
+					script = File.ReadAllText(CreateFullPath(_config.Script.Include));
+				if (_config.Script.Type == ScriptEngine.Language.Exe)
+					script = CreateFullPath(script);
 
 				StringWriter swOutput = new StringWriter();
 
@@ -71,10 +92,18 @@ using the '-Command -' argument we avoid signing or setting ExecutionPolicy.");
 					script
 				);
 
-			    string lastErrorMessage = null;
-				using (ScriptRunner runner = new ScriptRunner(_config.Script.Type, script))
+				using (ScriptRunner scriptEngine = new ScriptRunner(_config.Script.Type, script))
 				{
-					runner.OutputReceived +=
+					IRunner runner = scriptEngine;
+					if (input.AllowAppDomains && _config.Script.InvokeAssembly)
+					{
+						runner = AssemblyRunnerCache.Fetch(scriptEngine.ScriptEngine.Executable);
+						arguments.InsertRange(0, scriptEngine.ScriptArguments);
+					}
+
+					runner.WorkingDirectory = _config.BaseDirectory;
+					string lastErrorMessage = null;
+					ProcessOutputEventHandler handler =
 						delegate(object o, ProcessOutputEventArgs args)
 							{
 								if (args.Error)
@@ -88,20 +117,22 @@ using the '-Command -' argument we avoid signing or setting ExecutionPolicy.");
 									input.WriteLine(args.Data);
 							};
 
-					input.WriteLine("Executing {0} {1}", runner, ArgumentList.Join(arguments.ToArray()));
-
-					runner.Start(arguments.ToArray());
-					if (_config.StandardInput.Redirect)
+					int exitCode = -1;
+					debug.WriteLine("Executing {0} {1}", runner, ArgumentList.Join(arguments.ToArray()));
+					try
 					{
-						debug.WriteLine("Writing std::in from {0}", input.InputPath);
-						string contents = File.ReadAllText(input.InputPath);
-						runner.StandardInput.Write(contents);
+						runner.OutputReceived += handler;
+						if (_config.StandardInput.Redirect)
+							exitCode = runner.Run(new StringReader(File.ReadAllText(input.InputPath)), arguments.ToArray());
+						else exitCode = runner.Run(arguments.ToArray());
 					}
-					runner.StandardInput.Close();
-					runner.WaitForExit();
-					debug.WriteLine("Exited = {0}", runner.ExitCode);
+					finally
+					{
+						debug.WriteLine("Exited = {0}", exitCode);
+						runner.OutputReceived -= handler;
+					}
 
-				    if (_config.StandardOut != null)
+					if (_config.StandardOut != null)
 				    {
 					    string target = Path.ChangeExtension(input.InputPath, _config.StandardOut.Extension);
 					    using (TempFile file = TempFile.FromExtension(_config.StandardOut.Extension))
@@ -112,9 +143,9 @@ using the '-Command -' argument we avoid signing or setting ExecutionPolicy.");
 					    }
 				    }
 
-					if (runner.ExitCode != 0)
+					if (exitCode != 0)
 					{
-					    string message = "The script returned a non-zero result: " + runner.ExitCode;
+						string message = "The script returned a non-zero result: " + exitCode;
                         input.WriteLine(message);
                         throw new ApplicationException(String.IsNullOrEmpty(lastErrorMessage) ? message : lastErrorMessage);
 					}
