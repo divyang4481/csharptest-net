@@ -14,13 +14,8 @@
 #endregion
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.IO;
-using CSharpTest.Net.Collections;
-using CSharpTest.Net.Utils;
-using System.Text.RegularExpressions;
 using System.Xml;
-using System.Xml.XPath;
 
 namespace CSharpTest.Net.Html
 {
