@@ -41,10 +41,10 @@ static partial class Check
     {
         if (!condition)
         {
-            ConstructorInfo ci = typeof(TException).GetConstructor(new Type[] { typeof(string) });
+            ConstructorInfo ci = typeof (TException).GetConstructor(new Type[] {typeof (string)});
             if (ci != null)
             {
-                TException e = (TException)ci.Invoke(new object[] { message });
+                TException e = (TException) ci.Invoke(new object[] {message});
                 throw e;
             }
             throw new TException();
@@ -64,7 +64,9 @@ static partial class Check
     public static void Assert(bool condition, ExceptionBuilder fnExceptionBuilder)
     {
         if (!condition)
-        { throw fnExceptionBuilder(); }
+        {
+            throw fnExceptionBuilder();
+        }
     }
 
     /// <summary>
@@ -76,10 +78,10 @@ static partial class Check
     {
         if (!condition)
         {
-            ConstructorInfo ci = typeof(TException).GetConstructor(new Type[] { typeof(string), typeof(Exception) });
+            ConstructorInfo ci = typeof (TException).GetConstructor(new Type[] {typeof (string), typeof (Exception)});
             if (ci != null)
             {
-                TException e = (TException)ci.Invoke(new object[] { message, innerException });
+                TException e = (TException) ci.Invoke(new object[] {message, innerException});
                 throw e;
             }
             throw new TException();
@@ -104,18 +106,18 @@ static partial class Check
         if (value == null) throw new ArgumentNullException();
         if (value.Length == 0) throw new ArgumentOutOfRangeException();
         return value;
-	}
+    }
 
-	/// <summary>
-	/// Verfies that the Guid is not empty.
-	/// throws ArgumentOutOfRangeException
-	/// </summary>
-	public static Guid NotEmpty(Guid value)
-	{
-		if (value == Guid.Empty)
-			throw new ArgumentOutOfRangeException();
-		return value;
-	}
+    /// <summary>
+    /// Verfies that the Guid is not empty.
+    /// throws ArgumentOutOfRangeException
+    /// </summary>
+    public static Guid NotEmpty(Guid value)
+    {
+        if (value == Guid.Empty)
+            throw new ArgumentOutOfRangeException();
+        return value;
+    }
 
     /// <summary>
     /// Verfies that the collection is not null and not empty and returns the collection.
@@ -180,7 +182,9 @@ static partial class Check
     /// throws ArgumentException
     /// </summary>
     public static T IsAssignable<T>(object value)
-    { return (T)IsAssignable(typeof(T), value); }
+    {
+        return (T) IsAssignable(typeof (T), value);
+    }
 
     /// <summary>
     /// Returns value if the object provided can be assinged to a variable of type toType
@@ -205,6 +209,7 @@ static partial class Check
     public static void IsAssignable(Type toType, Type fromType)
     {
         if (!Check.NotNull(toType).IsAssignableFrom(Check.NotNull(fromType)))
-            throw new ArgumentException(String.Format("Can not set value of type {0} to a value of type {1}.", toType, fromType));
+            throw new ArgumentException(String.Format("Can not set value of type {0} to a value of type {1}.", toType,
+                                                      fromType));
     }
 }

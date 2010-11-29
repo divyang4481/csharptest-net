@@ -165,6 +165,7 @@
     <Compile Include="Synchronization\ILockStrategy.cs" />
     <Compile Include="Synchronization\LockStrategyBase.cs" />
     <Compile Include="Synchronization\ReadWriteLocking.cs" />
+    <Compile Include="Threading\UsageCounter.cs" />
     <Compile Include="Utils\Constants.cs" />
     <Compile Include="Utils\FileUtils.cs" />
     <Compile Include="Utils\RegexPatterns.cs" />

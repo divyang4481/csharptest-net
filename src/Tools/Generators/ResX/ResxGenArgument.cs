@@ -29,6 +29,8 @@ namespace CSharpTest.Net.Generators.ResX
 
 		public bool IsPublic { get { return Char.IsUpper(Name[0]); } }
 		public string ParamName { get { return String.Format("{0}{1}", Char.ToLower(Name[0]), Name.Substring(1)); } }
-		public string FieldName { get { return String.Format("_{0}{1}", Char.ToLower(Name[0]), Name.Substring(1)); } }
+		
+        // no longer used... Exception fields are placed inside of Exception.Data[] dictionary
+        //public string FieldName { get { return String.Format("_{0}{1}", Char.ToLower(Name[0]), Name.Substring(1)); } }
 	}
 }

@@ -92,6 +92,7 @@
     <Compile Include="TestStringUtils.cs" />
     <Compile Include="TestTempFiles.cs" />
     <Compile Include="TestTimeoutAction.cs" />
+    <Compile Include="TestUsageCounter.cs" />
     <Compile Include="TestUserSettings.cs" />
     <Compile Include="TestWhirlpoolHash.cs" />
     <Compile Include="TestWin32Window.cs" />

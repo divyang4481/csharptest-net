@@ -1,16 +1,33 @@
 <?xml version='1.0' encoding='utf-8'?>
 <?xml-stylesheet href='CoverageReport.xsl' type='text/xsl'?>
-<coverageReport reportTitle='Module Class Summary' date='Tuesday, November 02, 2010' time='4:47:18 PM' version='1.5.7 Beta'>
- <project name='Module Class Summary' files='213' classes='402' members='2565' nonCommentLines='8678' sequencePoints='7641' unvisitedPoints='397' unvisitedFunctions='0' coverage='94.8043449810234' acceptable='70' functionCoverage='100' acceptableFunction='70' filteredBy='None' sortedBy='Name'>
+<coverageReport reportTitle='Module Class Summary' date='Wednesday, November 24, 2010' time='6:48:51 PM' version='1.5.7 Beta'>
+ <project name='Module Class Summary' files='251' classes='450' members='2833' nonCommentLines='9617' sequencePoints='8513' unvisitedPoints='466' unvisitedFunctions='0' coverage='94.5260190297193' acceptable='70' functionCoverage='100' acceptableFunction='70' filteredBy='None' sortedBy='Name'>
   <coverageFiles>
    <coverageFile>E:\Projects\rokserver\src\bin\CSharpTest.Net.Logging.Test.coverage</coverageFile>
    <coverageFile>E:\Projects\rokserver\src\bin\CSharpTest.Net.Shared.Test.coverage</coverageFile>
    <coverageFile>E:\Projects\rokserver\src\bin\CSharpTest.Net.Library.Test.coverage</coverageFile>
    <coverageFile>E:\Projects\rokserver\src\bin\CSharpTest.Net.SslTunnel.Test.coverage</coverageFile>
+   <coverageFile>E:\Projects\rokserver\src\bin\CSharpTest.Net.RpcLibrary.Test.coverage</coverageFile>
+   <coverageFile>E:\Projects\rokserver\src\bin\CSharpTest.Net.Generators.Test.coverage</coverageFile>
   </coverageFiles>
  </project>
  <modules>
-  <module name='CSharpTest.Net.Library' sequencePoints='5420' unvisitedPoints='216' coverage='96.0148' acceptable='70'>
+  <module name='CSharpTest.Net.Generators' sequencePoints='347' unvisitedPoints='31' coverage='91.0663' acceptable='70'>
+   <namespace name='CSharpTest.Net.Generators' sequencePoints='68' unvisitedPoints='8' coverage='88.2353' acceptable='70'>
+    <class name='CSharpTest.Net.Generators.Commands' sequencePoints='7' unvisitedPoints='0' coverage='100' acceptable='70' />
+    <class name='CSharpTest.Net.Generators.CsWriter' sequencePoints='38' unvisitedPoints='0' coverage='100' acceptable='70' />
+    <class name='CSharpTest.Net.Generators.CsWriter+Braces' sequencePoints='11' unvisitedPoints='0' coverage='100' acceptable='70' />
+    <class name='CSharpTest.Net.Generators.Program' sequencePoints='12' unvisitedPoints='8' coverage='33.3333' acceptable='70' />
+   </namespace>
+   <namespace name='CSharpTest.Net.Generators.ResX' sequencePoints='279' unvisitedPoints='23' coverage='91.7563' acceptable='70'>
+    <class name='CSharpTest.Net.Generators.ResX.ResxGenArgParser' sequencePoints='14' unvisitedPoints='1' coverage='92.8571' acceptable='70' />
+    <class name='CSharpTest.Net.Generators.ResX.ResxGenArgument' sequencePoints='6' unvisitedPoints='0' coverage='100' acceptable='70' />
+    <class name='CSharpTest.Net.Generators.ResX.ResxGenItem' sequencePoints='65' unvisitedPoints='14' coverage='78.4615' acceptable='70' />
+    <class name='CSharpTest.Net.Generators.ResX.ResxGenItemLookup' sequencePoints='2' unvisitedPoints='0' coverage='100' acceptable='70' />
+    <class name='CSharpTest.Net.Generators.ResX.ResxGenWriter' sequencePoints='192' unvisitedPoints='8' coverage='95.8333' acceptable='70' />
+   </namespace>
+  </module>
+  <module name='CSharpTest.Net.Library' sequencePoints='5478' unvisitedPoints='224' coverage='95.9109' acceptable='70'>
    <namespace name='CSharpTest.Net' sequencePoints='34' unvisitedPoints='2' coverage='94.1176' acceptable='70'>
     <class name='CSharpTest.Net.Constants' sequencePoints='32' unvisitedPoints='2' coverage='93.75' acceptable='70' />
     <class name='CSharpTest.Net.Resources+FormatStrings' sequencePoints='2' unvisitedPoints='0' coverage='100' acceptable='70' />
@@ -157,13 +174,13 @@
     <class name='CSharpTest.Net.IO.TempFile' sequencePoints='92' unvisitedPoints='17' coverage='81.5217' acceptable='70' />
     <class name='CSharpTest.Net.IO.TransactFile' sequencePoints='26' unvisitedPoints='1' coverage='96.1538' acceptable='70' />
    </namespace>
-   <namespace name='CSharpTest.Net.Processes' sequencePoints='440' unvisitedPoints='28' coverage='93.6364' acceptable='70'>
+   <namespace name='CSharpTest.Net.Processes' sequencePoints='441' unvisitedPoints='29' coverage='93.424' acceptable='70'>
     <class name='CSharpTest.Net.Processes.AssemblyRunner' sequencePoints='119' unvisitedPoints='11' coverage='90.7563' acceptable='70' />
     <class name='CSharpTest.Net.Processes.AssemblyRunner+DomainHook' sequencePoints='21' unvisitedPoints='0' coverage='100' acceptable='70' />
     <class name='CSharpTest.Net.Processes.AssemblyRunner+StartArguments' sequencePoints='4' unvisitedPoints='0' coverage='100' acceptable='70' />
     <class name='CSharpTest.Net.Processes.ProcessExitedEventArgs' sequencePoints='4' unvisitedPoints='0' coverage='100' acceptable='70' />
     <class name='CSharpTest.Net.Processes.ProcessOutputEventArgs' sequencePoints='6' unvisitedPoints='0' coverage='100' acceptable='70' />
-    <class name='CSharpTest.Net.Processes.ProcessRunner' sequencePoints='164' unvisitedPoints='10' coverage='93.9024' acceptable='70' />
+    <class name='CSharpTest.Net.Processes.ProcessRunner' sequencePoints='165' unvisitedPoints='11' coverage='93.3333' acceptable='70' />
     <class name='CSharpTest.Net.Processes.ScriptEngine' sequencePoints='77' unvisitedPoints='6' coverage='92.2078' acceptable='70' />
     <class name='CSharpTest.Net.Processes.ScriptRunner' sequencePoints='45' unvisitedPoints='1' coverage='97.7778' acceptable='70' />
    </namespace>
@@ -198,6 +215,10 @@
     <class name='CSharpTest.Net.Synchronization.ReadWriteLocking' sequencePoints='19' unvisitedPoints='0' coverage='100' acceptable='70' />
     <class name='CSharpTest.Net.Synchronization.ReadWriteLocking+ReadLock' sequencePoints='11' unvisitedPoints='0' coverage='100' acceptable='70' />
     <class name='CSharpTest.Net.Synchronization.ReadWriteLocking+WriteLock' sequencePoints='13' unvisitedPoints='0' coverage='100' acceptable='70' />
+   </namespace>
+   <namespace name='CSharpTest.Net.Threading' sequencePoints='57' unvisitedPoints='7' coverage='87.7193' acceptable='70'>
+    <class name='CSharpTest.Net.Threading.UsageCounter' sequencePoints='51' unvisitedPoints='7' coverage='86.2745' acceptable='70' />
+    <class name='CSharpTest.Net.Threading.UsageCounter+TAction`1' sequencePoints='6' unvisitedPoints='0' coverage='100' acceptable='70' />
    </namespace>
    <namespace name='CSharpTest.Net.Utils' sequencePoints='686' unvisitedPoints='26' coverage='96.2099' acceptable='70'>
     <class name='CSharpTest.Net.Utils.FileUtils' sequencePoints='136' unvisitedPoints='7' coverage='94.8529' acceptable='70' />
@@ -234,6 +255,33 @@
    </namespace>
    <namespace name='CSharpTest.Net.Utils' sequencePoints='686' unvisitedPoints='26' coverage='96.2099' acceptable='70'>
     <class name='CSharpTest.Net.Utils.ProcessInfo' sequencePoints='90' unvisitedPoints='18' coverage='80' acceptable='70' />
+   </namespace>
+  </module>
+  <module name='CSharpTest.Net.RpcLibrary' sequencePoints='467' unvisitedPoints='30' coverage='93.576' acceptable='70'>
+   <namespace name='CSharpTest.Net.RpcLibrary' sequencePoints='219' unvisitedPoints='22' coverage='89.9543' acceptable='70'>
+    <class name='CSharpTest.Net.RpcLibrary.Log' sequencePoints='24' unvisitedPoints='6' coverage='75' acceptable='70' />
+    <class name='CSharpTest.Net.RpcLibrary.RpcClientApi' sequencePoints='94' unvisitedPoints='6' coverage='93.617' acceptable='70' />
+    <class name='CSharpTest.Net.RpcLibrary.RpcClientApi+RpcClientHandle' sequencePoints='4' unvisitedPoints='0' coverage='100' acceptable='70' />
+    <class name='CSharpTest.Net.RpcLibrary.RpcServerApi' sequencePoints='93' unvisitedPoints='10' coverage='89.2473' acceptable='70' />
+    <class name='CSharpTest.Net.RpcLibrary.RpcServerApi+RpcServerHandle' sequencePoints='4' unvisitedPoints='0' coverage='100' acceptable='70' />
+   </namespace>
+   <namespace name='CSharpTest.Net.RpcLibrary.Interop' sequencePoints='173' unvisitedPoints='8' coverage='95.3757' acceptable='70'>
+    <class name='CSharpTest.Net.RpcLibrary.Interop.FunctionPtr`1' sequencePoints='7' unvisitedPoints='0' coverage='100' acceptable='70' />
+    <class name='CSharpTest.Net.RpcLibrary.Interop.Ptr`1' sequencePoints='7' unvisitedPoints='0' coverage='100' acceptable='70' />
+    <class name='CSharpTest.Net.RpcLibrary.Interop.RpcApi' sequencePoints='19' unvisitedPoints='2' coverage='89.4737' acceptable='70' />
+    <class name='CSharpTest.Net.RpcLibrary.Interop.RpcClientInfo' sequencePoints='77' unvisitedPoints='1' coverage='98.7013' acceptable='70' />
+    <class name='CSharpTest.Net.RpcLibrary.Interop.RpcClientInfo+IgnoreOnDispose' sequencePoints='1' unvisitedPoints='0' coverage='100' acceptable='70' />
+    <class name='CSharpTest.Net.RpcLibrary.Interop.RpcClientInfo+RpcImpersonationContext' sequencePoints='5' unvisitedPoints='0' coverage='100' acceptable='70' />
+    <class name='CSharpTest.Net.RpcLibrary.Interop.RpcHandle' sequencePoints='33' unvisitedPoints='0' coverage='100' acceptable='70' />
+    <class name='CSharpTest.Net.RpcLibrary.Interop.UsageCounter' sequencePoints='24' unvisitedPoints='5' coverage='79.1667' acceptable='70' />
+   </namespace>
+   <namespace name='CSharpTest.Net.RpcLibrary.Interop.Structs' sequencePoints='75' unvisitedPoints='0' coverage='100' acceptable='70'>
+    <class name='CSharpTest.Net.RpcLibrary.Interop.Structs.MIDL_SERVER_INFO' sequencePoints='16' unvisitedPoints='0' coverage='100' acceptable='70' />
+    <class name='CSharpTest.Net.RpcLibrary.Interop.Structs.MIDL_STUB_DESC' sequencePoints='21' unvisitedPoints='0' coverage='100' acceptable='70' />
+    <class name='CSharpTest.Net.RpcLibrary.Interop.Structs.RPC_CLIENT_INTERFACE' sequencePoints='11' unvisitedPoints='0' coverage='100' acceptable='70' />
+    <class name='CSharpTest.Net.RpcLibrary.Interop.Structs.RPC_SERVER_INTERFACE' sequencePoints='15' unvisitedPoints='0' coverage='100' acceptable='70' />
+    <class name='CSharpTest.Net.RpcLibrary.Interop.Structs.RPC_VERSION' sequencePoints='2' unvisitedPoints='0' coverage='100' acceptable='70' />
+    <class name='CSharpTest.Net.RpcLibrary.Interop.Structs.SEC_WINNT_AUTH_IDENTITY' sequencePoints='10' unvisitedPoints='0' coverage='100' acceptable='70' />
    </namespace>
   </module>
   <module name='CSharpTest.Net.Shared.Test' sequencePoints='486' unvisitedPoints='10' coverage='97.9424' acceptable='70'>

@@ -47,6 +47,8 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CsWriterTest.cs" />
+    <Compile Include="TestGeneratorProgram.cs" />
     <Compile Include="TestResourceBuilder.cs" />
     <Compile Include="TestResourceResult.cs" />
     <Compile Include="TestResXExceptions.cs" />

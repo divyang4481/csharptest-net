@@ -13,10 +13,12 @@
  */
 #endregion
 using System;
+using System.IO;
 using NUnit.Framework;
 
 namespace CSharpTest.Net.Generators.Test
 {
+    [TestFixture]
     public class TestResXGenerator
     {
         [Test]
@@ -36,14 +38,6 @@ namespace CSharpTest.Net.Generators.Test
             builder.Add("TestString", "Test{Value}");
             TestResourceResult result = builder.Compile();
             Assert.AreEqual("Test{Value}", result.GetValue("TestString"));
-        }
-        [Test, ExpectedException(typeof(ApplicationException))]
-        public void TestBadFormatString()
-        {
-            TestResourceBuilder builder = new TestResourceBuilder("TestNs", "ResXClass");
-
-            builder.Add("TestString", "Test{Value} with format {0}");
-            builder.Compile();
         }
         [Test]
         public void TestFormatStringAnonymousArg()
@@ -80,6 +74,22 @@ namespace CSharpTest.Net.Generators.Test
             builder.Add("TestString(string value)", "Test-{0:n2}", "(int value)");
             TestResourceResult result = builder.Compile();
             Assert.AreEqual("Test-Value", result.GetValue("TestString", "Value"));
+        }
+        [Test, ExpectedException(typeof(System.ApplicationException), ExpectedMessage = "One or more String.Format operations failed.")]
+        public void TestInvalidFormatString()
+        {
+            TextWriter serr = Console.Error;
+            try
+            {
+                Console.SetError(TextWriter.Null);
+                TestResourceBuilder builder = new TestResourceBuilder("TestNs", "ResXClass");
+                builder.Add("TestString(string value)", "Test-{0:n2} {}", "(int value)");
+                builder.Compile();
+            }
+            finally
+            {
+                Console.SetError(serr);
+            }
         }
         [Test]
         public void TestFormatStringTypedArgOverloads()

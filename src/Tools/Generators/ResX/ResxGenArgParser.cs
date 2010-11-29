@@ -41,6 +41,7 @@ namespace CSharpTest.Net.Generators.ResX
 		public IEnumerator<ResxGenArgument> GetEnumerator()
 		{ return _args.GetEnumerator(); }
 
+        [System.CodeDom.Compiler.GeneratedCodeAttribute("", "")]
 		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
 		{ return GetEnumerator(); }
 	}
