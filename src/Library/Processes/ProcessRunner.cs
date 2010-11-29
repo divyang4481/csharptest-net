@@ -105,13 +105,22 @@ namespace CSharpTest.Net.Processes
 		public void Kill()
 		{
 			int attempt = 3;
-			while (attempt-- >= 0 && _isRunning && !WaitForExit(TimeSpan.Zero, false))
-			{
-				try { if (_running != null && !_running.HasExited) _running.Kill(); }
-				catch (System.InvalidOperationException) { break; }
-			}
+            try
+            {
+                while (attempt-- >= 0 && _isRunning && !WaitForExit(TimeSpan.Zero, false))
+                {
+                    try 
+                    { 
+                        if (_running != null && !_running.HasExited)
+                            _running.Kill();
+                    }
+                    catch (System.InvalidOperationException) { break; }
+                }
+            }
+            catch (System.ComponentModel.Win32Exception)
+            { }
 
-			TryRaiseExitedEvent(_mreErrorDone);
+		    TryRaiseExitedEvent(_mreErrorDone);
 			TryRaiseExitedEvent(_mreOutputDone);
 			TryRaiseExitedEvent(_mreProcessExit);
 			_isRunning = false;

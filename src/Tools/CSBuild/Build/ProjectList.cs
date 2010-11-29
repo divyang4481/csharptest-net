@@ -60,13 +60,17 @@ namespace CSharpTest.Net.CSBuild.Build
 			{
 				project = Engine.LoadProject(projectFile);
 
-				int ordinal = _projects.Count;
-				_projects.Add(project);
-
-				_byProject.Add(project.ProjectFile, ordinal);
-				_byOutputFile.Add(project.TargetFullName, ordinal);
-
 				int conflict;
+				int ordinal = _projects.Count;
+
+                _projects.Add(project);
+				_byProject.Add(project.ProjectFile, ordinal);
+                
+                if (_byOutputFile.TryGetValue(project.TargetFullName, out conflict))
+                    Log.Warning("Multiple projects build target {0}, using {1}", project.TargetFullName, _projects[conflict].ProjectFile);
+                else
+                    _byOutputFile.Add(project.TargetFullName, ordinal);
+
 				if (_byProjectId.TryGetValue(project.ProjectGuid, out conflict))
 					Log.Warning("Multiple projects with id {0}, using {1}", project.ProjectGuid, _projects[conflict].ProjectFile);
 				else

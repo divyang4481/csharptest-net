@@ -15,11 +15,12 @@
 using System;
 using System.CodeDom.Compiler;
 using System.IO;
+using System.Reflection;
 using CSharpTest.Net.Collections;
 
 namespace CSharpTest.Net.Generators
 {
-    class CsWriter : IndentedTextWriter
+    public class CsWriter : IndentedTextWriter
     {
         private readonly DisposingList _open;
 
@@ -52,6 +53,33 @@ namespace CSharpTest.Net.Generators
 
         public IDisposable WriteNamespace(string ns) { return WriteBlock("namespace {0}", ns); }
 
+        public void WriteSummaryXml(string content, params object[] args)
+        {
+            if (args != null && args.Length > 0)
+                content = String.Format(content, args);
+            string line;
+            WriteLine("/// <summary>");
+            using (StringReader sr = new StringReader(content))
+                while (null != (line = sr.ReadLine()))
+                    WriteLine("/// {0}", System.Web.HttpUtility.HtmlEncode(line));
+            WriteLine("/// </summary>");
+        }
+
+        public void WriteClassPreamble()
+        {
+            Assembly generator = Assembly.GetCallingAssembly() ?? Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly() ?? GetType().Assembly;
+            WriteLine("[global::System.Diagnostics.DebuggerStepThroughAttribute()]");
+            WriteLine("[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]");
+            WriteLine("[global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]");
+            WriteLine("[global::System.CodeDom.Compiler.GeneratedCodeAttribute(\"{0}\", \"{1}\")]", generator.GetName().Name, generator.GetName().Version);
+        }
+
+        public IDisposable WriteClass(string format, params object[] args)
+        {
+            WriteClassPreamble();
+            return WriteBlock(format, args);
+        }
+
         public IDisposable WriteBlock(string format, params object[] args)
         {
             if (args != null && args.Length > 0)
@@ -63,21 +91,10 @@ namespace CSharpTest.Net.Generators
                     while (null != (line = r.ReadLine()))
                         WriteLine(line);
             }
-            return new Braces(this);
+            return WriteBlock();
         }
-		public IDisposable WriteBlock() { return new Braces(this); }
 
-		public void WriteSummaryXml(string content, params object[] args)
-		{
-			if (args != null && args.Length > 0)
-				content = String.Format(content, args);
-			string line;
-			WriteLine("/// <summary>");
-			using (StringReader sr = new StringReader(content))
-				while (null != (line = sr.ReadLine()))
-					WriteLine("/// {0}", System.Web.HttpUtility.HtmlEncode(line));
-			WriteLine("/// </summary>");
-		}
+		public IDisposable WriteBlock() { return new Braces(this); }
 
         private class Braces : IDisposable
         {

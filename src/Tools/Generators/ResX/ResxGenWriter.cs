@@ -204,7 +204,7 @@ namespace CSharpTest.Net.Generators.ResX
 
 				code.WriteLine();
 				code.WriteSummaryXml("Returns the raw format strings.");
-				using (code.WriteBlock("public static {0}class FormatStrings", _partial ? "partial " : ""))
+                using (code.WriteClass("public static {0}class FormatStrings", _partial ? "partial " : ""))
 				{
 					foreach (ResxGenItem item in fmt)
 					{
@@ -219,7 +219,7 @@ namespace CSharpTest.Net.Generators.ResX
 			{
 				code.WriteLine();
 				code.WriteSummaryXml("Returns the raw exception strings.");
-                using (code.WriteBlock("public static {0}class ExceptionStrings", _partial ? "partial " : ""))
+                using (code.WriteClass("public static {0}class ExceptionStrings", _partial ? "partial " : ""))
 				{
 					foreach (ResxGenItem item in exp)
 					{
@@ -250,12 +250,7 @@ namespace CSharpTest.Net.Generators.ResX
 
 				code.WriteSummaryXml("Exception class: {0} {1}\r\n{2}", exName, baseName, first.Value);
 				code.WriteLine("[global::System.SerializableAttribute()]");
-				code.WriteLine("[global::System.Diagnostics.DebuggerStepThroughAttribute()]");
-				code.WriteLine("[global::System.Diagnostics.DebuggerNonUserCodeAttribute()]");
-				code.WriteLine("[global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]");
-                code.WriteLine("[global::System.CodeDom.Compiler.GeneratedCodeAttribute(\"{0}\", \"{1}\")]", me.GetName().Name, me.GetName().Version);
-
-				using (code.WriteBlock("public {2}{3}class {0} {1}", exName, baseName, _sealed ? "sealed " : "", _partial ? "partial " : ""))
+				using (code.WriteClass("public {2}{3}class {0} {1}", exName, baseName, _sealed ? "sealed " : "", _partial ? "partial " : ""))
 				{
 					code.WriteSummaryXml("Serialization constructor");
 					code.WriteBlock("{1} {0}(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) : base(info, context)",

@@ -120,13 +120,16 @@ namespace CSharpTest.Net.StampCopyright
 
 			if (content != original)
 			{
-				_changes++;
-				Console.WriteLine("Updating: {0}", fileName);
-				using (StreamWriter wtr = new StreamWriter(fileName, false, encoding))
-				{
-					wtr.Write(content);
-					wtr.Flush();
-				}
+                lock (typeof(Program))
+                {
+                    _changes++;
+                    Console.WriteLine("Updating: {0}", fileName);
+                    using (StreamWriter wtr = new StreamWriter(fileName, false, encoding))
+                    {
+                        wtr.Write(content);
+                        wtr.Flush();
+                    }
+                }
 			}
 		}
 
@@ -136,7 +139,7 @@ namespace CSharpTest.Net.StampCopyright
 			string content = String.Empty;
 			if (new FileInfo(fileName).Length > 0)
 			{
-				using (Stream io = File.Open(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.Read))
+				using (Stream io = File.Open(fileName, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite))
 				{
 					int tmpCh = io.ReadByte();
 					io.Position = 0;
