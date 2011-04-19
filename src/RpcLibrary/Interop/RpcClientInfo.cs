@@ -116,7 +116,7 @@ namespace CSharpTest.Net.RpcLibrary.Interop
 
         public bool IsAuthenticated
         {
-            get { return GetCallInfo().AuthenticationService != RpcAuthentication.RPC_C_AUTHN_NONE && _isAuthenticated; }
+            get { return GetCallInfo().AuthenticationService != RpcAuthentication.RPC_C_AUTHN_NONE || _isAuthenticated; }
         }
 
         public bool IsClientLocal
@@ -156,6 +156,13 @@ namespace CSharpTest.Net.RpcLibrary.Interop
             attrs.Version = 2;
             attrs.Flags = RPC_CALL_ATTRIBUTES_FLAGS.RPC_QUERY_NO_AUTH_REQUIRED;
             RpcError err = RpcServerInqCallAttributes(_clientHandle, ref attrs);
+
+            if (err == RpcError.RPC_S_INVALID_ARG) //may not support v2 on early edditions of XP/SP3
+            {
+                attrs.Version = 1;
+                err = RpcServerInqCallAttributes(_clientHandle, ref attrs);
+            }
+
             if (err == RpcError.RPC_S_OK)
             {
                 _callAttrs = attrs;
@@ -208,8 +215,15 @@ namespace CSharpTest.Net.RpcLibrary.Interop
                     attrs.Flags = RPC_CALL_ATTRIBUTES_FLAGS.RPC_QUERY_CLIENT_PRINCIPAL_NAME;
                     if ((err = RpcServerInqCallAttributes(_clientHandle, ref attrs)) == RpcError.RPC_S_OK)
                     {
-                        _isAuthenticated = true;
                         _clientPrincipalName = Marshal.PtrToStringUni(clientPrincipal.Handle);
+
+                        if (!String.IsNullOrEmpty(_clientPrincipalName))
+                        {
+                            _isAuthenticated = true;
+                            //On Windows XP this only returns a value on LRPC so we know they are local
+                            if (attrs.Version == 1)
+                                _callAttrs.IsClientLocal = RpcCallClientLocality.Local; 
+                        }
                     }
                 }
             }
