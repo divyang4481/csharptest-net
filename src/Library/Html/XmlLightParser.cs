@@ -1,4 +1,4 @@
-﻿#region Copyright 2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2010-2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,7 +20,35 @@ using CSharpTest.Net.Utils;
 
 namespace CSharpTest.Net.Html
 {
-	/// <summary>
+/*  # The following is the expanded html regex:
+
+    \<(?:
+    # match tag : 
+    (?:(?<close>/)?(?<tag>
+          [:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]
+          [:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD-\\.0-9\u00B7\u0300-\u036F\u203F-\u2040]*
+        )
+        # Attribute matching format:
+        (?<attr>\s+(?<name>
+          [:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]
+          [:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD-\\.0-9\u00B7\u0300-\u036F\u203F-\u2040]*
+        )(?:\s*=\s*(?:(?:'(?<value>[^']*)')|(?:""(?<value>[^""]*)"")|(?:(?<value>[^\s>\/]*(?=[\s\/>])))))?)*
+    (?<wsattrend>\s*)(?<closed>/)?)
+    |# match special :
+    (?:\!(?:
+        # match comments :
+        (?:--(?<comment>.*?)--)
+        |# match cdata :
+        (?:\[CDATA\[(?<cdata>.*?)]])
+        |# other :
+        (?:(?<special>[^><]*(?:<[^><]*(?:<[^>]*>[^><]*)*>[^><]*)*))
+    ))
+    |# match instruction :
+    (?:\?(?<instruction>.*?)\?)
+    )>
+*/
+
+    /// <summary>
 	/// Provides a means by which you can cursur through xml/html documents and be notified for each tag/text/etc
 	/// via implementing the IXmlLightReader interface.
 	/// </summary>

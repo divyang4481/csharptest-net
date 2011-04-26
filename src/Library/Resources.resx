@@ -132,4 +132,7 @@
   <data name="StringConverterTryParse(System.Type type)" xml:space="preserve">
     <value>The type {0} is not convertable from a string.</value>
   </data>
+  <data name="DebugAssertionFailedException(string message)" xml:space="preserve">
+    <value>Debug Assertion Failed: {0}</value>
+  </data>
 </root>

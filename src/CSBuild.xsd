@@ -13,17 +13,17 @@
   <xs:complexType name="BuildTarget">
     <xs:sequence>
       <xs:choice minOccurs="0" maxOccurs="unbounded">
-        <xs:element minOccurs="0" maxOccurs="1" name="reference" type="ReferenceFolder" />
-        <xs:element minOccurs="0" maxOccurs="1" name="log" type="LogFileOutput" />
-        <xs:element minOccurs="0" maxOccurs="1" name="xml" type="XmlFileOutput" />
-        <xs:element minOccurs="0" maxOccurs="1" name="define" type="BuildDefineConst" />
         <xs:element minOccurs="0" maxOccurs="1" name="add" type="AddProjects" />
-        <xs:element minOccurs="0" maxOccurs="1" name="remove" type="RemoveProjects" />
-        <xs:element minOccurs="0" maxOccurs="1" name="save-project-changes" type="SaveProjectChanges" />
+        <xs:element minOccurs="0" maxOccurs="1" name="xml" type="XmlFileOutput" />
         <xs:element minOccurs="0" maxOccurs="1" name="framework" type="TargetFramework" />
-        <xs:element minOccurs="0" maxOccurs="1" name="output" type="BuildOutput" />
-        <xs:element minOccurs="0" maxOccurs="1" name="property" type="BuildProperty" />
+        <xs:element minOccurs="0" maxOccurs="1" name="log" type="LogFileOutput" />
         <xs:element minOccurs="0" maxOccurs="1" name="intermediateFiles" type="BuildIntermediateFiles" />
+        <xs:element minOccurs="0" maxOccurs="1" name="define" type="BuildDefineConst" />
+        <xs:element minOccurs="0" maxOccurs="1" name="save-project-changes" type="SaveProjectChanges" />
+        <xs:element minOccurs="0" maxOccurs="1" name="remove" type="RemoveProjects" />
+        <xs:element minOccurs="0" maxOccurs="1" name="property" type="BuildProperty" />
+        <xs:element minOccurs="0" maxOccurs="1" name="output" type="BuildOutput" />
+        <xs:element minOccurs="0" maxOccurs="1" name="reference" type="ReferenceFolder" />
       </xs:choice>
     </xs:sequence>
     <xs:attribute default="v3.5" name="tools" type="FrameworkVersions" />
@@ -31,10 +31,12 @@
     <xs:attribute default="AnyCPU" name="platform" type="BuildPlatforms" />
     <xs:attribute default="Debug" name="configuration" type="xs:string" />
   </xs:complexType>
-  <xs:complexType name="ReferenceFolder">
+  <xs:complexType name="AddProjects">
     <xs:complexContent mixed="false">
       <xs:extension base="BaseFileItem">
-        <xs:attribute default="false" name="recursive" type="xs:boolean" />
+        <xs:sequence>
+          <xs:element minOccurs="0" maxOccurs="unbounded" name="dependsOn" type="DependsUpon" />
+        </xs:sequence>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
@@ -50,6 +52,11 @@
       <xs:enumeration value="working-folder" />
     </xs:restriction>
   </xs:simpleType>
+  <xs:complexType name="ImportOptionsPath">
+    <xs:complexContent mixed="false">
+      <xs:extension base="BaseFileItem" />
+    </xs:complexContent>
+  </xs:complexType>
   <xs:complexType name="LogFilePath">
     <xs:complexContent mixed="false">
       <xs:extension base="BaseFileItem">
@@ -57,9 +64,11 @@
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
-  <xs:complexType name="BuildIntermediateFiles">
+  <xs:complexType name="ReferenceFolder">
     <xs:complexContent mixed="false">
-      <xs:extension base="BaseFileItem" />
+      <xs:extension base="BaseFileItem">
+        <xs:attribute default="false" name="recursive" type="xs:boolean" />
+      </xs:extension>
     </xs:complexContent>
   </xs:complexType>
   <xs:complexType name="BuildOutput">
@@ -72,18 +81,9 @@
       <xs:extension base="BaseFileItem" />
     </xs:complexContent>
   </xs:complexType>
-  <xs:complexType name="DependsUpon">
+  <xs:complexType name="BuildIntermediateFiles">
     <xs:complexContent mixed="false">
       <xs:extension base="BaseFileItem" />
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:complexType name="AddProjects">
-    <xs:complexContent mixed="false">
-      <xs:extension base="BaseFileItem">
-        <xs:sequence>
-          <xs:element minOccurs="0" maxOccurs="unbounded" name="dependsOn" type="DependsUpon" />
-        </xs:sequence>
-      </xs:extension>
     </xs:complexContent>
   </xs:complexType>
   <xs:complexType name="BaseFileOutput" abstract="true">
@@ -103,16 +103,31 @@
       <xs:enumeration value="Diagnostic" />
     </xs:restriction>
   </xs:simpleType>
-  <xs:complexType name="XmlFileOutput">
-    <xs:complexContent mixed="false">
-      <xs:extension base="BaseFileOutput" />
-    </xs:complexContent>
-  </xs:complexType>
   <xs:complexType name="LogFileOutput">
     <xs:complexContent mixed="false">
       <xs:extension base="BaseFileOutput" />
     </xs:complexContent>
   </xs:complexType>
+  <xs:complexType name="XmlFileOutput">
+    <xs:complexContent mixed="false">
+      <xs:extension base="BaseFileOutput" />
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="DependsUpon">
+    <xs:complexContent mixed="false">
+      <xs:extension base="BaseFileItem" />
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="TargetFramework">
+    <xs:attribute name="version" type="FrameworkVersions" use="required" />
+  </xs:complexType>
+  <xs:simpleType name="FrameworkVersions">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="v2.0" />
+      <xs:enumeration value="v3.0" />
+      <xs:enumeration value="v3.5" />
+    </xs:restriction>
+  </xs:simpleType>
   <xs:complexType name="BuildDefineConst">
     <xs:complexContent mixed="false">
       <xs:extension base="BaseBuildSettingOfString" />
@@ -142,16 +157,6 @@
       <xs:enumeration value="Verbose" />
     </xs:restriction>
   </xs:simpleType>
-  <xs:complexType name="TargetFramework">
-    <xs:attribute name="version" type="FrameworkVersions" use="required" />
-  </xs:complexType>
-  <xs:simpleType name="FrameworkVersions">
-    <xs:restriction base="xs:string">
-      <xs:enumeration value="v2.0" />
-      <xs:enumeration value="v3.0" />
-      <xs:enumeration value="v3.5" />
-    </xs:restriction>
-  </xs:simpleType>
   <xs:simpleType name="BuildPlatforms">
     <xs:restriction base="xs:string">
       <xs:enumeration value="AnyCPU" />
@@ -163,19 +168,20 @@
   <xs:complexType name="BuildOptions">
     <xs:sequence>
       <xs:choice minOccurs="0" maxOccurs="unbounded">
-        <xs:element minOccurs="0" maxOccurs="1" name="strict-references" type="BuildStrictReferences" />
-        <xs:element minOccurs="0" maxOccurs="1" name="force-file-references" type="ProjectReferencesToFile" />
         <xs:element minOccurs="0" maxOccurs="1" name="continue-on-error" type="BuildContinueOnError" />
-        <xs:element minOccurs="0" maxOccurs="1" name="console" type="ConsoleOutputLevel" />
-        <xs:element minOccurs="0" maxOccurs="1" name="global-property" type="BuildProperty" />
         <xs:element minOccurs="0" maxOccurs="1" name="logfile" type="LogFilePath" />
-        <xs:element minOccurs="0" maxOccurs="1" name="no-standard-references" type="NoStdReferences" />
+        <xs:element minOccurs="0" maxOccurs="1" name="console" type="ConsoleOutputLevel" />
+        <xs:element minOccurs="0" maxOccurs="1" name="strict-references" type="BuildStrictReferences" />
+        <xs:element minOccurs="0" maxOccurs="1" name="import" type="ImportOptionsPath" />
+        <xs:element minOccurs="0" maxOccurs="1" name="global-property" type="BuildProperty" />
+        <xs:element minOccurs="0" maxOccurs="1" name="force-file-references" type="ProjectReferencesToFile" />
         <xs:element minOccurs="0" maxOccurs="1" name="save-project-changes" type="SaveProjectChanges" />
+        <xs:element minOccurs="0" maxOccurs="1" name="no-standard-references" type="NoStdReferences" />
       </xs:choice>
     </xs:sequence>
     <xs:attribute default="4" name="timeout-hours" type="xs:int" />
   </xs:complexType>
-  <xs:complexType name="BuildStrictReferences">
+  <xs:complexType name="BuildContinueOnError">
     <xs:complexContent mixed="false">
       <xs:extension base="BooleanBuildOption" />
     </xs:complexContent>
@@ -188,12 +194,12 @@
       <xs:extension base="BooleanBuildOption" />
     </xs:complexContent>
   </xs:complexType>
-  <xs:complexType name="BuildContinueOnError">
+  <xs:complexType name="ProjectReferencesToFile">
     <xs:complexContent mixed="false">
       <xs:extension base="BooleanBuildOption" />
     </xs:complexContent>
   </xs:complexType>
-  <xs:complexType name="ProjectReferencesToFile">
+  <xs:complexType name="BuildStrictReferences">
     <xs:complexContent mixed="false">
       <xs:extension base="BooleanBuildOption" />
     </xs:complexContent>
@@ -211,9 +217,9 @@
   <xs:complexType name="ProjectIncludes">
     <xs:sequence>
       <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element minOccurs="0" maxOccurs="1" name="remove" type="RemoveProjects" />
         <xs:element minOccurs="0" maxOccurs="1" name="reference" type="ReferenceFolder" />
         <xs:element minOccurs="0" maxOccurs="1" name="add" type="AddProjects" />
-        <xs:element minOccurs="0" maxOccurs="1" name="remove" type="RemoveProjects" />
       </xs:choice>
     </xs:sequence>
   </xs:complexType>

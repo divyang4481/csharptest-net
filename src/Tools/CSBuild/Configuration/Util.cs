@@ -1,4 +1,4 @@
-﻿#region Copyright 2008-2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2008-2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,8 +15,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
+using System.Text.RegularExpressions;
 using CSharpTest.Net.CSBuild.Build;
 using CSharpTest.Net.CSBuild.Configuration;
+using CSharpTest.Net.Utils;
 
 namespace CSharpTest.Net.CSBuild
 {
@@ -34,12 +37,24 @@ namespace CSharpTest.Net.CSBuild
                 return Path.GetFullPath(path);
         }
 
-		internal static string MakeAbsolutePath(OutputRelative rel, string path)
+		internal static string MakeAbsolutePath(OutputRelative rel, string path, IDictionary<string, string> namedValues)
 		{
 			if (String.IsNullOrEmpty(path))
 				path = @".\";
 
 			path = Utils.FileUtils.ExpandEnvironment(path);
+            if (path.IndexOf('$') >= 0)
+            {
+                path = Transform(path, MakefileMacro,
+                    delegate(Match m)
+                    {
+                        string name = m.Groups["field"].Value;
+                        if (namedValues.ContainsKey(name))
+                            return namedValues[name];
+                        return m.Value; //unknown
+                    }
+                );
+            }
 
 			if( Path.IsPathRooted(path)) 
 				return path;
@@ -56,6 +71,26 @@ namespace CSharpTest.Net.CSBuild
 			}
 			throw new NotImplementedException();
 		}
+
+        public static readonly Regex MakefileMacro = new Regex(@"\$\((?<field>[\w-_\.]*)(?<replace>(?:\:(?<name>[^:=\)]+)=(?<value>[^:\)]*))+)?\)");
+
+        public static string Transform(string input, Regex pattern, Converter<Match, string> fnReplace)
+        {
+            int currIx = 0;
+            StringBuilder sb = new StringBuilder();
+
+            foreach (Match match in pattern.Matches(input))
+            {
+                sb.Append(input, currIx, match.Index - currIx);
+                string replace = fnReplace(match);
+                sb.Append(replace);
+
+                currIx = match.Index + match.Length;
+            }
+
+            sb.Append(input, currIx, input.Length - currIx);
+            return sb.ToString();
+        }
 
 		internal static string MakeFrameworkBinPath(FrameworkVersions framework)
 		{

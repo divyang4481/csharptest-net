@@ -1,4 +1,4 @@
-﻿#region Copyright 2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2010-2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,6 +17,7 @@ using System.IO;
 using System.Collections.Generic;
 using CSharpTest.Net.CSBuild.BuildTasks;
 using System.Reflection;
+using CSharpTest.Net.CSBuild.Configuration;
 
 namespace CSharpTest.Net.CSBuild.Build
 {
@@ -47,7 +48,7 @@ namespace CSharpTest.Net.CSBuild.Build
 
 		public FrameworkVersions ToolsVersion { get { return _framework; } }
 
-        public static BuildDomain CreateInstance(FrameworkVersions toolsVersion)
+        public static BuildDomain CreateInstance(FrameworkVersions toolsVersion, string[] properties)
         {
             AppDomainSetup setup = new AppDomainSetup();
             setup.ApplicationBase = AppDomain.CurrentDomain.BaseDirectory;
@@ -60,6 +61,7 @@ namespace CSharpTest.Net.CSBuild.Build
             RemoteDomain instance = (RemoteDomain)domain.CreateInstanceAndUnwrap(typeof(RemoteDomain).Assembly.FullName, typeof(RemoteDomain).FullName);
 
             instance.Framework = toolsVersion;
+            instance.Properties = properties;
             instance.SetLog(Log.TextWriter, Log.ConsoleLevel);
 
             return new BuildDomain(domain, instance, toolsVersion);
@@ -80,6 +82,7 @@ namespace CSharpTest.Net.CSBuild.Build
         {
             BuildEngine _engine = null;
             FrameworkVersions _framework;
+            string[] _properties;
 
             public RemoteDomain()
             { 
@@ -115,10 +118,14 @@ namespace CSharpTest.Net.CSBuild.Build
             }
 
             public FrameworkVersions Framework { set { _framework = value; } }
+            public string[] Properties { set { _properties = value; } }
 
             BuildEngine CreateEngine(FrameworkVersions toolsVersion)
             {
-                BuildEngine engine = new BuildEngine(toolsVersion);
+                string dir = Util.MakeFrameworkBinPath(toolsVersion);
+                //if (!CSBuildConfig.ToDictionary(_properties).TryGetValue("FrameworkBIN" + _framework, out dir))
+
+                BuildEngine engine = new BuildEngine(toolsVersion, dir);
                 return engine;
             }
 

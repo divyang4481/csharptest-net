@@ -1,4 +1,4 @@
-﻿#region Copyright 2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2010-2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,15 +12,21 @@
  * limitations under the License.
  */
 #endregion
-
 namespace CSharpTest.Net.RpcLibrary
 {
     partial class RpcException // Defined in resources
     {
+        /// <summary>
+        /// Exception class: RpcException : System.ComponentModel.Win32Exception
+        /// Unspecified rpc error
+        /// </summary>
         public RpcException(RpcError errorCode) : base(unchecked((int) errorCode))
         {
         }
 
+        /// <summary>
+        /// Returns the RPC Error as an enumeration
+        /// </summary>
         public RpcError RpcError
         {
             get { return (RpcError)NativeErrorCode; }
@@ -32,6 +38,9 @@ namespace CSharpTest.Net.RpcLibrary
             Assert((RpcError)rawError);
         }
 
+        /// <summary>
+        /// Asserts that the argument is set to RpcError.RPC_S_OK or throws a new exception.
+        /// </summary>
         [System.Diagnostics.DebuggerNonUserCode]
         public static void Assert(RpcError errorCode)
         {

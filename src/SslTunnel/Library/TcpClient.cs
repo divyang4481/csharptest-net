@@ -1,4 +1,4 @@
-﻿#region Copyright 2009-2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2009-2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,6 +20,9 @@ using System.Net.Sockets;
 
 namespace CSharpTest.Net.SslTunnel
 {
+    /// <summary>
+    /// Wraps the System.Net.Sockets.TcpClient
+    /// </summary>
 	public class TcpClient : IDisposable
 	{
 		readonly string _bindingName;
@@ -29,6 +32,9 @@ namespace CSharpTest.Net.SslTunnel
 
 		readonly List<IDisposable> _resources;
 
+        /// <summary>
+        /// Creates a tcp client to the given server name/ip and port
+        /// </summary>
 		public TcpClient(string serverName, int bindingPort)
 		{
 			_resources = new List<IDisposable>();
@@ -37,12 +43,16 @@ namespace CSharpTest.Net.SslTunnel
 			_client = new System.Net.Sockets.TcpClient();
 			_resources.Add(_client);
 		}
-
+        /// <summary>
+        /// Creates a new client connection to the same server endpoint
+        /// </summary>
 		public virtual TcpClient Clone()
 		{
 			return new TcpClient(_bindingName, _bindingPort);
 		}
-
+        /// <summary>
+        /// Estabilishes the connection with the server
+        /// </summary>
 		public void Connect()
 		{
 			// Create a TCP/IP client socket.
@@ -56,12 +66,16 @@ namespace CSharpTest.Net.SslTunnel
 			_dataStream.ReadTimeout = TcpSettings.ReadTimeout;
 			_dataStream.WriteTimeout = TcpSettings.WriteTimeout;
 		}
-
+        /// <summary>
+        /// Allows customization of the connection handshake (SSL)
+        /// </summary>
 		protected virtual Stream ConnectServer(System.Net.Sockets.TcpClient client)
 		{
 			return client.GetStream();
 		}
-
+        /// <summary>
+        /// Disposes of the client connection.
+        /// </summary>
 		public void Dispose()
 		{
 			for (int i = _resources.Count - 1; i >= 0; i--)
@@ -70,12 +84,21 @@ namespace CSharpTest.Net.SslTunnel
 				_resources.RemoveAt(i);
 			}
 		}
-
+        /// <summary>
+        /// Returns the server name that this client connects to
+        /// </summary>
 		public string ServerName { get { return _bindingName; } }
+        /// <summary>
+        /// Returns the port that this client connects to
+        /// </summary>
 		public int ServerPort { get { return _bindingPort; } }
-		
+		/// <summary>
+		/// Returns the underlying client soket after a call to Connect()
+		/// </summary>
 		public Socket Client { get { return _client.Client; } }
-
+        /// <summary>
+        /// Returns the network stream after a call to Connect()
+        /// </summary>
 		public Stream Stream { get { return _dataStream; } }
 	}
 }

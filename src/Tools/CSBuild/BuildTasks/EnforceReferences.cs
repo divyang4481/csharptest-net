@@ -1,4 +1,4 @@
-﻿#region Copyright 2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2010-2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,10 +29,12 @@ namespace CSharpTest.Net.CSBuild.BuildTasks
 		readonly List<ReferenceFolder> _folders = new List<ReferenceFolder>();
 		readonly Dictionary<String, String> _failedReferences = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 		readonly Dictionary<String, ReferenceWorkItem> _assemblyNameToFile = new Dictionary<string, ReferenceWorkItem>(StringComparer.OrdinalIgnoreCase);
+        readonly IDictionary<String, String> _namedValues;
 		
 		readonly bool _strict, _noStdLib, _noprojectrefs;
-		public EnforceReferences(bool strictReferences, bool noStdLib, bool noProjectReferences)
+		public EnforceReferences(IDictionary<String, String> namedValues, bool strictReferences, bool noStdLib, bool noProjectReferences)
 		{
+            _namedValues = namedValues;
 			_strict = strictReferences;
 			_noStdLib = noStdLib;
 			_noprojectrefs = noProjectReferences;
@@ -164,7 +166,7 @@ namespace CSharpTest.Net.CSBuild.BuildTasks
 			FileList found = new FileList();
 			found.FileFound += new EventHandler<FileList.FileFoundEventArgs>(FileFound);
 			found.RecurseFolders = folder.Recursive;
-			found.Add(folder.AbsolutePath);
+            found.Add(folder.AbsolutePath(_namedValues));
 
 			ReferenceWorkItem item;
 			

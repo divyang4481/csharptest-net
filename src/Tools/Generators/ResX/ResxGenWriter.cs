@@ -1,4 +1,4 @@
-﻿#region Copyright 2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2010-2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,27 +18,34 @@ using System.CodeDom.Compiler;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using System.Resources;
 using System.Resources.Tools;
+using CSharpTest.Net.Generators.ResX.Writers;
 using Microsoft.CSharp;
 
 namespace CSharpTest.Net.Generators.ResX
 {
-	class ResxGenWriter
+	partial class ResxGenWriter
 	{
 		private static readonly CSharpCodeProvider Csharp = new CSharpCodeProvider();
 		private readonly string _fileName;
 		private readonly string _nameSpace;
 		private readonly string _className;
+        private readonly string _fullClassName;
 		private readonly string _resxNameSpace;
         private readonly string _baseException;
+        private readonly string _eventLogger;
 		private readonly bool _public, _partial, _sealed;
-		private readonly ResxGenItemLookup _items;
-		private readonly List<ResXDataNode> _xnodes;
+        private readonly ResXOptions _options;
 
-        public ResxGenWriter(string filename, string nameSpace, string resxNameSpace, bool asPublic, bool asPartial, bool asSealed, string className, string baseException)
+		private readonly List<ResXDataNode> _xnodes;
+        private readonly List<ResxString> _xstrings;
+        private readonly Dictionary<string, ResxException> _xexceptions;
+
+        public ResxGenWriter(string filename, string nameSpace, string resxNameSpace, bool asPublic, bool asPartial, bool asSealed, 
+            string className, string baseException)
 		{
+            _options = new ResXOptions();
 			_fileName = filename;
 			_nameSpace = nameSpace;
 			_resxNameSpace = resxNameSpace;
@@ -47,46 +54,38 @@ namespace CSharpTest.Net.Generators.ResX
 			_sealed = asSealed;
 			_className = className;
             _baseException = baseException;
+            _fullClassName = String.Format("{0}.{1}", _nameSpace, _className);
+            _eventLogger = null;
 
 			//Environment.CurrentDirectory = Path.GetDirectoryName(_fileName);
-			Parse(out _items, out _xnodes);
+            Parse(_xstrings = new List<ResxString>(), _xexceptions = new Dictionary<string, ResxException>(StringComparer.Ordinal), _xnodes = new List<ResXDataNode>());
+            _eventLogger = _eventLogger ?? _options.AutoLogMethod;
 		}
 
-		void Parse(out ResxGenItemLookup items, out List<ResXDataNode> xnodes)
+        void Parse(List<ResxString> xstrings, Dictionary<string, ResxException> xexceptions, List<ResXDataNode> xnodes)
 		{
-			items = new ResxGenItemLookup();
-			xnodes = new List<ResXDataNode>();
-			string relPath = Path.GetDirectoryName(_fileName);
-
-			using (ResXResourceReader r = new ResXResourceReader(_fileName))
-			{
-				r.UseResXDataNodes = true;
-				IDictionaryEnumerator enumerator = r.GetEnumerator();
-				while (enumerator.MoveNext())
-				{
-					ResXDataNode node = (ResXDataNode)enumerator.Value;
-					if( node.FileRef != null && !Path.IsPathRooted(node.FileRef.FileName))
-						node = new ResXDataNode(node.Name, new ResXFileRef(Path.Combine(relPath, node.FileRef.FileName), node.FileRef.TypeName, node.FileRef.TextFileEncoding));
-
-					string identifier = StronglyTypedResourceBuilder.VerifyResourceName(node.Name, Csharp);
-
-					ResxGenItem item = new ResxGenItem(identifier, _nameSpace, node);
-					if (!item.Hidden)
-						xnodes.Add(node);
-					if (!item.Ignored)
-					{
-						List<ResxGenItem> lst;
-						if (!items.TryGetValue(item.ItemName, out lst))
-							items.Add(item.ItemName, lst = new List<ResxGenItem>());
-
-						lst.Add(item);
-					}
-				}
-			}
+            foreach (ResxGenItem item in _options.ReadFile(_fileName))
+            {
+                if (!item.Hidden)
+                    xnodes.Add(item.Node);
+                if (!item.Ignored)
+                {
+                    if (!item.IsException)
+                        xstrings.Add(new ResxString(item));
+                    else
+                    {
+                        ResxException ex;
+                        if (xexceptions.TryGetValue(item.MemberName, out ex))
+                            ex.AddOverload(item);
+                        else
+                            xexceptions.Add(item.MemberName, new ResxException(item));
+                    }
+                }
+            }
 		}
 
 		public void Write(TextWriter output)
-		{
+        {
 			string resxCode = CreateResources();
 			int lastBrace = resxCode.LastIndexOf('}') - 1;
 			int nextLastBrace = resxCode.LastIndexOf('}', lastBrace) - 1;
@@ -101,12 +100,14 @@ namespace CSharpTest.Net.Generators.ResX
 				code.Indent = 2;
 				code.WriteLine();
 
+                WriteProperties(code);
 				WriteFormatters(code);
 				code.Indent--;
 				code.WriteLine();
 				code.WriteLine(resxCode.Substring(nextLastBrace, lastBrace - nextLastBrace));
 
-				WriteExceptions(code);
+                foreach (ResxException e in _xexceptions.Values)
+                    e.WriteException(code, _fullClassName, "ExceptionStrings.", _baseException, _sealed, _partial);
 
 				output.WriteLine(code.ToString());
 			}
@@ -114,37 +115,16 @@ namespace CSharpTest.Net.Generators.ResX
 			output.WriteLine(resxCode.Substring(lastBrace));
 		}
 
-        int LineFromText(string text)
-        {
-            try
-            {
-                string content = File.ReadAllText(_fileName);
-                int pos = content.IndexOf(text);
-                if (pos > 0)
-                    return content.Substring(0, pos).Split('\n').Length;
-                return 0;
-            }
-            catch { return 0; }
-        }
-
         public bool Test(TextWriter errors)
         {
             bool success = true;
-            foreach (List<ResxGenItem> list in _items.Values)
-            {
-                foreach (ResxGenItem item in list)
-                {
-                    try
-                    {
-                        String.Format(item.Value, new object[item.Args.Count]);
-                    }
-                    catch(Exception err)
-                    {
-                        success = false;
-                        errors.WriteLine("{0}({1}): error: {2} - {3}", _fileName, LineFromText(item.FullName), item.ItemName, err.Message);
-                    }
-                }
-            }
+            Action<string> report = delegate(string message)
+            { errors.WriteLine("{0}({1}): error: {2}", _fileName, 0, message); };
+
+            foreach (ResxString xs in _xstrings)
+                success = xs.Test(report) && success;
+            foreach (ResxException xs in _xexceptions.Values)
+                success = xs.Test(report) && success;
             return success;
         }
 
@@ -181,135 +161,112 @@ namespace CSharpTest.Net.Generators.ResX
 
 		void WriteFormatters(CsWriter code)
 		{
-			if (_items.Count == 0)
-				return;
-			List<ResxGenItem> fmt = new List<ResxGenItem>(), exp = new List<ResxGenItem>();
-			foreach (List<ResxGenItem> lst in _items.Values)
-				foreach (ResxGenItem item in lst)
-					if(item.IsException) exp.Add(item);
-					else fmt.Add(item);
+            if (_xstrings.Count > 0)
+            {
+                foreach (ResxString s in _xstrings)
+                    s.WriteAccessor(code, _fullClassName, "FormatStrings.");
 
-			if (fmt.Count > 0)
-			{
-				foreach (ResxGenItem item in fmt)
-				{
-					string procName = StronglyTypedResourceBuilder.VerifyResourceName(item.ItemName, Csharp);
-
-					code.WriteSummaryXml(item.Value);
-					using (code.WriteBlock("public static string {0}({1})", procName, item.Parameters(true)))
-					{
-						code.WriteLine("return String.Format(FormatStrings.{0}, {1});", item.Identifier, item.Parameters(false));
-					}
-				}
-
-				code.WriteLine();
-				code.WriteSummaryXml("Returns the raw format strings.");
+                code.WriteLine();
+                code.WriteSummaryXml("Returns the raw format strings.");
                 using (code.WriteClass("public static {0}class FormatStrings", _partial ? "partial " : ""))
-				{
-					foreach (ResxGenItem item in fmt)
-					{
-						code.WriteSummaryXml(item.Value);
-						code.WriteLine(
-							"public static string {0} {{ get {{ return ResourceManager.GetString({1}, resourceCulture); }} }}",
-							item.Identifier, code.MakeString(item.FullName));
-					}
-				}
-			}
-			if (exp.Count > 0)
+                {
+                    foreach (ResxString s in _xstrings)
+                        s.WriteFormatString(code);
+                }
+            }
+		    if (_xexceptions.Count > 0)
 			{
 				code.WriteLine();
 				code.WriteSummaryXml("Returns the raw exception strings.");
                 using (code.WriteClass("public static {0}class ExceptionStrings", _partial ? "partial " : ""))
 				{
-					foreach (ResxGenItem item in exp)
-					{
-						code.WriteSummaryXml(item.Value);
-						code.WriteLine(
-							"public static string {0} {{ get {{ return ResourceManager.GetString({1}, resourceCulture); }} }}",
-							item.Identifier, code.MakeString(item.FullName));
-					}
+                    code.WriteSummaryXml("Formats a message for an exception");
+                    using (code.WriteBlock("internal static string SafeFormat(string message, params object[] args)"))
+                    {
+                        using(code.WriteBlock("try"))
+                            code.WriteLine("return string.Format(resourceCulture, message, args);");
+                        using(code.WriteBlock("catch"))
+                            code.WriteLine("return message ?? string.Empty;");
+                    }
+
+                    string helpLinkFormat = _options.HelpLinkFormat ?? String.Empty;
+                    String.Format(helpLinkFormat, 5, String.Empty);//just to make sure it's a valid format
+
+                    code.WriteSummaryXml("{0}", _options.HelpLinkFormat);
+                    using (code.WriteBlock("internal static string HelpLinkFormat(int hResult, string typeName)"))
+                        code.WriteLine("return SafeFormat({0}, hResult, typeName);", code.MakeString(helpLinkFormat));
+
+                    foreach (ResxException ex in _xexceptions.Values)
+                        ex.WriteFormatString(code);
 				}
 			}
 		}
 
-		void WriteExceptions(CsWriter code)
-		{
-			foreach (List<ResxGenItem> lst in _items.Values)
-			{
-				ResxGenItem first = lst[0];
-				if (!first.IsException)
-					continue;
-				string exName = StronglyTypedResourceBuilder.VerifyResourceName(first.ItemName, Csharp);
-
-                string baseName = ": " + _baseException;
-				foreach (ResxGenItem item in lst)
-					if (item.Comments.StartsWith(":"))
-						baseName = item.Comments;
-
-				Assembly me = Assembly.GetExecutingAssembly() ?? typeof(Program).Assembly;
-
-				code.WriteSummaryXml("Exception class: {0} {1}\r\n{2}", exName, baseName, first.Value);
-				code.WriteLine("[global::System.SerializableAttribute()]");
-				using (code.WriteClass("public {2}{3}class {0} {1}", exName, baseName, _sealed ? "sealed " : "", _partial ? "partial " : ""))
-				{
-					code.WriteSummaryXml("Serialization constructor");
-					code.WriteBlock("{1} {0}(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) : base(info, context)",
-                        exName, _sealed ? "internal" : "protected")
-						.Dispose();
-
-					Dictionary<string, ResxGenArgument> publicData = new Dictionary<string, ResxGenArgument>();
-					foreach (ResxGenItem item in lst)
-						foreach (ResxGenArgument arg in item.Args)
-							if (arg.IsPublic)
-								publicData[arg.Name] = arg;
-
-					foreach (ResxGenArgument pd in publicData.Values)
-					{
-                        if (pd.Name == "HResult" || pd.Name == "HelpLink" || pd.Name == "Source")
-                            continue;//uses base properties
-
-						code.WriteLine();
-						code.WriteSummaryXml("The {0} parameter passed to the constructor", pd.ParamName);
-						code.WriteLine("public {1} {0} {{ get {{ if (Data[\"{0}\"] is {1}) return ({1})Data[\"{0}\"]; else return default({1}); }} }}", pd.Name, pd.Type);
-					}
-					code.WriteLine();
-
-					foreach (ResxGenItem item in lst)
-					{
-						string formatNm = String.Format("global::{0}.{1}.ExceptionStrings.{2}", _nameSpace, _className, item.Identifier);
-						string baseArgs = item.IsFormatter ? "String.Format({0}, {1})" : "{0}";
-                        string argList = item.HasArguments ? ", " + item.Parameters(true) : "";
-
-						code.WriteSummaryXml(item.Value);
-						code.WriteLine("public {0}({1})", exName, item.Parameters(true));
-						using (code.WriteBlock("\t: base({0})", String.Format(baseArgs, formatNm, item.Parameters(false))))
-						{
-							foreach (ResxGenArgument arg in item.Args)
-                                WriteSetProperty(code, arg);
-                        }
-						code.WriteSummaryXml(item.Value);
-                        code.WriteLine("public {0}({1}{2}Exception innerException)", exName, item.Parameters(true), item.HasArguments ? ", " : "");
-						using (code.WriteBlock("\t: base({0}, innerException)", String.Format(baseArgs, formatNm, item.Parameters(false))))
-						{
-							foreach (ResxGenArgument arg in item.Args)
-								WriteSetProperty(code, arg);
-						}
-						code.WriteSummaryXml("if(condition == false) throws {0}", item.Value);
-						using (code.WriteBlock("public static void Assert(bool condition{0})", argList))
-							code.WriteLine("if (!condition) throw new {0}({1});", exName, item.Parameters(false));
-					}
-				}
-			}
-		}
-
-        public void WriteSetProperty(CsWriter code, ResxGenArgument arg)
+        /// <summary>
+        /// Appends static properties used for event logging
+        /// </summary>
+        void WriteProperties(CsWriter code)
         {
-            if (arg.IsPublic)
+            if (_options.AutoLog)
             {
-                if (arg.Name == "HResult" || arg.Name == "HelpLink" || arg.Name == "Source")
-                    code.WriteLine("base.{0} = {1};", arg.Name, arg.ParamName);
-                else
-                    code.WriteLine("base.Data[\"{0}\"] = {1};", arg.Name, arg.ParamName);
+                code.WriteLine();
+                code.WriteSummaryXml("Create the appropriate type of exception from an hresult using the specified message");
+                using (code.WriteBlock("public static bool TryCreateException(int hResult, string message, out System.Exception exception)"))
+                using (code.WriteBlock("switch (unchecked((uint)hResult))"))
+                {
+                    Dictionary<uint, bool> visited = new Dictionary<uint, bool>();
+                    foreach (ResxException ex in _xexceptions.Values)
+                    {
+                        if (ex.HResult != 0 && !visited.ContainsKey(ex.HResult))
+                        {
+                            visited.Add(ex.HResult, true);
+                            code.WriteLine(
+                                "case 0x{0:x8}U: exception = {1}.{2}.Create(hResult, message); return true;",
+                                ex.HResult, _nameSpace, ex.MemberName);
+                        }
+                    }
+                    code.WriteLine("default: exception = null; return false;");
+                }
+
+                code.WriteLine();
+                code.WriteSummaryXml("The the event log facility id of events defined in this resource file");
+                code.WriteLine("internal static readonly int EventFacilityId = {0};", Math.Max(0, _options.FacilityId));
+
+                code.WriteLine();
+                code.WriteSummaryXml("The category id used to write events for this resource file");
+                code.WriteLine("internal static readonly int EventCategoryId = {0};", Math.Max(0, _options.EventCategoryId));
+
+                if (String.IsNullOrEmpty(_options.EventSource))
+                    Console.Error.WriteLine("Warning: AutoLog == true, but no event source name was defined.");
+
+                code.WriteLine();
+                code.WriteSummaryXml("The the event log used to write events for this resource file");
+                code.WriteLine("internal static readonly string EventLogName = {0};", 
+                    code.MakeString(String.IsNullOrEmpty(_options.EventLog) ? "Application" : _options.EventLog));
+
+                code.WriteLine();
+                code.WriteSummaryXml("The event source used to write events");
+                code.WriteLine("internal static readonly string EventSourceName = {0};",
+                    code.MakeString(String.IsNullOrEmpty(_options.EventSource) ? "" : _options.EventSource));
+
+                code.WriteLine();
+                code.WriteSummaryXml("Writes an event log for the specified message id and arguments");
+                using (code.WriteBlock("internal static void WriteEvent(string eventLog, string eventSource, int category, System.Diagnostics.EventLogEntryType eventType, long eventId, object[] arguments, System.Exception error)"))
+                {
+                    using (code.WriteBlock("try"))
+                    {
+                        if (String.IsNullOrEmpty(_eventLogger))
+                        {
+                            using (code.WriteBlock("using (System.Diagnostics.EventLog log = new System.Diagnostics.EventLog(eventLog, \".\", eventSource))"))
+                                code.WriteLine("log.WriteEvent(new System.Diagnostics.EventInstance(eventId, category, eventType), null, arguments);");
+                        }
+                        else
+                        {
+                            code.WriteLine("{0}(eventLog, eventSource, category, eventType, eventId, arguments, error);",_eventLogger);
+                        }
+                    }
+                    code.WriteLine("catch { }");
+                }
             }
         }
 	}

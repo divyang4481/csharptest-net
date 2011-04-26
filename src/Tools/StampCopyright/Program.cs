@@ -14,10 +14,13 @@
 #endregion
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using CSharpTest.Net.CustomTool;
+using CSharpTest.Net.Html;
 using CSharpTest.Net.Utils;
 using CSharpTest.Net.CustomTool.Projects;
 
@@ -42,6 +45,7 @@ namespace CSharpTest.Net.StampCopyright
 		}
 
 		static string _copyText;
+        static string _subversion;
 		static int _changes;
 
 		[STAThread]
@@ -53,7 +57,7 @@ namespace CSharpTest.Net.StampCopyright
 			if (args.Contains("nologo") == false)
 			{
 				Console.WriteLine("StampCopyright.exe");
-				Console.WriteLine("Copyright 2009 by Roger Knapp, Licensed under the Apache License, Version 2.0");
+				Console.WriteLine("Copyright 2009-{0:yyyy} by Roger Knapp, Licensed under the Apache License, Version 2.0", DateTime.Now);
 				Console.WriteLine("");
 			}
 
@@ -62,11 +66,15 @@ namespace CSharpTest.Net.StampCopyright
 
 			try
 			{
+                args.TryGetValue("svn", out _subversion);
+
 				Log.ConsoleLevel = System.Diagnostics.TraceLevel.Warning;
-				_changes = 0;
-				_copyText = File.ReadAllText(input[0]).Trim().Replace("YEAR", DateTime.Now.Year.ToString());
+                _changes = 0;
+                _copyText = File.ReadAllText(input[0]).Trim();
+                _copyText = _copyText.Replace("YEAR", DateTime.Now.Year.ToString());
+                _copyText = _copyText.Replace("yyyy", DateTime.Now.Year.ToString());
 				input.RemoveAt(0);
-				ProjectVisitor visitor = new ProjectVisitor(true, input.ToArray());
+				ProjectVisitor visitor = new ProjectVisitor(false, input.ToArray());
 				visitor.VisitProjectItems(VisitProjectItem);
 			}
 			catch (ApplicationException ae)
@@ -94,7 +102,37 @@ namespace CSharpTest.Net.StampCopyright
 			return Environment.ExitCode;
 		}
 
-		static void VisitProjectItem(IProjectInfo project, IProjectItem item)
+        static bool _ignoreConfirm = false;
+
+        static bool Confirm(string format, params object[] args)
+        {
+            if (_ignoreConfirm)
+            {
+                Console.WriteLine(format, args);
+                return true;
+            }
+
+            while (true)
+            {
+                Console.Write(format + " (y/n/a/q)?:", args);
+                try
+                {
+                        switch (Console.ReadKey().Key)
+                        {
+                            case ConsoleKey.Y: return true;
+                            case ConsoleKey.N: return false;
+                            case ConsoleKey.A: return _ignoreConfirm = true;
+                            case ConsoleKey.Q: throw new ApplicationException(new OperationCanceledException().Message);
+                        }
+                }
+                finally
+                {
+                    Console.WriteLine();
+                }
+            }
+        }
+
+	    static void VisitProjectItem(IProjectInfo project, IProjectItem item)
 		{
 			if (item.BuildAction != "Compile")
 				return;
@@ -122,12 +160,14 @@ namespace CSharpTest.Net.StampCopyright
 			{
                 lock (typeof(Program))
                 {
-                    _changes++;
-                    Console.WriteLine("Updating: {0}", fileName);
-                    using (StreamWriter wtr = new StreamWriter(fileName, false, encoding))
+                    if(Confirm("Update {0}", fileName))
                     {
-                        wtr.Write(content);
-                        wtr.Flush();
+                        _changes++;
+                        using (StreamWriter wtr = new StreamWriter(fileName, false, encoding))
+                        {
+                            wtr.Write(content);
+                            wtr.Flush();
+                        }
                     }
                 }
 			}
@@ -188,7 +228,10 @@ namespace CSharpTest.Net.StampCopyright
 						if (int.TryParse(m.Value, out fromYear) && fromYear > 1900)
 							minYearFrom = Math.Min(minYearFrom, fromYear);
 
-					if (minYearFrom < DateTime.Now.Year)
+                    if (!String.IsNullOrEmpty(_subversion))
+                        YearFromSubversion(fileName, ref minYearFrom);
+
+				    if (minYearFrom < DateTime.Now.Year)
 						insert = insert.Insert(ixYear, minYearFrom + "-");
 				}
 				if (temp == insert)
@@ -199,5 +242,61 @@ namespace CSharpTest.Net.StampCopyright
 
 			content = String.Format("{0}{1}{2}", insert, Environment.NewLine, content.TrimStart());
 		}
+
+        class OutputCapture
+        {
+            ManualResetEvent _outputComplete = new ManualResetEvent(false);
+            StringWriter _output = new StringWriter();
+
+            public OutputCapture(Process p )
+            {
+                p.OutputDataReceived += new DataReceivedEventHandler(OutputDataReceived);
+                p.BeginOutputReadLine();
+            }
+
+            void OutputDataReceived(object sender, DataReceivedEventArgs e)
+            {
+                if (e.Data == null)
+                    _outputComplete.Set();
+                else
+                    _output.WriteLine(e.Data);
+            }
+
+            public string Output
+            {
+                get { _outputComplete.WaitOne(30000, false); return _output.ToString(); }
+            }
+        }
+
+        static void YearFromSubversion(string fileName, ref int minYearFrom)
+	    {
+            try
+            {
+                ProcessStartInfo psi = new ProcessStartInfo(_subversion);
+                psi.Arguments = String.Format("log --xml --non-interactive \"{0}\"", fileName);
+                psi.CreateNoWindow = true;
+                psi.UseShellExecute = false;
+                psi.RedirectStandardOutput = true;
+                psi.RedirectStandardInput = true;
+                Trace.WriteLine(_subversion + " " + psi.Arguments);
+                Process p = Process.Start(psi);
+                p.StandardInput.Close();
+                OutputCapture capture = new OutputCapture(p);
+                p.WaitForExit(60000);
+                if (p.ExitCode == 0)
+                {
+                    XmlLightDocument doc = new XmlLightDocument(capture.Output);
+                    foreach (XmlLightElement e in doc.Select("/log/logentry/date"))
+                    {
+                        int tmp;
+                        if (int.TryParse(e.InnerText.Substring(0, 4), out tmp) && tmp > 1900 && tmp <= DateTime.Now.Year)
+                            minYearFrom = Math.Min(minYearFrom, tmp);
+                    }
+                }
+                else
+                    Trace.WriteLine(_subversion + " failed: " + p.ExitCode);
+            }
+            catch { return; }
+	    }
 	}
 }

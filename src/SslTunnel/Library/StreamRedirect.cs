@@ -1,4 +1,4 @@
-﻿#region Copyright 2009-2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2009-2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,6 +20,9 @@ using System.IO.Compression;
 
 namespace CSharpTest.Net.SslTunnel
 {
+    /// <summary>
+    /// Used to forward data from one stream to another as soon as it's available.
+    /// </summary>
 	public class StreamRedirect
 	{
 		const int BUFF_SIZE = 16383; //16kb - 0x03fff
@@ -31,9 +34,13 @@ namespace CSharpTest.Net.SslTunnel
 		ManualResetEvent _closed;
 		IAsyncResult _result;
         BinaryLogWrite _logger;
-
+        /// <summary>
+        /// An event to monitor the bytes being sent between client/server
+        /// </summary>
         public delegate void BinaryLogWrite(byte[] bytes, int length);
-
+        /// <summary>
+        /// Creates a redirector between the two streams
+        /// </summary>
         public StreamRedirect(Stream from, Stream to, string connInfo)
 		{
             _logger = null;
@@ -45,8 +52,10 @@ namespace CSharpTest.Net.SslTunnel
 
 			_buffer = new byte[BUFF_SIZE];
 			_result = _from.BeginRead(_buffer, 0, _buffer.Length, OnRead, null);
-		}
-
+        }
+        /// <summary>
+        /// Creates a redirector between the two streams
+        /// </summary>
         public StreamRedirect(Stream from, Stream to, string connInfo, BinaryLogWrite logger)
             : this(from, to, connInfo)
         {
@@ -89,9 +98,13 @@ namespace CSharpTest.Net.SslTunnel
 				Close();
 			}
 		}
-
+        /// <summary>
+        /// Returns a WaitHandle that will be signaled when the connection is closed
+        /// </summary>
 		public WaitHandle WaitClosed { get { return _closed; } }
-
+        /// <summary>
+        /// Forces the connection to close
+        /// </summary>
 		public void Close()
 		{
 			_from.Close();

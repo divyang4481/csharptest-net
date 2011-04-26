@@ -1,4 +1,4 @@
-﻿#region Copyright 2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2010-2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -100,7 +100,7 @@ namespace CSharpTest.Net.RpcLibrary.Interop
             get
             {
                 GetCallInfo();
-                return _clientAddress == null ? new byte[0] : (byte[]) _clientAddress.Clone();
+                return _clientAddress == null ? new byte[0] : (byte[])_clientAddress.Clone();
             }
         }
 
@@ -222,7 +222,7 @@ namespace CSharpTest.Net.RpcLibrary.Interop
                             _isAuthenticated = true;
                             //On Windows XP this only returns a value on LRPC so we know they are local
                             if (attrs.Version == 1)
-                                _callAttrs.IsClientLocal = RpcCallClientLocality.Local; 
+                                _callAttrs.IsClientLocal = RpcCallClientLocality.Local;
                         }
                     }
                 }

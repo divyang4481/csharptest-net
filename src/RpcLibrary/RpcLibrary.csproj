@@ -16,13 +16,12 @@
     <DebugType>full</DebugType>
     <OutputPath>..\bin\</OutputPath>
     <IntermediateOutputPath>$(OutputPath)obj\$(AssemblyName)\</IntermediateOutputPath>
+    <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
     <DefineConstants>NET35;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <DocumentationFile>..\bin\CSharpTest.Net.RpcLibrary.xml</DocumentationFile>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
-    <NoWarn>1591</NoWarn>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\keys\csharptest.net.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>

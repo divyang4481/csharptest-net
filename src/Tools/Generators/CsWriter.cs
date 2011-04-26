@@ -16,6 +16,7 @@ using System;
 using System.CodeDom.Compiler;
 using System.IO;
 using System.Reflection;
+using System.Text;
 using CSharpTest.Net.Collections;
 
 namespace CSharpTest.Net.Generators
@@ -24,7 +25,8 @@ namespace CSharpTest.Net.Generators
     {
         private readonly DisposingList _open;
 
-        public CsWriter() : base(new StringWriter())
+        public CsWriter() : this(new StringWriter()) { }
+        public CsWriter(TextWriter writer) : base(writer)
         {
             _open = new DisposingList();
         }
@@ -41,8 +43,29 @@ namespace CSharpTest.Net.Generators
         }
 
 		public string MakeString(string data)
-		{
-			return "@\"" + data.Replace("\"", "\"\"") + "\"";
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append('"');
+            foreach (char ch in data)
+            {
+                if (ch >= 32 && ch < 128)
+                {
+                    if (ch == '\\' || ch == '\'' || ch == '"')
+                        sb.Append('\\');
+                    sb.Append(ch);
+                    continue;
+                }
+                if (ch == '\r') { sb.Append("\\r"); continue; }
+                if (ch == '\n') { sb.Append("\\n"); continue; }
+                if (ch == '\t') { sb.Append("\\t"); continue; }
+
+                sb.Append('\\');
+                sb.Append((char)('0' + ((ch >> 6) & 3)));
+                sb.Append((char)('0' + ((ch >> 3) & 7)));
+                sb.Append((char)('0' + (ch & 7)));
+            }
+            sb.Append('"');
+            return sb.ToString();
 		}
 
         public void AddNamespaces(params string[] namespaces)
@@ -51,7 +74,13 @@ namespace CSharpTest.Net.Generators
                 WriteLine("using {0};", ns);
         }
 
-        public IDisposable WriteNamespace(string ns) { return WriteBlock("namespace {0}", ns); }
+        public IDisposable WriteNamespace(string ns) 
+        {
+            if (String.IsNullOrEmpty(ns))
+                return new DisposingList();//just some IDisposable... ignored.
+
+            return WriteBlock("namespace {0}", ns);
+        }
 
         public void WriteSummaryXml(string content, params object[] args)
         {

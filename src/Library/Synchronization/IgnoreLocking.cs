@@ -1,4 +1,4 @@
-﻿#region Copyright 2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2010-2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,45 +16,74 @@ using System;
 
 namespace CSharpTest.Net.Synchronization
 {
-	/// <summary>
-	/// Provides the reader/writer locking interface, but resolves to a no-op and no actual
-	/// locking is performed.
-	/// </summary>
-	public class IgnoreLocking : LockStrategyBase
-	{
-		private static readonly IgnoreAll Ignore = new IgnoreAll();
-		
-		/// <summary> Returns a singleton lock </summary>
-		public static readonly ILockStrategy Instance = new IgnoreLocking();
+    /// <summary> Singleton instance of ignore locking </summary>
+    public class IgnoreLockFactory : ILockFactory
+    {
+        /// <summary> Returns the IgnoreLocking.Instance singleton </summary>
+        public ILockStrategy Create() { return IgnoreLocking.Instance; }
+    }
 
-		class IgnoreAll : ReadLock, IWriteLock
-		{
-			protected override bool TryWrite(int timeout, out IWriteLock writeLock)
-			{
-				writeLock = Ignore;
-				return true;
-			}
+    /// <summary>
+    /// wraps the reader/writer lock around Monitor
+    /// </summary>
+    public class IgnoreLocking : ILockStrategy
+    {
+        /// <summary> Singleton instance of ignore locking </summary>
+        public static IgnoreLocking Instance = new IgnoreLocking();
 
-			protected override void Dispose(bool disposing)
-			{ }
-		}
+        void IDisposable.Dispose() { }
 
-		/// <summary>
-		/// Returns true if the lock was successfully obtained within the timeout specified
-		/// </summary>
-		protected override bool TryRead(int timeout, out IReadLock readLock)
-		{
-			readLock = Ignore;
-			return true;
-		}
+        /// <summary> Returns Zero. </summary>
+        public int WriteVersion { get { return 0; } }
 
-		/// <summary>
-		/// Returns true if the lock was successfully obtained within the timeout specified
-		/// </summary>
-		protected override bool TryWrite(int timeout, out IWriteLock writeLock)
-		{
-			writeLock = Ignore;
-			return true;
-		}
-	}
+        /// <summary>
+        /// Returns true if the lock was successfully obtained within the timeout specified
+        /// </summary>
+        public bool TryRead(int timeout)
+        {
+            return true;
+        }
+
+        /// <summary>
+        /// Releases a read lock
+        /// </summary>
+        public void ReleaseRead()
+        { }
+
+        /// <summary>
+        /// Returns true if the lock was successfully obtained within the timeout specified
+        /// </summary>
+        public bool TryWrite(int timeout)
+        {
+            return true;
+        }
+
+        /// <summary>
+        /// Releases a writer lock
+        /// </summary>
+        public void ReleaseWrite()
+        { }
+
+        /// <summary>
+        /// Returns a reader lock that can be elevated to a write lock
+        /// </summary>
+        public ReadLock Read() { return new ReadLock(this, true); }
+
+        /// <summary>
+        /// Returns a reader lock that can be elevated to a write lock
+        /// </summary>
+        /// <exception cref="System.TimeoutException"/>
+        public ReadLock Read(int timeout) { return new ReadLock(this, true); }
+
+        /// <summary>
+        /// Returns a read and write lock
+        /// </summary>
+        public WriteLock Write() { return new WriteLock(this, true); }
+
+        /// <summary>
+        /// Returns a read and write lock
+        /// </summary>
+        /// <exception cref="System.TimeoutException"/>
+        public WriteLock Write(int timeout) { return new WriteLock(this, true); }
+    }
 }

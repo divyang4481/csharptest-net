@@ -1,4 +1,4 @@
-﻿#region Copyright 2008-2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2008-2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -58,5 +58,23 @@ namespace CSharpTest.Net.CSBuild.Configuration
 		public ProjectIncludes Projects { get { return FindOne<ProjectIncludes>() ?? new ProjectIncludes(); } }
 		public BuildTarget[] Targets { get { return FindAll<BuildTarget>(); } }
 		#endregion
+
+
+        internal static Dictionary<string, string> ToDictionary(string[] rawtext)
+        {
+            Dictionary<string, string>  properties = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (string property in rawtext)
+            {
+                string[] values = property.Split(new char[] { '=', ':' }, 2);
+                if (values.Length == 2)
+                {
+                    string key = values[0].Trim();
+                    string val = Environment.ExpandEnvironmentVariables(values[1]).Trim();
+                    properties[key] = val;
+                }
+            }
+            return properties;
+        }
 	}
 }

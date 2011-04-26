@@ -1,4 +1,4 @@
-﻿#region Copyright 2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2010-2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -33,17 +33,17 @@ namespace CSharpTest.Net.Formatting
 			for (int i = 0; i < 6; i++) HexValues['A' + i] = 10 + i;
 		}
 
-		/// <summary> Transforms a sequence of characters from '0' - '9' and 'a' - 'b' in the binary values </summary>
+		/// <summary> Transforms a sequence of characters from '0' - '9' and 'a' - 'f' in the binary values </summary>
         public static string EncodeBytes(byte[] input)
         { return EncodeBytes(input, 0, Check.NotNull(input).Length); }
-        /// <summary> Transforms a sequence of characters from '0' - '9' and 'a' - 'b' in the binary values </summary>
+        /// <summary> Transforms a sequence of characters from '0' - '9' and 'a' - 'f' in the binary values </summary>
         public static string EncodeBytes(byte[] input, int start, int length)
         {
             byte[] output = new byte[length * 2];
             int len = EncodeBytes(input, start, length, output, 0);
             return Encoding.ASCII.GetString(output, 0, len);
         }
-        /// <summary> Transforms a sequence of characters from '0' - '9' and 'a' - 'b' in the binary values </summary>
+        /// <summary> Transforms a sequence of characters from '0' - '9' and 'a' - 'f' in the binary values </summary>
         public static int EncodeBytes(byte[] input, int start, int length, byte[] output, int offset)
 		{
 			Check.NotNull(input);

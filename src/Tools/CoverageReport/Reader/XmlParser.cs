@@ -1,4 +1,4 @@
-﻿#region Copyright 2009-2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2009-2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -32,7 +32,7 @@ namespace CSharpTest.Net.CoverageReport.Reader
 			{
 				try
 				{
-					expressions.Add(new Regex(rx));
+					expressions.Add(new Regex(rx, RegexOptions.Compiled));
 				}
 				catch (ArgumentException e)
 				{
@@ -101,7 +101,7 @@ namespace CSharpTest.Net.CoverageReport.Reader
 					string fullname = String.Format(fmtName, metric.Namespace, metric.Class, metric.MethodName);
 					if (regex.IsMatch(fullname))
 					{
-						Log.Info("Ignoring '{0}' from rule '{1}'", fullname, regex.ToString());
+						//Log.Info("Ignoring '{0}' from rule '{1}'", fullname, regex.ToString());
 						return true;
 					}
 				}
