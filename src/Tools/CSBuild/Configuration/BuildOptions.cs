@@ -1,4 +1,4 @@
-﻿#region Copyright 2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2010-2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,7 +31,8 @@ namespace CSharpTest.Net.CSBuild.Configuration
 		[DefaultValue(4)]
 		public int TimeoutHours = 4;
 
-		[XmlElement("logfile", typeof(LogFilePath))]
+        [XmlElement("logfile", typeof(LogFilePath))]
+        [XmlElement("import", typeof(ImportOptionsPath))]
 		[XmlElement("global-property", typeof(BuildProperty))]
 		[XmlElement("strict-references", typeof(BuildStrictReferences))]
 		[XmlElement("no-standard-references", typeof(NoStdReferences))]
@@ -51,7 +52,8 @@ namespace CSharpTest.Net.CSBuild.Configuration
 			return false;
 		}
 
-		public bool ForceReferencesToFile { get { return GetOption<ProjectReferencesToFile>(); } }
+        public ImportOptionsPath ImportOptionsFile { get { foreach (object o in AllItems) if (o is ImportOptionsPath) return (ImportOptionsPath)o; return null; } }
+        public bool ForceReferencesToFile { get { return GetOption<ProjectReferencesToFile>(); } }
 		public bool NoStdReferences { get { return GetOption<NoStdReferences>(); } }
         public bool StrictReferences { get { return GetOption<BuildStrictReferences>(); } }
 		public bool SaveProjectChanges(out TraceLevel level)
@@ -69,17 +71,14 @@ namespace CSharpTest.Net.CSBuild.Configuration
 		public bool ContinueOnError { get { return GetOption<BuildContinueOnError>(); } }
 		public IEnumerable<BuildProperty> GlobalProperties { get { foreach (object o in _allItems) if (o is BuildProperty) yield return o as BuildProperty; } }
 
-        public string LogPath
+        public string LogPath(IDictionary<string, string> namedValues)
         {
-            get
-            {
-				LogFilePath log;
-				if (GetOption(out log))
-					return log.AbsolutePath;
-				if (log == null)
-					return Util.MakeAbsolutePath(OutputRelative.FixedPath, DefaultLogPath);
-				return null;
-	        }
+			LogFilePath log;
+			if (GetOption(out log))
+				return log.AbsolutePath(namedValues);
+			if (log == null)
+                return Util.MakeAbsolutePath(OutputRelative.FixedPath, DefaultLogPath, namedValues);
+			return null;
         }
 
 		public bool ConsoleEnabled { get { return ConsoleLevel != null; } }
@@ -98,6 +97,10 @@ namespace CSharpTest.Net.CSBuild.Configuration
     }
 
 	interface IEnabledItem { bool IsEnabled(); }
+
+    [Serializable]
+    public class ImportOptionsPath : BaseFileItem
+    { }
 
     [Serializable]
 	public class LogFilePath : BaseFileItem, IEnabledItem

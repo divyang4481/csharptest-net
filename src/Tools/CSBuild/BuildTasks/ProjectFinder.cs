@@ -1,4 +1,4 @@
-﻿#region Copyright 2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2010-2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,12 +25,13 @@ namespace CSharpTest.Net.CSBuild.BuildTasks
 	[Serializable]
     class ProjectFinder : BuildTask
     {
+        Dictionary<String, String> _namedValues = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         Dictionary<String, String> _include = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         Dictionary<String, String> _removes = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         Dictionary<String, List<String>> _depends = new Dictionary<string, List<String>>(StringComparer.OrdinalIgnoreCase);
 
-        public ProjectFinder()
-        { }
+        public ProjectFinder(TargetBuilder targetBuilder)
+        { _namedValues = targetBuilder.NamedValues; }
 
         public void Add(IEnumerable<AddProjects> addItems)
         {
@@ -82,7 +83,7 @@ namespace CSharpTest.Net.CSBuild.BuildTasks
 
             foreach (BaseFileItem location in locations)
             {
-                string path = Util.GetFullPath(location.AbsolutePath);
+                string path = Util.GetFullPath(location.AbsolutePath(_namedValues));
                 if (Directory.Exists(path))
                     path = String.Format("{0}\\*.?*proj", path.TrimEnd('\\'));
                 files.Add(path);

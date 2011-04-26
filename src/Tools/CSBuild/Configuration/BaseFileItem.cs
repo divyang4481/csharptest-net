@@ -1,4 +1,4 @@
-﻿#region Copyright 2008-2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2008-2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,7 +34,7 @@ namespace CSharpTest.Net.CSBuild.Configuration
 		[XmlAttribute("path")]
 		public String Path { get { return _path; } set { _path = value; } }
 
-		public virtual string AbsolutePath
-		{ get { return Util.MakeAbsolutePath(_rel, _path); } }
+		public virtual string AbsolutePath(IDictionary<string, string> namedValues)
+		{ return Util.MakeAbsolutePath(_rel, _path, namedValues); }
 	}
 }

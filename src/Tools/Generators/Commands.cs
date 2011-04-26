@@ -13,9 +13,15 @@
  */
 #endregion
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using CSharpTest.Net.Commands;
 using CSharpTest.Net.Generators.ResX;
+using CSharpTest.Net.Generators.ResXtoMc;
+using CSharpTest.Net.Html;
+using CSharpTest.Net.IO;
+using CSharpTest.Net.Processes;
 
 namespace CSharpTest.Net.Generators
 {
@@ -45,7 +51,7 @@ namespace CSharpTest.Net.Generators
             bool testFormat,
 			[Argument("sealed", Description = "Generates exceptions as sealed classes.", DefaultValue = false)]
             bool sealedExceptions,
-            [Argument("base", Description = "The default base exception to derive from.", DefaultValue = "ApplicationException")]
+            [Argument("base", Description = "The default base exception to derive from.", DefaultValue = "System.ApplicationException")]
             string baseException
 			//[Argument("extension", "ext", Description = "The output extension to use, otherwise '.Generated.cs'.", DefaultValue = ".Generated.cs")]
 			//string extension
@@ -56,6 +62,128 @@ namespace CSharpTest.Net.Generators
 
             if (testFormat && !writer.Test(Console.Error))
                 throw new ApplicationException("One or more String.Format operations failed.");
+        }
+
+        [Command("ResXtoMc", Description = "Generates a Windows event log message file from a resx input file.")]
+        public static void ResXtoMc(
+            [Argument("output", "out", Description = "The target file path of the mc file to generate.")]
+            string outputFile,
+            [Argument("input", "in", Description = "The file path of either a resx file, or a project to scan for resx files within.")]
+            string[] files
+            )
+        {
+            McFileGenerator gen = new McFileGenerator(files);
+            using (Stream io = File.Open(outputFile, FileMode.Create, FileAccess.Write, FileShare.None))
+            using (StreamWriter writer = new StreamWriter(io))
+                gen.Write(writer);
+        }
+
+        [Command("ProjectResX", Description = "Generates the message files from a project and injects them into the project.")]
+        public static void ProjectResX(
+            [Argument("csproj", Description = "The csproj to generate message file for.")]
+            string project,
+            [Argument("name", Description = "The relative path and name of the generated resource files.", DefaultValue = "Resources")]
+            string naming,
+            [Argument("versionInfo", Description = "A csproj containing or an AssemblyInfo.cs file -- or -- a dll to extract version info from.", DefaultValue = null)]
+            string versionInfo,
+            [Argument("tools", Description = "The directory used to locate the mc.exe and rc.exe command line tools.", DefaultValue = null)]
+            string toolsBin
+            )
+        {
+            FauxProject proj = new FauxProject(project);
+            Dictionary<string, string> vars = proj.GetProjectVariables();
+
+            string mcFile = Path.Combine(Path.GetDirectoryName(project), naming + ".mc");
+            string dir = Path.GetDirectoryName(mcFile);
+            Directory.CreateDirectory(dir);
+
+            string nsSuffix = Path.GetDirectoryName(naming).Replace('/', '.').Replace('\\', '.').Trim('.');
+            if (!String.IsNullOrEmpty(nsSuffix))
+                nsSuffix = "." + nsSuffix;
+
+            McFileGenerator gen = new McFileGenerator(new string[] { project });
+            using (Stream io = File.Open(mcFile, FileMode.Create, FileAccess.Write, FileShare.None))
+            using (StreamWriter writer = new StreamWriter(io))
+                gen.Write(writer);
+
+            McCompiler mc = new McCompiler(gen, mcFile);
+            mc.IntermediateFiles = dir;
+            mc.Namespace = String.Format("{0}{1}", vars["RootNamespace"], nsSuffix);
+            
+            if (!String.IsNullOrEmpty(versionInfo))
+                mc.VersionInfo.ReadFrom(versionInfo);
+            else
+                mc.VersionInfo.ReadFrom(project);
+    
+            if (!String.IsNullOrEmpty(toolsBin))
+                mc.ToolsBin = toolsBin;
+
+            if (vars.ContainsKey("ApplicationIcon"))
+                mc.IconFile = Path.Combine(dir, vars["ApplicationIcon"]);
+
+            string rcFile;
+            mc.CreateResFile(vars["TargetFileName"], out rcFile);
+            File.WriteAllText(Path.ChangeExtension(rcFile, ".Constants.cs"), mc.CreateConstants(Path.ChangeExtension(rcFile, ".h")));
+            File.WriteAllText(Path.ChangeExtension(rcFile, ".InstallUtil.cs"), mc.CreateInstaller());
+        }
+
+        [Command("ResXtoMessageDll", Description = "Generates and compiles a Windows event log message assembly.")]
+        public static void ResXtoMessageDll(
+            [Argument("output", "out", Description = "The target assembly name to generate.")]
+            string outputFile,
+            [Argument("input", "in", Description = "The file path of either a resx file, or a project to scan for resx files within.")]
+            string[] files,
+            [Argument("intermediate", "temp", Description = "A directory used for intermediate files.", DefaultValue = "%TEMP%")]
+            string intermediateFiles,
+            [Argument("versionInfo", Description = "A csproj containing or an AssemblyInfo.cs file -- or -- a dll to extract version info from.", DefaultValue = null)]
+            string versionInfo,
+            [Argument("namespace", Description = "The namespace to use for the embedded constants and install utility classes.", DefaultValue = null)]
+            string nameSpace,
+            [Argument("tools", Description = "The directory used to locate the mc.exe and rc.exe command line tools.", DefaultValue = null)]
+            string toolsBin,
+            [Argument("csc", Description = "Additional options to provide to the csc command line compiler.", DefaultValue = "")]
+            string cscOptions
+            )
+        {
+            TempDirectory tempDir = null;
+            try
+            {
+                intermediateFiles = intermediateFiles == "%TEMP%"
+                                        ? (tempDir = new TempDirectory()).TempPath
+                                        : Path.GetFullPath(Environment.ExpandEnvironmentVariables(intermediateFiles));
+
+                string mcFile = Path.Combine(intermediateFiles, Path.GetFileNameWithoutExtension(outputFile) + ".mc");
+
+                McFileGenerator gen = new McFileGenerator(files);
+                using (Stream io = File.Open(mcFile, FileMode.Create, FileAccess.Write, FileShare.None))
+                using (StreamWriter writer = new StreamWriter(io))
+                    gen.Write(writer);
+
+                McCompiler mc = new McCompiler(gen, mcFile);
+                mc.IntermediateFiles = intermediateFiles;
+
+                if (!String.IsNullOrEmpty(nameSpace))
+                    mc.Namespace = nameSpace;
+
+                if (!String.IsNullOrEmpty(versionInfo))
+                    mc.VersionInfo.ReadFrom(versionInfo);
+                
+                if (!String.IsNullOrEmpty(toolsBin))
+                    mc.ToolsBin = toolsBin;
+
+                mc.Compile(outputFile, cscOptions ?? "");
+            }
+            catch
+            {
+                if(tempDir != null)
+                    tempDir.Detatch();// for diagnostics we allow this to leak if we fail
+                tempDir = null;
+            }
+            finally
+            {
+                if (tempDir != null)
+                    tempDir.Dispose();
+            }
         }
     }
 }

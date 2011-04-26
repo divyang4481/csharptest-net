@@ -1,0 +1,22 @@
+syntax: glob
+
+_ReSharper.*
+obj
+ipch
+bin
+Bin
+Debug
+Release
+*.user
+*.suo
+*.sln
+*.cache
+*.vspscc
+*.log
+*.ncb
+*.pch
+*.sdf
+*.zip
+*.mdf
+*.pdb
+*.snk

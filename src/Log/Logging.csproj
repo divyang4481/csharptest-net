@@ -13,13 +13,15 @@
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <OutputPath>..\bin\</OutputPath>
     <IntermediateOutputPath>$(OutputPath)obj\$(AssemblyName)\</IntermediateOutputPath>
-    <DocumentationFile Condition="'$(OutputType)' == 'Library'">$(OutputPath)$(AssemblyName).xml</DocumentationFile>
+    <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
     <DebugSymbols>True</DebugSymbols>
     <DebugType>pdbonly</DebugType>
     <DefineConstants>NET35;TRACE</DefineConstants>
     <ErrorReport>none</ErrorReport>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
     <WarningLevel>4</WarningLevel>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\keys\csharptest.net.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <Optimize>False</Optimize>

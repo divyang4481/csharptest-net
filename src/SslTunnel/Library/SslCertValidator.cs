@@ -1,4 +1,4 @@
-﻿#region Copyright 2009-2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2009-2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,21 +20,31 @@ using System.IO;
 
 namespace CSharpTest.Net.SslTunnel
 {
+    /// <summary>
+    /// Provides a validator for an endpoint's SSL certificate
+    /// </summary>
 	public class SslCertValidator
 	{
 		readonly List<ExpectedCertificate> _allowed;
+        /// <summary>
+        /// Constructs a validator for an endpoint's SSL certificate
+        /// </summary>
 		public SslCertValidator(params ExpectedCertificate[] allow)
 		{
 			_allowed = new List<ExpectedCertificate>();
 			if (allow != null)
 				_allowed.AddRange(allow);
 		}
-
+        /// <summary>
+        /// Returns true if a certificate is required.
+        /// </summary>
 		public bool CertRequired
 		{
 			get { return _allowed.Count > 0; }
 		}
-
+        /// <summary>
+        /// Returns true if the endpoint's certificate is valid
+        /// </summary>
 		public bool IsValid(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
 		{
 			DebugDumpCertificate(certificate);
@@ -76,14 +86,18 @@ namespace CSharpTest.Net.SslTunnel
 
 			return true;
 		}
-
+        /// <summary>
+        /// Logs a certificate's properties to the Trace window
+        /// </summary>
 		public static void DebugDumpCertificate(X509Certificate certificate)
 		{
 			StringWriter sw = new StringWriter();
 			DebugDumpCertificate(certificate, sw);
 			Log.Verbose(sw.ToString());
 		}
-
+        /// <summary>
+        /// Logs a certificate's properties to the give text writer
+        /// </summary>
 		public static void DebugDumpCertificate(X509Certificate certificate, TextWriter sw)
 		{
 			if (certificate != null)

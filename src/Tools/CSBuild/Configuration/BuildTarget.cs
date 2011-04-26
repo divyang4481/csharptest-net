@@ -1,4 +1,4 @@
-﻿#region Copyright 2008-2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2008-2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -120,9 +120,9 @@ namespace CSharpTest.Net.CSBuild.Configuration
 	[System.Diagnostics.DebuggerDisplay("{Name} = {Path}")]
 	public class BuildOutput : BaseFileItem
 	{
-		public string Name { get { return "OutputPath"; } }
-		public override string AbsolutePath
-		{ get { return base.AbsolutePath.TrimEnd('\\') + "\\"; } }
+        public string Name { get { return "OutputPath"; } }
+        public override string AbsolutePath(IDictionary<string, string> namedValues)
+		{ return base.AbsolutePath(namedValues).TrimEnd('\\') + "\\"; }
 	}
 
     [Serializable]
@@ -140,7 +140,7 @@ namespace CSharpTest.Net.CSBuild.Configuration
 	public class BuildIntermediateFiles : BaseFileItem
 	{
 		public string Name { get { return "IntermediateOutputPath"; } }
-		public override string AbsolutePath
-		{ get { return base.AbsolutePath.TrimEnd('\\') + "\\"; } }
-	}
+        public override string AbsolutePath(IDictionary<string, string> namedValues)
+        { return base.AbsolutePath(namedValues).TrimEnd('\\') + "\\"; }
+    }
 }

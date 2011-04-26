@@ -1,4 +1,4 @@
-﻿#region Copyright 2009-2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2009-2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -120,9 +120,9 @@ namespace CSharpTest.Net.CoverageReport.Counters
 			if (result != 0) return result;
 
 			if (this.Line != other.Line)
-				return (other.Line - this.Line);
+                return Line.CompareTo(other.Line);
 			if (this.Column != other.Column)
-				return (other.Column - this.Column);
+                return Column.CompareTo(other.Column);
 
 			return 0;
 		}

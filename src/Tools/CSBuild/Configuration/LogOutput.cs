@@ -1,4 +1,4 @@
-﻿#region Copyright 2008-2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2008-2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -39,17 +39,14 @@ namespace CSharpTest.Net.CSBuild.Configuration
 		[XmlAttribute("file")]
 		public string FileName;
 
-		public override string AbsolutePath
+		public override string AbsolutePath(IDictionary<string, string> namedValues)
 		{
-			get
+			if (this.Path == null)
 			{
-				if (this.Path == null)
-				{
-					this.RelativeTo = OutputRelative.None;
-					return FileName;
-				}
-				return base.AbsolutePath;
+				this.RelativeTo = OutputRelative.None;
+				return FileName;
 			}
+			return base.AbsolutePath(namedValues);
 		}
 	}
 

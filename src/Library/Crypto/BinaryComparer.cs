@@ -1,4 +1,4 @@
-﻿#region Copyright 2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2010-2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -49,12 +49,7 @@ namespace CSharpTest.Net.Crypto
         public static int GetHashCode(byte[] bytes)
         {
             if(bytes == null) return 0;
-
-            int sum = 0;
-            foreach (byte b in bytes)
-                sum += b;
-
-            return sum ^ (bytes.Length << 16);
+            return new IO.Crc32(bytes).Value;
         }
 
         /// <summary> Compares the contents of the byte arrays and returns the result. </summary> 

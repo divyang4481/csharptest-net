@@ -1,4 +1,4 @@
-﻿#region Copyright 2008-2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2009-2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,6 +26,9 @@ using System.Threading;
 
 namespace CSharpTest.Net.SslTunnel
 {
+    /// <summary>
+    /// A wrapper around the TcpListener 
+    /// </summary>
 	public class TcpServer : IDisposable
 	{
 		readonly string _bindingName;
@@ -39,6 +42,9 @@ namespace CSharpTest.Net.SslTunnel
 
 		readonly List<IDisposable> _resources;
 
+        /// <summary>
+        /// Constructs a server using the the given ip or host name and port number
+        /// </summary>
 		public TcpServer(string bindingName, int bindingPort)
 		{
 			_resources = new List<IDisposable>(new IDisposable[] { _shutdown = new ManualResetEvent(false), _ready = new ManualResetEvent(false) });
@@ -50,16 +56,20 @@ namespace CSharpTest.Net.SslTunnel
 			_server.Name = String.Format("TcpServer ({0}:{1}", _bindingName, _bindingPort);
 			_server.SetApartmentState(ApartmentState.MTA);
 		}
-
+        /// <summary>
+        /// Starts listening for requests
+        /// </summary>
 		public void Start()
 		{
 			_server.Start();
 
 			WaitHandle[] handles = new WaitHandle[] { _ready, _shutdown };
-			if (0 != WaitHandle.WaitAny(handles, new TimeSpan(0, 1, 0), false))
+            if (0 != WaitHandle.WaitAny(handles, new TimeSpan(0, 1, 0), true))
 				throw new ApplicationException("Failed to start service thread.");
 		}
-
+        /// <summary>
+        /// Stops listening for requests
+        /// </summary>
 		public void Stop()
 		{
 			_shutdown.Set();
@@ -67,7 +77,9 @@ namespace CSharpTest.Net.SslTunnel
 			_server.Abort();
 			_server.Join();
 		}
-
+        /// <summary>
+        /// Disposes of the server, stops listening if needed.
+        /// </summary>
 		public virtual void Dispose()
 		{
 			try
@@ -111,7 +123,7 @@ namespace CSharpTest.Net.SslTunnel
 					IAsyncResult result = listener.BeginAcceptTcpClient(OnConnect, listener);
 					handles[0] = result.AsyncWaitHandle;
 
-					if (0 != WaitHandle.WaitAny(handles, -1, false))
+                    if (0 != WaitHandle.WaitAny(handles, -1, true))
 					{
 						listener.Stop();
 						break;
@@ -155,6 +167,9 @@ namespace CSharpTest.Net.SslTunnel
 			}
 		}
 
+        /// <summary>
+        /// Allows customization of the connection handshake (SSL)
+        /// </summary>
 		protected virtual Stream ConnectClient(System.Net.Sockets.TcpClient client)
 		{
 			return client.GetStream();
@@ -191,31 +206,44 @@ namespace CSharpTest.Net.SslTunnel
 				client.Close();
 			}
 		}
-
+        /// <summary>
+        /// The event argument used to handling inbound connections
+        /// </summary>
 		public class ConnectedEventArgs : System.EventArgs
 		{
 			readonly TcpServer _server;
 			readonly System.Net.Sockets.TcpClient _client;
 			readonly Stream _stream;
 
-			public ConnectedEventArgs(TcpServer server, System.Net.Sockets.TcpClient client, Stream stream)
+            internal ConnectedEventArgs(TcpServer server, System.Net.Sockets.TcpClient client, Stream stream)
 			{
 				_server = server;
 				_client = client;
 				_stream = stream;
 			}
-
+            /// <summary>
+            /// Closes the connection on this client
+            /// </summary>
 			public void Close()
 			{
                 _client.Close();
 			}
-
+            /// <summary>
+            /// Returns the local endpoint the client connected to
+            /// </summary>
 			public IPEndPoint LocalEndPoint { get { return _server._localEndpoint; } }
+            /// <summary>
+            /// Returns the remote endpoint of the client connection
+            /// </summary>
 			public IPEndPoint RemoteEndPoint { get { return (IPEndPoint)_client.Client.RemoteEndPoint; } }
-
+            /// <summary>
+            /// The network stream for this connection
+            /// </summary>
 			public Stream Stream { get { return _stream; } }
 		}
-
+        /// <summary>
+        /// Raised when a client establishes a connection.
+        /// </summary>
 		public event EventHandler<ConnectedEventArgs> Connected;
 	}
 }

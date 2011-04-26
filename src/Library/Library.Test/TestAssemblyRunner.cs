@@ -1,4 +1,4 @@
-﻿#region Copyright 2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2010-2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,6 +14,7 @@
 #endregion
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using CSharpTest.Net.IO;
 using CSharpTest.Net.Reflection;
 using NUnit.Framework;
@@ -223,8 +224,8 @@ namespace CSharpTest.Net.Library.Test
 
             using (AssemblyRunner runner = new AssemblyRunner(Exe))
             {
-                bool gotExit = false;
-                runner.ProcessExited += delegate(Object o, ProcessExitedEventArgs e) { gotExit = true; };
+                ManualResetEvent gotExit = new ManualResetEvent(false);
+                runner.ProcessExited += delegate(Object o, ProcessExitedEventArgs e) { gotExit.Set(); };
                 Assert.IsFalse(runner.IsRunning);
                 runner.Kill(); // always safe to call
 
@@ -242,7 +243,7 @@ namespace CSharpTest.Net.Library.Test
                 Assert.IsFalse(runner.WaitForExit(TimeSpan.FromSeconds(1), false));
                 runner.Kill();
                 Assert.IsFalse(runner.IsRunning);
-                Assert.IsTrue(gotExit);
+                Assert.IsTrue(gotExit.WaitOne(30000, false));
             }
         }
     }

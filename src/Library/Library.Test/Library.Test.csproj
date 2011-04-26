@@ -43,6 +43,19 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="LockingTests\BaseLockTest.cs" />
+    <Compile Include="LockingTests\BaseThreadedReaderWriterTest.cs" />
+    <Compile Include="LockingTests\BaseThreadedWriterTest.cs" />
+    <Compile Include="LockingTests\TestDebugLocking.cs" />
+    <Compile Include="LockingTests\TestLockingStructs.cs" />
+    <Compile Include="LockingTests\TestMutexLock.cs" />
+    <Compile Include="LockingTests\TestReservedWriteLocking.cs" />
+    <Compile Include="LockingTests\TestSimpleReadWriteLocking.cs" />
+    <Compile Include="LockingTests\TestIgnoreLocking.cs" />
+    <Compile Include="LockingTests\TestReaderWriterLocking.cs" />
+    <Compile Include="LockingTests\TestExclusiveLocking.cs" />
+    <Compile Include="LockingTests\TestWriterOnlyLocking.cs" />
+    <Compile Include="LockingTests\ThreadedReaderWriter.cs" />
     <Compile Include="Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -50,15 +63,23 @@
     </Compile>
     <EmbeddedResource Include="Resources\AssemblyRunnerSampleApp.cs" />
     <Compile Include="TestAssemblyRunner.cs" />
+    <Compile Include="TestClampedStream.cs" />
+    <Compile Include="TestCrc32.cs" />
     <Compile Include="TestDisposable.cs" />
+    <Compile Include="TestFragmentedFile.cs" />
+    <Compile Include="TestGenericCollection.cs" />
     <Compile Include="TestHashDerivedBytes.cs" />
     <Compile Include="TestCsvReader.cs" />
     <Compile Include="TestHexEncoding.cs">
     </Compile>
     <Compile Include="TestHtmlParser.cs" />
+    <Compile Include="TestIpcChannel.cs" />
+    <Compile Include="TestLinkList.cs" />
     <Compile Include="TestModifiedRijndael.cs" />
+    <Compile Include="TestObjectKeepAlive.cs" />
     <Compile Include="TestPassword.cs" />
     <Compile Include="TestPasswordHash.cs" />
+    <Compile Include="TestPrimitiveSerializer.cs" />
     <Compile Include="TestSafe64Encoding.cs" />
     <Compile Include="TestBinaryComparer.cs" />
     <Compile Include="TestCloning.cs" />
@@ -79,7 +100,6 @@
     <Compile Include="TestReadOnlyList.cs" />
     <Compile Include="TestReplaceFile.cs" />
     <Compile Include="TestRSACrypto.cs" />
-    <Compile Include="TestRwLocking.cs" />
     <Compile Include="TestSalt.cs" />
     <Compile Include="TestScriptRunner.cs" />
     <Compile Include="TestSecureString.cs" />
@@ -87,15 +107,21 @@
     <Compile Include="TestSerializers.cs" />
     <Compile Include="TestSetList.cs" />
     <Compile Include="TestStorage.cs" />
+    <Compile Include="TestStreamCache.cs" />
     <Compile Include="TestStreams.cs" />
     <Compile Include="TestStringConvert.cs" />
     <Compile Include="TestStringUtils.cs" />
+    <Compile Include="TestSynchronizedCollections.cs" />
     <Compile Include="TestTempFiles.cs" />
     <Compile Include="TestTimeoutAction.cs" />
     <Compile Include="TestUsageCounter.cs" />
     <Compile Include="TestUserSettings.cs" />
+    <Compile Include="TestVariantSerializer.cs" />
+    <Compile Include="TestWaitAndContinue.cs" />
+    <Compile Include="TestWeakReferenceT.cs" />
     <Compile Include="TestWhirlpoolHash.cs" />
     <Compile Include="TestWin32Window.cs" />
+    <Compile Include="TestWorkQueue.cs" />
     <Compile Include="TestXhtmlValid.cs" />
   </ItemGroup>
   <ItemGroup>

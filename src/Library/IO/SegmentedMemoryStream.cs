@@ -1,4 +1,4 @@
-﻿#region Copyright 2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2010-2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,7 +13,6 @@
  */
 #endregion
 using System;
-using System.Collections.Generic;
 using System.IO;
 
 // disables non-comment warning
@@ -21,14 +20,46 @@ using System.IO;
 
 namespace CSharpTest.Net.IO
 {
-	/// <summary>
+    /// <summary>
 	/// Creates a stream over an array of byte arrays in memory to reduce use of the LOH and array resizing operation.
 	/// </summary>
 	public class SegmentedMemoryStream : Stream
-	{
-		readonly List<byte[]> _contents;
-		readonly int _segmentSize;
-		long _length;
+    {
+        #region Contents
+        class Contents
+        {
+            readonly int _segmentSize;
+            byte[][] _segments;
+            int _segmentCount;
+            long _length;
+
+            public Contents(int segmentSize)
+            {
+                _segmentSize = segmentSize;
+                _segments = new byte[16][];
+            }
+
+            public int SegmentSize { get { return _segmentSize; } }
+            public long Length { get { return _length; } set { _length = value; } }
+
+            public byte[] this[int index] { get { return _segments[index]; } }
+
+            public void GrowTo(int newSegmentCount)
+            {
+                lock (this)
+                {
+                    while (_segments.Length < newSegmentCount)
+                        Array.Resize(ref _segments, _segments.Length << 1);
+                    while (_segmentCount < newSegmentCount)
+                    {
+                        _segments[_segmentCount] = new byte[_segmentSize];
+                        _segmentCount++;
+                    }
+                }
+            }
+        }
+        #endregion
+        readonly Contents _contents;
 		long _position;
 
 		/// <summary>
@@ -42,65 +73,66 @@ namespace CSharpTest.Net.IO
 		/// </summary>
 		public SegmentedMemoryStream(int segmentSize)
 		{
-			_segmentSize = segmentSize;
-			_contents = new List<byte[]>();
-			_length = 0;
+			_contents = new Contents(segmentSize);
 			_position = 0;
 		}
+        /// <summary> Creates a 'clone' of the stream sharing the same contents </summary>
+        protected SegmentedMemoryStream(SegmentedMemoryStream from)
+        {
+            _contents = from._contents;
+            _position = 0;
+        }
 
-		public override bool CanRead { get { return true; } }
-		public override bool CanSeek { get { return true; } }
-		public override bool CanWrite { get { return true; } }
+	    public override bool CanRead { get { return _position >= 0; } }
+        public override bool CanSeek { get { return _position >= 0; } }
+        public override bool CanWrite { get { return _position >= 0; } }
 
 		public override void Flush()
 		{ }
 
 		protected override void Dispose(bool disposing)
 		{
-			_contents.Clear();
-			_length = _position = -1;
+			_position = -1;
 			base.Dispose(disposing);
 		}
 
 		public override long Length
 		{
-			get { AssertOpen(); return _length; }
+			get { AssertOpen(); return _contents.Length; }
 		}
 
 		private void AssertOpen()
 		{
-			if (_length < 0) throw new ObjectDisposedException(GetType().FullName);
+            if (_position < 0) throw new ObjectDisposedException(GetType().FullName);
 		}
 
 		private void OffsetToIndex(long offset, out int arrayIx, out int arrayOffset)
 		{
-			arrayIx = (int)(offset / _segmentSize);
-			arrayOffset = (int)(offset % _segmentSize);
+			arrayIx = (int)(offset / _contents.SegmentSize);
+            arrayOffset = (int)(offset % _contents.SegmentSize);
 		}
 
 		public override void SetLength(long value)
 		{
 			AssertOpen();
-			Check.InRange<long>(value, 0L, int.MaxValue);
+			Check.InRange(value, 0L, int.MaxValue);
 
 			int arrayIx, arrayOffset;
 			OffsetToIndex(value, out arrayIx, out arrayOffset);
 
-			int chunksRequired = arrayIx + (arrayOffset > 0 ? 1 : 0);
-			while (_contents.Count < chunksRequired)
-				_contents.Add(new byte[_segmentSize]);
-
-			_length = value;
+            int chunksRequired = arrayIx + (arrayOffset > 0 ? 1 : 0);
+            _contents.GrowTo(chunksRequired);
+            _contents.Length = value;
 		}
 
-		public override long Position
+	    public override long Position
 		{
 			get { return _position; }
 			set
 			{
 				AssertOpen();
-				Check.InRange<long>(value, 0L, int.MaxValue);
-				if (value > _length)
+				Check.InRange(value, 0L, int.MaxValue);
+				if (value > _contents.Length)
 					SetLength(value);
 				_position = value;
 			}
@@ -109,7 +141,7 @@ namespace CSharpTest.Net.IO
 		public override long Seek(long offset, SeekOrigin origin)
 		{
 			if (origin == SeekOrigin.End)
-				offset = _length + offset;
+                offset = _contents.Length + offset;
 			if (origin == SeekOrigin.Current)
 				offset = _position + offset;
 			return Position = offset;
@@ -118,14 +150,15 @@ namespace CSharpTest.Net.IO
 		public override int Read(byte[] buffer, int offset, int count)
 		{
 			AssertOpen();
-			int total = 0, arrayIx, arrayOffset;
-			if ((_length - _position) < count)
-				count = (int)(_length - _position);
+			int total = 0;
+            if ((_contents.Length - _position) < count)
+                count = (int)(_contents.Length - _position);
 
 			while (count > 0)
 			{
+                int arrayIx, arrayOffset;
 				OffsetToIndex(_position, out arrayIx, out arrayOffset);
-				int amt = Math.Min(_segmentSize - arrayOffset, count);
+                int amt = Math.Min(_contents.SegmentSize - arrayOffset, count);
 
 				byte[] chunk = _contents[arrayIx];
 				Array.Copy(chunk, arrayOffset, buffer, offset, amt);
@@ -140,14 +173,14 @@ namespace CSharpTest.Net.IO
 		public override void Write(byte[] buffer, int offset, int count)
 		{
 			AssertOpen();
-			if ((_position + count) > _length)
+            if ((_position + count) > _contents.Length)
 				SetLength(_position + count);
 
-			int arrayIx, arrayOffset;
 			while (count > 0)
 			{
+			    int arrayIx, arrayOffset;
 				OffsetToIndex(_position, out arrayIx, out arrayOffset);
-				int amt = Math.Min(_segmentSize - arrayOffset, count);
+                int amt = Math.Min(_contents.SegmentSize - arrayOffset, count);
 
 				byte[] chunk = _contents[arrayIx];
 				Array.Copy(buffer, offset, chunk, arrayOffset, amt);

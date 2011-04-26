@@ -1,4 +1,4 @@
-﻿#region Copyright 2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2010-2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,6 +14,10 @@
 #endregion
 namespace CSharpTest.Net.RpcLibrary
 {
+#pragma warning disable 1591
+    /// <summary>
+    /// Defines the various types of protocols that are supported by Win32 RPC
+    /// </summary>
     public enum RpcProtseq
     {
         /// <summary>
@@ -87,15 +91,22 @@ namespace CSharpTest.Net.RpcLibrary
         /// </summary>
         ncalrpc
     }
-
+    /// <summary>
+    /// Defines the type of protocol the client is connected with
+    /// </summary>
     public enum RpcProtoseqType : uint
     {
+        /// <summary> TCP, UDP, IPX over TCP, etc </summary>
         TCP = 0x1,
+        /// <summary> Named Pipes </summary>
         NMP = (0x2),
+        /// <summary> LPRC / Local RPC </summary>
         LRPC = (0x3),
+        /// <summary> HTTP / IIS integrated </summary>
         HTTP = (0x4),
     }
 
+    /// <summary> WIN32 RPC Error Codes </summary>
     public enum RpcError : uint
     {
         RPC_S_OK = 0,
@@ -121,6 +132,10 @@ namespace CSharpTest.Net.RpcLibrary
         RPC_E_FAIL = 0x80004005u
     }
 
+    /// <summary>
+    /// The protection level of the communications, RPC_C_PROTECT_LEVEL_PKT_PRIVACY is 
+    /// the default for authenticated communications.
+    /// </summary>
     public enum RpcProtectionLevel : uint
     {
         RPC_C_PROTECT_LEVEL_DEFAULT = 0,
@@ -132,6 +147,12 @@ namespace CSharpTest.Net.RpcLibrary
         RPC_C_PROTECT_LEVEL_PKT_PRIVACY = 6,
     }
 
+    /// <summary>
+    /// The authentication type to be used for connection, GSS_NEGOTIATE / WINNT
+    /// are the most common.  Be aware that GSS_NEGOTIATE is not available unless
+    /// the machin is a member of a domain that is not running WinNT (or in legacy 
+    /// mode).
+    /// </summary>
     public enum RpcAuthentication : uint
     {
         RPC_C_AUTHN_NONE = 0,

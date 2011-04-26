@@ -1,4 +1,4 @@
-﻿#region Copyright 2009-2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2009-2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,11 +28,6 @@ namespace CSharpTest.Net.Reflection
 
 		/// <summary>
 		/// Constructs the PropertyType info from a source type and an instance property or field name
-		/// <example>
-		/// PropertyType pt = new PropertyType(typeof(Form), "ClientRectangle");
-		/// Assert.AreEqual(typeof(Rectangle), pt.Type);
-		/// Assert.AreEqual("ClientRectangle", pt.Name);
-		/// </example>
 		/// </summary>
 		/// <param name="type">Any System.Type object to find the property or field on</param>
 		/// <param name="name">The name of the property or field to find</param>

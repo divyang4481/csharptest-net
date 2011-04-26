@@ -1,4 +1,4 @@
-﻿#region Copyright 2008-2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2009-2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,18 +25,25 @@ using System.Threading;
 
 namespace CSharpTest.Net.SslTunnel
 {
+    /// <summary>
+    /// TcpServer implementation that uses SSL
+    /// </summary>
 	public class SslServer : TcpServer
 	{
 		readonly X509Certificate _cert;
 		readonly SslCertValidator _certVerify;
-
+        /// <summary>
+        /// Constructs the server with the specified certificate and optionally allowable client certificates
+        /// </summary>
 		public SslServer(string bindingName, int bindingPort, X509Certificate certificate, ExpectedCertificate[] allowClients)
 			: base(bindingName, bindingPort)
 		{
 			_cert = certificate;
 			_certVerify = new SslCertValidator(allowClients);
 		}
-
+        /// <summary>
+        /// Establishes the SSL connection for this client.
+        /// </summary>
 		protected override Stream ConnectClient(System.Net.Sockets.TcpClient client)
 		{
 			// A client has connected. Create the 

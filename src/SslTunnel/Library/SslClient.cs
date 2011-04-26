@@ -1,4 +1,4 @@
-﻿#region Copyright 2008-2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2009-2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,27 +25,39 @@ using System.Threading;
 
 namespace CSharpTest.Net.SslTunnel
 {
+    /// <summary>
+    /// Creates a TcpClient that uses SSL
+    /// </summary>
 	public class SslClient : TcpClient
 	{
 		readonly X509Certificate _cert;
 		readonly SslCertValidator _certVerify;
 		SslStream _sslStream;
-
+        /// <summary>
+        /// Creates the client with the specified client certificiate and the expected server information
+        /// </summary>
 		public SslClient(string serverName, int bindingPort, X509Certificate certificate, ExpectedCertificate expectedCert)
 			: this(serverName, bindingPort, certificate, new SslCertValidator(expectedCert))
 		{ }
-		private SslClient(string serverName, int bindingPort, X509Certificate certificate, SslCertValidator validator)
+        /// <summary>
+        /// Creates the client with the specified client certificiate and a certificate validator
+        /// </summary>
+        private SslClient(string serverName, int bindingPort, X509Certificate certificate, SslCertValidator validator)
 			: base(serverName, bindingPort)
 		{
 			_cert = certificate;
 			_certVerify = validator;
 		}
-
+        /// <summary>
+        /// Clones the client connection
+        /// </summary>
 		public override TcpClient Clone()
 		{
 			return new SslClient(ServerName, ServerPort, _cert, _certVerify);
 		}
-
+        /// <summary>
+        /// Establishes the client SSL connection
+        /// </summary>
 		protected override Stream ConnectServer(System.Net.Sockets.TcpClient client)
 		{
 			Log.Verbose("Connected, SSL Nego...");

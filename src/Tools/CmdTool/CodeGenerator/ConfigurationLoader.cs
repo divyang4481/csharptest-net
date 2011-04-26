@@ -1,4 +1,4 @@
-﻿#region Copyright 2009-2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2009-2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -99,8 +99,23 @@ namespace CSharpTest.Net.CustomTool.CodeGenerator
                 if (!ismatch)
                     continue;
 
-                foreach(GeneratorConfig gen in match.Generators)
-    		        generators.Add(new OutOfProcessGenerator(gen));
+                Dictionary<string, ICodeGenerator> usedExtensions = new Dictionary<string, ICodeGenerator>(StringComparer.OrdinalIgnoreCase);
+                foreach (ICodeGenerator gen in generators)
+                {
+                    foreach (string ext in gen.PossibleExtensions)
+                        usedExtensions.Add(ext, gen);
+                }
+
+                foreach (GeneratorConfig gen in match.Generators)
+                {
+                    bool alreadyExists = false;
+                    ICodeGenerator codeGen = new OutOfProcessGenerator(gen);
+                    foreach (string ext in codeGen.PossibleExtensions)
+                        alreadyExists |= usedExtensions.ContainsKey(ext);
+
+                    if(!alreadyExists)
+                        generators.Add(codeGen);
+                }
 		    }
 		}
 

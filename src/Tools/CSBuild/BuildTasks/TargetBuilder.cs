@@ -1,4 +1,4 @@
-﻿#region Copyright 2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2010-2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,16 +26,24 @@ namespace CSharpTest.Net.CSBuild.BuildTasks
     {
 		readonly CSBuildConfig _config;
         readonly BuildTarget _target;
-        readonly string[] _properties;
         readonly BuildAll _buildTask;
+        readonly Dictionary<string, string> _properties;
+        readonly Dictionary<string, string> _namedValues;
 
         public TargetBuilder(CSBuildConfig config, BuildTarget target, string[] properties, string[] targets)
         {
             _config = config;
             _target = target;
-            _properties = properties;
+            _properties = CSBuildConfig.ToDictionary(properties);
+            _namedValues = new Dictionary<string, string>(_properties, StringComparer.OrdinalIgnoreCase);
+
+            foreach (BuildProperty prop in _target.BuildProperties)
+                _namedValues[prop.Name] = Environment.ExpandEnvironmentVariables(prop.Value);
+
             _buildTask = new BuildAll(targets);
         }
+
+        public Dictionary<string, string> NamedValues { get { return _namedValues; } }
 
         protected override int Run(BuildEngine engine)
         {
@@ -45,32 +53,27 @@ namespace CSharpTest.Net.CSBuild.BuildTasks
 			int errors = 0;
 
 			if (_target.TextLog != null)
-				errors += new LogFileOutput(_target.TextLog.AbsolutePath, _target.TextLog.Level).Perform(engine);
+                errors += new LogFileOutput(_target.TextLog.AbsolutePath(_namedValues), _target.TextLog.Level).Perform(engine);
             if (_target.XmlLog != null)
-				errors += new XmlFileOutput(_target.XmlLog.AbsolutePath, _target.XmlLog.Level).Perform(engine);
+                errors += new XmlFileOutput(_target.XmlLog.AbsolutePath(_namedValues), _target.XmlLog.Level).Perform(engine);
 
 			//Globals must preceed project loading
 			errors += new SetGlobal(MSProp.Configuration, _target.Configuration).Perform(engine);
 			errors += new SetGlobal(MSProp.Platform, _target.Platform.ToString()).Perform(engine);
-            foreach (string property in _properties)
-            {
-                string[] values = property.Split(new char[] { '=', ':' }, 2);
-                if (values.Length == 2)
-					engine.Properties.SetValue(values[0], values[1]);
-            }
-			foreach (BuildProperty prop in _config.Options.GlobalProperties)
-				engine.Properties.SetValue(prop.Name, Environment.ExpandEnvironmentVariables(prop.Value));
+
+            foreach (KeyValuePair<string,string> property in _properties)
+                    engine.Properties.SetValue(property.Key, property.Value);
+
 			foreach (BuildProperty prop in _target.BuildProperties)
 				if (prop.IsGlobal)
 					engine.Properties.SetValue(prop.Name, Environment.ExpandEnvironmentVariables(prop.Value));
-
 
             Log.Info("CSBuild {0} {1} - Runtime={2}, Configuration={3}, Platform={4}",
                 targetName.ToLower(), _target.GroupName.ToLower(), engine.Framework.ToString().Insert(2,"."),
                 engine.Properties[MSProp.Configuration], engine.Properties[MSProp.Platform]);
 
             //Add projects
-            ProjectFinder projects = new ProjectFinder();
+            ProjectFinder projects = new ProjectFinder(this);
             projects.Add(_config.Projects.AddProjects);
             projects.Add(_target.AddProjects);
             projects.Remove(_config.Projects.RemoveProjects);
@@ -95,14 +98,14 @@ namespace CSharpTest.Net.CSBuild.BuildTasks
 			if (_target.TargetFramework != null)
 				errors += new SetProjectProperty(MSProp.TargetFrameworkVersion, _target.TargetFramework.Version.ToString().Insert(2, ".")).Perform(engine);
 			if(_target.OutputPath != null)
-				errors += new SetProjectPathProperty(MSProp.OutputPath, _target.OutputPath.AbsolutePath).Perform(engine);
+                errors += new SetProjectPathProperty(MSProp.OutputPath, _target.OutputPath.AbsolutePath(_namedValues)).Perform(engine);
 			if(_target.IntermediateFiles != null)
-				errors += new SetProjectPathProperty(MSProp.IntermediateOutputPath, _target.IntermediateFiles.AbsolutePath).Perform(engine);
+                errors += new SetProjectPathProperty(MSProp.IntermediateOutputPath, _target.IntermediateFiles.AbsolutePath(_namedValues)).Perform(engine);
 
 			errors += new SetSolutionDir().Perform(engine);
 			errors += new NewerFrameworkReferences().Perform(engine);
 
-			EnforceReferences folders = new EnforceReferences(_config.Options.StrictReferences, _config.Options.NoStdReferences, _config.Options.ForceReferencesToFile);
+			EnforceReferences folders = new EnforceReferences(_namedValues, _config.Options.StrictReferences, _config.Options.NoStdReferences, _config.Options.ForceReferencesToFile);
 			folders.Add(_config.Projects.ReferenceFolders);
 			folders.Add(_target.ReferenceFolders);
 			errors += folders.Perform(engine);

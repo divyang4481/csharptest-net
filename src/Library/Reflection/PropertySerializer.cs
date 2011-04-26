@@ -1,4 +1,4 @@
-﻿#region Copyright 2009-2010 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2009-2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -92,7 +92,6 @@ namespace CSharpTest.Net.Reflection
 		/// <summary>
 		/// Adds a single item to the named property collection, again can be a nested property by
 		/// using a path or dotted notation "ClientRectangle.X".
-		/// <seealso cref="PropertyValue.TraverseProperties"/>
 		/// </summary>
 		public void AddMember(string sdatapath)
 		{

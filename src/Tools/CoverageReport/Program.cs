@@ -106,6 +106,13 @@ namespace CSharpTest.Net.CoverageReport
 							new MetricReport(parser.ByModule, parser.ByNamespace, parser.ByClass).Write(rpt);
 					}
 
+                    if (args.Contains("unused"))
+                    {
+                        using (Log.Start("Creating unused statement report."))
+                        using (UnusedReport rpt = new UnusedReport(OpenText(args["unused"]), parser))
+                            new MetricReport(parser.ByModule, parser.ByMethod).Write(rpt);
+                    }
+
 					if (args.Contains("combine"))
 					{
 						using (Log.Start("Creating combined coverage file."))

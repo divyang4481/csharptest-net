@@ -13,7 +13,7 @@
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <OutputPath>..\bin\</OutputPath>
     <IntermediateOutputPath>$(OutputPath)obj\$(AssemblyName)\</IntermediateOutputPath>
-    <DocumentationFile Condition="'$(OutputType)' == 'Library'">$(OutputPath)$(AssemblyName).xml</DocumentationFile>
+    <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
     <DebugSymbols>True</DebugSymbols>
     <DebugType>pdbonly</DebugType>
     <DefineConstants>NET35;TRACE</DefineConstants>
@@ -24,7 +24,7 @@
     <AssemblyOriginatorKeyFile>..\..\keys\csharptest.net.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <Optimize>False</Optimize>
+    <Optimize>false</Optimize>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
     <Optimize>True</Optimize>
@@ -61,12 +61,17 @@
     <Compile Include="Bases\Comparable.cs" />
     <Compile Include="Bases\Disposable.cs" />
     <Compile Include="Bases\Equatable.cs" />
+    <Compile Include="Collections\SynchronizedDictionary.cs" />
+    <Compile Include="Collections\SynchronizedList.cs" />
+    <Compile Include="Interfaces\IFactory.cs">
+    </Compile>
     <Compile Include="Cloning\ClonableExtensions.cs" />
     <Compile Include="Cloning\MemberwiseClone.cs" />
     <Compile Include="Cloning\ObjectCloner.cs" />
     <Compile Include="Cloning\ReferenceComparer.cs" />
     <Compile Include="Cloning\SerializerClone.cs" />
     <Compile Include="Collections\DisposingList.cs" />
+    <Compile Include="Collections\LListNode.cs" />
     <Compile Include="Crypto\AsymmetricKey.cs" />
     <Compile Include="Crypto\HashStream.cs" />
     <Compile Include="Crypto\IPasswordDerivedBytes.cs" />
@@ -127,17 +132,32 @@
     <Compile Include="Delegates\Actions.cs" />
     <Compile Include="Delegates\EventHandlerForControl.cs" />
     <Compile Include="Delegates\Functions.cs" />
+    <Compile Include="Interfaces\ITransactable.cs" />
     <Compile Include="IO\AggregateStream.cs" />
     <Compile Include="IO\BaseStream.cs" />
     <Compile Include="Formatting\HexStream.cs" />
+    <Compile Include="IO\ClampedStream.cs" />
+    <Compile Include="IO\Crc32.cs" />
+    <Compile Include="IO\FileStreamFactory.cs" />
+    <Compile Include="IO\FragmentedFile.cs" />
     <Compile Include="IO\MarshallingStream.cs" />
     <Compile Include="IO\SegmentedMemoryStream.cs" />
+    <Compile Include="IO\SharedMemoryStream.cs" />
+    <Compile Include="IO\StreamCache.cs" />
     <Compile Include="IO\TempDirectory.cs" />
     <Compile Include="IO\TransactFile.cs" />
     <Compile Include="IO\DisposingStream.cs" />
     <Compile Include="IO\IOStream.cs" />
     <Compile Include="IO\CombinedStream.cs" />
     <Compile Include="IO\NonClosingStream.cs" />
+    <Compile Include="IpcChannel\IIpcChannelRegistrar.cs" />
+    <Compile Include="IpcChannel\IpcChannelRegistrar.cs" />
+    <Compile Include="IpcChannel\IpcEvent.cs" />
+    <Compile Include="IpcChannel\IpcEventChannel.cs" />
+    <Compile Include="IpcChannel\IpcEventListener.cs" />
+    <Compile Include="IpcChannel\IpcEventMessage.cs" />
+    <Compile Include="IpcChannel\IpcEventSender.cs" />
+    <Compile Include="IpcChannel\IpcSignalEventArgs.cs" />
     <Compile Include="Processes\AssemblyRunner.cs" />
     <Compile Include="Processes\IRunner.cs" />
     <Compile Include="Processes\ProcessExitedEventArgs.cs" />
@@ -156,23 +176,43 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="Serialization\INameValueStore.cs" />
+    <Compile Include="Serialization\ISerializer.cs" />
+    <Compile Include="Serialization\PrimitiveSerializer.cs" />
     <Compile Include="Serialization\Storage.cs" />
     <Compile Include="Serialization\StorageClasses.cs" />
     <Compile Include="AppConfig\UserSettingsSection.cs" />
+    <Compile Include="Serialization\VariantNumberSerializer.cs" />
     <Compile Include="Shared\PublicShared.cs" />
+    <Compile Include="Synchronization\ReservedWriteLocking.cs" />
+    <Compile Include="Synchronization\DebugLocking.cs" />
+    <Compile Include="Synchronization\DebugLockFactory.cs" />
     <Compile Include="Synchronization\ExclusiveLocking.cs" />
     <Compile Include="Synchronization\IgnoreLocking.cs" />
     <Compile Include="Synchronization\ILockStrategy.cs" />
-    <Compile Include="Synchronization\LockStrategyBase.cs" />
-    <Compile Include="Synchronization\ReadWriteLocking.cs" />
+    <Compile Include="Synchronization\LockCounterFactory.cs" />
+    <Compile Include="Synchronization\LockFactory.cs" />
+    <Compile Include="Synchronization\ReadLock.cs" />
+    <Compile Include="Synchronization\ReaderWriterLocking.cs" />
+    <Compile Include="Synchronization\SafeLock.cs" />
+    <Compile Include="Synchronization\SimpleReadWriteLocking.cs" />
+    <Compile Include="Synchronization\WriterOnlyLocking.cs" />
+    <Compile Include="Synchronization\WriteLock.cs" />
+    <Compile Include="Threading\IWaitAndContinue.cs" />
+    <Compile Include="Threading\IWorkQueue.cs" />
+    <Compile Include="Synchronization\MutexLock.cs" />
     <Compile Include="Threading\UsageCounter.cs" />
+    <Compile Include="Threading\WaitAndContinueList.cs" />
+    <Compile Include="Threading\WaitAndContinueWorker.cs" />
+    <Compile Include="Threading\WorkQueue.cs" />
     <Compile Include="Utils\Constants.cs" />
     <Compile Include="Utils\FileUtils.cs" />
+    <Compile Include="Utils\ObjectKeepAlive.cs" />
     <Compile Include="Utils\RegexPatterns.cs" />
     <Compile Include="IO\ReplaceFile.cs" />
     <Compile Include="Utils\StringCoverter.cs" />
     <Compile Include="Utils\StringUtils.cs" />
     <Compile Include="IO\TempFile.cs" />
+    <Compile Include="Utils\WeakReference.cs" />
     <Compile Include="WinForms\Win32Window.cs" />
   </ItemGroup>
   <ItemGroup>
