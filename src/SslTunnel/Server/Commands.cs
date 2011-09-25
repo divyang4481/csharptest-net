@@ -90,7 +90,9 @@ namespace CSharpTest.Net.SslTunnel.Server
 			{
 				AppDomain.CurrentDomain.ExecuteAssembly(
 					InstallUtilEXE(),
+#if NET20 || NET35
 					AppDomain.CurrentDomain.Evidence,
+#endif
 					arguments.ToArray()
 				);
 			}

@@ -107,15 +107,23 @@ Configuration file paths:
 
 		[STAThread]
 		static int Main(string[] argsRaw)
-		{
+        {
 			int errors = 0;
             ArgumentList arguments = new ArgumentList(argsRaw);
 
-            if (arguments.Contains("?") || arguments.Contains("help"))
+            if (!arguments.Contains("nologo"))
+            {
+                Console.WriteLine("{0}", typeof (Program).Assembly);
+                foreach (System.Reflection.AssemblyCopyrightAttribute a in typeof(Program).Assembly.GetCustomAttributes(typeof(System.Reflection.AssemblyCopyrightAttribute), false))
+                    Console.WriteLine("{0}", a.Copyright);
+                Console.WriteLine(".NET Runtime Version={0}", System.Runtime.InteropServices.RuntimeEnvironment.GetSystemVersion());
+            }
+
+		    if (arguments.Contains("?") || arguments.Contains("help"))
                 return ShowHelp(Console.Out);
 
             Log.Open(TextWriter.Null);
-            Log.ConsoleLevel = TraceLevel.Warning;
+            Log.ConsoleLevel = arguments.Contains("verbose") ? TraceLevel.Verbose : TraceLevel.Warning;
             try
             {
                 CSBuildConfig config = null;

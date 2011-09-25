@@ -75,7 +75,9 @@ namespace CSharpTest.Net.SslTunnel.Test
 		{
 			AppDomain.CurrentDomain.ExecuteAssemblyByName(
 				typeof(SslTunnel.Server.Commands).Assembly.GetName(),
+#if NET20 || NET35
 				AppDomain.CurrentDomain.Evidence,
+#endif
 				new string[] { "help" }
 				);
 
@@ -213,7 +215,12 @@ namespace CSharpTest.Net.SslTunnel.Test
 							domainConsole.SetInput(blockRead);
 							domainConsole.SetOutput(_stdout);
 							domainConsole.SetError(_stderror);
-							domain.ExecuteAssembly(exeFile, AppDomain.CurrentDomain.Evidence, new string[] { "run" });
+							domain.ExecuteAssembly(
+                                exeFile, 
+#if NET20 || NET35
+                                AppDomain.CurrentDomain.Evidence, 
+#endif
+                                new string[] { "run" });
 						});
 					thread.Name = setup.ApplicationName;
 					thread.Start();

@@ -23,6 +23,7 @@ using System.Net;
 using System.Xml.XPath;
 using CSharpTest.Net.IO;
 using XmlDocument = System.Xml.XmlDocument;
+using System.Xml;
 
 namespace CSharpTest.Net.Library.Test
 {
@@ -89,11 +90,80 @@ namespace CSharpTest.Net.Library.Test
 		public void TestDocToXml()
 		{
 			HtmlLightDocument doc = new HtmlLightDocument();
-			new XmlLightElement(new XmlLightElement(doc, "html"), "body").Attributes.Add("id", "bdy");
-			Assert.AreEqual("<html> <body id=\"bdy\"></body> </html>", Normalize(doc.InnerXml));
+			XmlLightElement body = new XmlLightElement(new XmlLightElement(doc, "html"), "body");
+            body.IsEmpty = false;
+            body.Attributes.Add("id", "bdy");
+			Assert.AreEqual("<html> <body id=\"bdy\"> </body> </html>", Normalize(doc.InnerXml));
 		}
 
-		[Test]
+        [Test]
+        public void TestXmlNamespace()
+        {
+            string xml = @"<test xmlns=""urn:123"" />";
+            XmlLightDocument doc = new XmlLightDocument(xml);
+            Assert.AreEqual(xml, Normalize(doc.InnerXml));
+        }
+
+        [Test]
+        public void TestXmlNamespacePrefix()
+        {
+            string xml = @"<?xml version='1.0' encoding='ISO-8859-15'?>
+<html:html xmlns:html='http://www.w3.org/TR/xhtml1/'>
+<html:body>
+<html:p html:align='left' class='test'>hello</html:p>
+<p html:align='right' class='test'>world</p>
+</html:body>
+<health:body xmlns:health='http://www.example.org/health'>
+<health:height>6ft</health:height>
+<health:weight xmlns:a='urn:234' a:class='test'>155 lbs</health:weight>
+</health:body>
+</html:html>".Replace('\'', '"');
+
+            XmlLightDocument doc = new XmlLightDocument(xml);
+            Assert.AreEqual(Normalize(xml), Normalize(doc.InnerXml));
+        }
+
+        [Test]
+        public void TestHtmlEntityRef()
+        {
+            string html = @"<html>
+            <body attrib=""this & that ><&nbsp;&#32;!"">
+                this char '<' and this one '>' and this one '&' should be encoded.  
+                We encoded ' &nbsp; ' and &Atilde; and '&#32;' and '&#x20;' all by ourselves.
+                This in not valid xml &#xffffffff;, nor is &#123456789;, but we still allow it.
+                This entity name will pass-through &unknown; this will not &whateverthatmeans;
+                and nor will these &; &#; &h; &l t; &1two; &234; &#x00fg; &#-123;.
+            </body>
+            </html>";
+            string expect = @"<html><body attrib=""this &amp; that &gt;&lt;" + (Char)160 + @" !"">
+                this char '&lt;' and this one '&gt;' and this one '&amp;' should be encoded.  
+                We encoded ' &nbsp; ' and &Atilde; and '&#32;' and '&#x20;' all by ourselves.
+                This in not valid xml &#xffffffff;, nor is &#123456789;, but we still allow it.
+                This entity name will pass-through &unknown; this will not &amp;whateverthatmeans;
+                and nor will these &amp;; &amp;#; &amp;h; &amp;l t; &amp;1two; &amp;234; &amp;#x00fg; &amp;#-123;.
+            </body></html>";
+
+            XmlLightDocument doc = new HtmlLightDocument(html);
+            XmlWriterSettings settings = new XmlWriterSettings()
+            {
+                CheckCharacters = true,
+                Indent = false,
+                IndentChars = "",
+                NewLineChars = "",
+                NewLineHandling = NewLineHandling.None,
+                OmitXmlDeclaration = true,
+                CloseOutput = false
+            };
+            StringWriter sw = new StringWriter();
+            XmlWriter wtr = XmlWriter.Create(sw, settings);
+            doc.WriteXml(wtr);
+            wtr.Flush();
+            string xml = sw.ToString();
+
+            Assert.AreEqual(expect, xml);
+        }
+
+	    [Test]
 		public void TestParseDocument()
 		{
 			XmlLightDocument doc = new HtmlLightDocument(document);
@@ -268,7 +338,23 @@ namespace CSharpTest.Net.Library.Test
 			Assert.IsTrue(((System.Collections.IEnumerable)doc.Root.Attributes).GetEnumerator().MoveNext());
 			Assert.IsTrue(doc.Root.Attributes.Remove("id"));
 			Assert.AreEqual(0, doc.Root.Attributes.Count);
-		}
+        }
+
+        [Test]
+        public void TestManuallyCreated()
+        {
+            XmlLightElement root = new XmlLightElement(null, "root");
+            new XmlLightElement(root, "a").Attributes["b"] = "c";
+            new XmlLightElement(root, XmlLightElement.TEXT).Value = "Normal & <Encoded> Text";
+            new XmlLightElement(root, XmlLightElement.COMMENT).OriginalTag = "<!-- This is just a <simple> comment. -->";
+            new XmlLightElement(root, XmlLightElement.CONTROL){
+                OriginalTag = "<? Hey, that isn't valid !>"
+            }.Remove();
+
+            StringWriter sw = new StringWriter();
+            root.WriteUnformatted(sw);
+            Assert.AreEqual("<root><a b=\"c\"/>Normal &amp; &lt;Encoded&gt; Text<!-- This is just a <simple> comment. --></root>", sw.ToString());
+        }
 
 		[Test, Explicit]
 		public void RunPerfTests()

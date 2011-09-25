@@ -14,6 +14,7 @@
 #endregion
 using System;
 using System.Collections.Generic;
+using CSharpTest.Net.IO;
 using CSharpTest.Net.Serialization;
 using NUnit.Framework;
 using CSharpTest.Net.Collections;
@@ -38,6 +39,40 @@ namespace CSharpTest.Net.BPlusTree.Test
             Assert.AreEqual(CreatePolicy.IfNeeded, options.CreateFile);
             Assert.AreEqual(4, options.MaximumChildNodes);
             Assert.AreEqual(4, options.MaximumValueNodes);
+        }
+
+        [Test]
+        public void TestReadOnly()
+        {
+            using (TempFile file = new TempFile())
+            {
+                var opt = new BPlusTree<int, int>.Options(PrimitiveSerializer.Int32, PrimitiveSerializer.Int32)
+                {
+                    CreateFile = CreatePolicy.Always,
+                    FileName = file.TempPath,
+                };
+                using (BPlusTree<int, int> tree = new BPlusTree<int, int>(opt))
+                {
+                    tree.Add(1, 2);
+                    tree.Add(3, 4);
+                    tree.Add(5, 6);
+                }
+
+                opt.CreateFile = CreatePolicy.Never;
+                opt.ReadOnly = true;
+                using (BPlusTree<int, int> tree = new BPlusTree<int, int>(opt))
+                {
+                    Assert.AreEqual(tree[1], 2);
+                    Assert.AreEqual(tree[3], 4);
+                    Assert.AreEqual(tree[5], 6);
+
+                    try { tree[1] = 0; Assert.Fail(); }
+                    catch (InvalidOperationException) { }
+
+                    try { tree.Remove(1); Assert.Fail(); }
+                    catch (InvalidOperationException) { }
+                }
+            }
         }
     }
 }

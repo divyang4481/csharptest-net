@@ -14,9 +14,7 @@
 #endregion
 using System;
 using System.IO;
-using System.Collections.Generic;
-using System.Globalization;
-using CSharpTest.Net.Collections;
+using CSharpTest.Net.Interfaces;
 
 namespace CSharpTest.Net.IO
 {
@@ -24,7 +22,7 @@ namespace CSharpTest.Net.IO
     /// Creates a temp file based on the given file being replaced and when a call to Commit() is 
     /// made the target file is replaced with the current contents of the temporary file.
     /// </summary>
-    public class TransactFile : TempFile
+    public class TransactFile : TempFile, ITransactable
     {
         Stream _locked;
         bool _committed;
@@ -51,10 +49,20 @@ namespace CSharpTest.Net.IO
         /// Returns the originally provided filename that is being replaced
         /// </summary>
         public string TargetFile { get { return _targetFile; } }
+
         /// <summary>
         /// Commits the replace operation on the file
         /// </summary>
         public void Commit() { _committed = true; Dispose(true); }
+
+        /// <summary> 
+        /// Aborts the operation and reverts pending changes 
+        /// </summary>
+        public void Rollback()
+        {
+            Check.Assert<InvalidOperationException>(_committed == false);
+            Dispose(true);
+        }
 
         /// <summary>
         /// Disposes of the open stream and the temporary file.

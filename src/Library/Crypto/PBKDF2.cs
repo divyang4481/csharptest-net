@@ -48,6 +48,7 @@ namespace CSharpTest.Net.Crypto
 			return buffer;
 		}
 
+#if NET20 || NET35 // NOTE: .NET 4.0 finally implemented
 		/// <summary>
 		/// Disposes of the object
 		/// </summary>
@@ -64,5 +65,6 @@ namespace CSharpTest.Net.Crypto
 				m_hmacsha1.Clear();
 			}
 		}
-	}
+#endif
+    }
 }

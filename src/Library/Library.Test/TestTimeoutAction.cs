@@ -14,6 +14,7 @@
 #endregion
 using System;
 using System.Threading;
+using System.Windows.Forms;
 using CSharpTest.Net.Delegates;
 using NUnit.Framework;
 
@@ -132,7 +133,7 @@ namespace CSharpTest.Net.Library.Test
 		{
 			ManualResetEvent h = new ManualResetEvent(false);
 			TimeoutAction action = new TimeoutAction(TimeSpan.FromDays(1), delegate { h.Set(); });
-			Action delete = (Action)Delegate.CreateDelegate(typeof(Action), action, "Finalize", true, true);
+            MethodInvoker delete = (MethodInvoker)Delegate.CreateDelegate(typeof(MethodInvoker), action, "Finalize", true, true);
 
 			Assert.IsFalse(h.WaitOne(0, false));
 			delete();

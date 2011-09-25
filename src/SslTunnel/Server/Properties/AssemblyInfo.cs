@@ -15,14 +15,14 @@
 using System.Reflection;
 
 [assembly: AssemblyTitle("SslTunnel.Server.dll")]
-[assembly: AssemblyDescription("SslTunnel.Server Utility.")]
+[assembly: AssemblyDescription("SslTunnel.Server provides both a command-line and a windows service secure tcp/ip port tunnel.")]
 [assembly: AssemblyProduct("SslTunnel.Server")]
 [assembly: AssemblyConfiguration("Debug")]
 
 [assembly: AssemblyCompany("Roger Knapp")]
 [assembly: AssemblyCopyright("Copyright 2009 by Roger Knapp, Licensed under the Apache License, Version 2.0")]
 
-[assembly: AssemblyVersion("1.11.426.305")]
-[assembly: AssemblyFileVersion("1.11.426.305")]
+[assembly: AssemblyVersion("1.11.924.348")]
+[assembly: AssemblyFileVersion("1.11.924.348")]
 
 [assembly: ObfuscateAssembly(false)]

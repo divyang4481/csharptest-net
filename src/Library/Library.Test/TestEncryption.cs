@@ -13,6 +13,7 @@
  */
 #endregion
 using System;
+using System.Reflection;
 using System.Text;
 using System.Collections.Generic;
 using CSharpTest.Net.Formatting;
@@ -73,11 +74,74 @@ namespace CSharpTest.Net.Library.Test
                 catch (System.Security.Cryptography.CryptographicException) { }
             }
         }
+        
+        [Test]
+        public void TestCopyReadWriteBytes()
+        {
+            byte[] ivrandom = new byte[16];
+            new Random().NextBytes(ivrandom);
+
+            using (AESCryptoKey k1 = new AESCryptoKey())
+            using (AESCryptoKey k2 = AESCryptoKey.FromBytes(k1.ToArray()))
+            {
+                Assert.AreEqual(k1.Key, k2.Key);
+                Assert.AreEqual(k1.IV, k2.IV);
+            }
+        }
+
+        [Test]
+        public void TestSimpleEncryptDecrypt()
+        {
+            using (AESCryptoKey k1 = new AESCryptoKey())
+            {
+                byte[] test = new byte[240];
+                byte[] cypher1 = k1.Encrypt(test);
+                byte[] cypher2 = k1.Encrypt(test);
+                Assert.AreEqual(cypher1, cypher2);
+                Assert.AreEqual(test, k1.Decrypt(cypher1));
+            }
+        }
+
+        [Test]
+        public void TestDefaultIv()
+        {
+            Assembly asm = (Assembly.GetEntryAssembly() ?? typeof(AESCryptoKey).Assembly);
+            byte[] pk = Encoding.UTF8.GetBytes(asm.GetName().Name);
+            string expect = Hash.MD5(pk).ToString();
+            Assert.AreEqual(expect, Convert.ToBase64String(AESCryptoKey.ProcessDefaultIV));
+        }
+
+        [Test]
+        public void TestChangeDefaultIv()
+        {
+            byte[] original = AESCryptoKey.ProcessDefaultIV;
+            try
+            {
+                Assert.AreEqual(original, new AESCryptoKey().IV);
+
+                byte[] newIv = new byte[16];
+                new Random().NextBytes(newIv);
+                AESCryptoKey.ProcessDefaultIV = newIv;
+
+                Assert.AreEqual(newIv, AESCryptoKey.ProcessDefaultIV);
+                Assert.AreEqual(newIv, new AESCryptoKey().IV);
+            }
+            finally
+            {
+                AESCryptoKey.ProcessDefaultIV = original;
+            }
+        }
 
         [Test, ExpectedException(typeof(ArgumentOutOfRangeException))]
         public void TestBadInputKey()
         {
-            new AESCryptoKey(new byte[5]);
+            new AESCryptoKey(new byte[5], new byte[16]);
+        }
+
+        [Test, ExpectedException(typeof(ArgumentOutOfRangeException))]
+        public void TestBadInputIV()
+        {
+            new AESCryptoKey(new byte[32], new byte[10]);
         }
 
         [Test, ExpectedException(typeof(ObjectDisposedException))]

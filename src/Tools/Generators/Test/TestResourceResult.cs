@@ -14,7 +14,6 @@
 #endregion
 using System;
 using System.Reflection;
-using CSharpTest.Net.Delegates;
 
 namespace CSharpTest.Net.Generators.Test
 {
@@ -49,11 +48,12 @@ namespace CSharpTest.Net.Generators.Test
             return (string)Property(name).GetValue(null, null);
         }
 
-        public Func<T1, String> Method<T1>(string name)
+        delegate string MethodAction<T>(T name);
+        MethodAction<T1> Method<T1>(string name)
         {
             MethodInfo mi = ResType.GetMethod(name, BindingFlags.GetProperty | BindingFlags.Static | BindingFlags.Public, null, new Type[] { typeof(T1) }, null);
             if (mi == null) throw new ArgumentException("Method " + name + "(" + typeof(T1).Name + ") not found.");
-            return (Func<T1, String>) Delegate.CreateDelegate(typeof(Func<T1, String>), mi, true);
+            return (MethodAction<T1>)Delegate.CreateDelegate(typeof(MethodAction<T1>), mi, true);
         }
 
         public string GetValue<T1>(string name, T1 arg)
@@ -67,12 +67,13 @@ namespace CSharpTest.Net.Generators.Test
             return (Exception)exType.InvokeMember(null, BindingFlags.CreateInstance | BindingFlags.Public | BindingFlags.Instance, null, null, arguments);
         }
 
+        delegate void AssertAction<T1, T2>(T1 a, T2 b);
         public void Assert<T1>(string name, bool condition, T1 arg)
         {
             Type exType = Assembly.GetType(String.Format("{0}.{1}", Namespace, name), true);
             MethodInfo mi = exType.GetMethod("Assert", BindingFlags.InvokeMethod | BindingFlags.Static | BindingFlags.Public, null, new Type[] { typeof(bool), typeof(T1) }, null);
             if (mi == null) throw new ArgumentException("Method Assert on type " + name + " not found.");
-            ((Action<bool, T1>)Delegate.CreateDelegate(typeof(Action<bool, T1>), mi, true))(condition, arg);
+            ((AssertAction<bool, T1>)Delegate.CreateDelegate(typeof(AssertAction<bool, T1>), mi, true))(condition, arg);
         }
     }
 }

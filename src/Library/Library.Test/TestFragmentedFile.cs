@@ -71,7 +71,7 @@ namespace CSharpTest.Net.Library.Test
                     using (Stream io = ff.Open(id, FileAccess.Read))
                         Assert.AreEqual(guid, PrimitiveSerializer.Guid.ReadFrom(io));
 
-                    AssertThrows<NotSupportedException>(delegate() { ff.Open(id, FileAccess.Write).Dispose(); });
+                    AssertThrows<InvalidOperationException>(delegate() { ff.Open(id, FileAccess.Write).Dispose(); });
                 }
             }
         }

@@ -84,9 +84,6 @@ namespace CSharpTest.Net.Bases
 
             #region Hide base-members
 #if false
-            // disables non-comment warning
-#pragma warning disable 1591
-
             private const string ERROR = "This method should not be called.";
 
             [Obsolete(ERROR, true), DebuggerHidden, EditorBrowsable(EditorBrowsableState.Never)]

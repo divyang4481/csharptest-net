@@ -64,6 +64,24 @@ namespace CSharpTest.Net.Html
 			}
 		}
 
+        /// <summary>
+        /// Gets the value associated with the specified key.
+        /// </summary>
+        /// <param name="name">The name of the attribute to find</param>
+        /// <param name="value">Set to the value of the attribute</param>
+        /// <returns>Returns true if the attribute was defined</returns>
+        public bool TryGetValue(string name, out string value)
+        {
+            XmlLightAttribute attr;
+            if (_attributes.TryGetValue(name, out attr))
+            {
+                value = HttpUtility.HtmlDecode(attr.Value);
+                return true;
+            }
+            value = null;
+            return false;
+        }
+
 		/// <summary> Returns true if hte attribute is defined </summary>
 		public bool ContainsKey(string name)
 		{ return _attributes.ContainsKey(name); }
@@ -131,6 +149,6 @@ namespace CSharpTest.Net.Html
 		}
 
 		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-		{ return this.GetEnumerator(); }
+		{ return GetEnumerator(); }
 	}
 }

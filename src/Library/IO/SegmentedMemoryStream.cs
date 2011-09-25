@@ -15,9 +15,6 @@
 using System;
 using System.IO;
 
-// disables non-comment warning
-#pragma warning disable 1591
-
 namespace CSharpTest.Net.IO
 {
     /// <summary>
@@ -83,20 +80,40 @@ namespace CSharpTest.Net.IO
             _position = 0;
         }
 
-	    public override bool CanRead { get { return _position >= 0; } }
+        /// <summary>
+        /// When overridden in a derived class, gets a value indicating whether the current stream supports reading.
+        /// </summary>
+        public override bool CanRead { get { return _position >= 0; } }
+
+        /// <summary>
+        /// When overridden in a derived class, gets a value indicating whether the current stream supports seeking.
+        /// </summary>
         public override bool CanSeek { get { return _position >= 0; } }
+
+        /// <summary>
+        /// When overridden in a derived class, gets a value indicating whether the current stream supports writing.
+        /// </summary>
         public override bool CanWrite { get { return _position >= 0; } }
 
-		public override void Flush()
+        /// <summary>
+        /// When overridden in a derived class, clears all buffers for this stream and causes any buffered data to be written to the underlying device.
+        /// </summary>
+        public override void Flush()
 		{ }
 
-		protected override void Dispose(bool disposing)
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="T:System.IO.Stream"/> and optionally releases the managed resources.
+        /// </summary>
+        protected override void Dispose(bool disposing)
 		{
 			_position = -1;
 			base.Dispose(disposing);
 		}
 
-		public override long Length
+        /// <summary>
+        /// When overridden in a derived class, gets the length in bytes of the stream.
+        /// </summary>
+        public override long Length
 		{
 			get { AssertOpen(); return _contents.Length; }
 		}
@@ -112,7 +129,10 @@ namespace CSharpTest.Net.IO
             arrayOffset = (int)(offset % _contents.SegmentSize);
 		}
 
-		public override void SetLength(long value)
+        /// <summary>
+        /// When overridden in a derived class, sets the length of the current stream.
+        /// </summary>
+        public override void SetLength(long value)
 		{
 			AssertOpen();
 			Check.InRange(value, 0L, int.MaxValue);
@@ -125,7 +145,10 @@ namespace CSharpTest.Net.IO
             _contents.Length = value;
 		}
 
-	    public override long Position
+        /// <summary>
+        /// When overridden in a derived class, gets or sets the position within the current stream.
+        /// </summary>
+        public override long Position
 		{
 			get { return _position; }
 			set
@@ -138,7 +161,10 @@ namespace CSharpTest.Net.IO
 			}
 		}
 
-		public override long Seek(long offset, SeekOrigin origin)
+        /// <summary>
+        /// When overridden in a derived class, sets the position within the current stream.
+        /// </summary>
+        public override long Seek(long offset, SeekOrigin origin)
 		{
 			if (origin == SeekOrigin.End)
                 offset = _contents.Length + offset;
@@ -147,7 +173,10 @@ namespace CSharpTest.Net.IO
 			return Position = offset;
 		}
 
-		public override int Read(byte[] buffer, int offset, int count)
+        /// <summary>
+        /// When overridden in a derived class, reads a sequence of bytes from the current stream and advances the position within the stream by the number of bytes read.
+        /// </summary>
+        public override int Read(byte[] buffer, int offset, int count)
 		{
 			AssertOpen();
 			int total = 0;
@@ -170,7 +199,10 @@ namespace CSharpTest.Net.IO
 			return total;
 		}
 
-		public override void Write(byte[] buffer, int offset, int count)
+        /// <summary>
+        /// When overridden in a derived class, writes a sequence of bytes to the current stream and advances the current position within this stream by the number of bytes written.
+        /// </summary>
+        public override void Write(byte[] buffer, int offset, int count)
 		{
 			AssertOpen();
             if ((_position + count) > _contents.Length)
@@ -189,5 +221,22 @@ namespace CSharpTest.Net.IO
 				_position += amt;
 			}
 		}
+
+        /// <summary>
+        /// Reads a byte from the stream and advances the position within the stream by one byte, or returns -1 if at the end of the stream.
+        /// </summary>
+        public override int ReadByte()
+        {
+            byte[] bytes = new byte[1];
+            return Read(bytes, 0, 1) == 1 ? bytes[0] : -1;
+        }
+
+        /// <summary>
+        /// Writes a byte to the current position in the stream and advances the position within the stream by one byte.
+        /// </summary>
+        public override void WriteByte(byte value)
+        {
+            Write(new byte[] { value }, 0, 1);
+        }
 	}
 }

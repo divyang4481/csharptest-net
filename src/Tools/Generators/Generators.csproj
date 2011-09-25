@@ -13,7 +13,8 @@
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <OutputPath>..\..\bin\</OutputPath>
     <IntermediateOutputPath>$(OutputPath)obj\$(AssemblyName)\</IntermediateOutputPath>
-    <DocumentationFile Condition="'$(OutputType)' == 'Library'">$(OutputPath)$(AssemblyName).xml</DocumentationFile>
+    <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
+    <NoWarn>1591</NoWarn>
     <DebugSymbols>True</DebugSymbols>
     <DebugType>pdbonly</DebugType>
     <DefineConstants>NET35;TRACE</DefineConstants>
@@ -34,10 +35,16 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration.Install" />
-    <Reference Include="System.Data" />
+    <Reference Include="System.Data">
+      <Private>False</Private>
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
     <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
-    <Reference Include="System.Web" />
+    <Reference Include="System.Web">
+      <Private>False</Private>
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.XML" />
   </ItemGroup>
@@ -71,6 +78,7 @@
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
@@ -78,7 +86,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>XCOPY /U /F /D /Y $(TargetDir)$(TargetName).* C:\Projects\SVault\depend\CSharpTest.Net
-XCOPY /U /F /D /Y $(TargetDir)$(TargetName).* C:\Projects\SVault\open\toolbin</PostBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
   </PropertyGroup>
 </Project>

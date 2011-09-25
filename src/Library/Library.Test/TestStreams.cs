@@ -151,6 +151,10 @@ namespace CSharpTest.Net.Library.Test
 
                     stream.Seek(-stream.Length, SeekOrigin.End);
                     Assert.AreEqual(0, stream.Position);
+
+                    stream.WriteByte(123);
+                    stream.Position = 0;
+                    Assert.AreEqual(123, stream.ReadByte());
                 }
 
                 using (MarshallingStream stream = new MarshallingStream(h.AddrOfPinnedObject(), true, dataIn.Length))
@@ -217,6 +221,11 @@ namespace CSharpTest.Net.Library.Test
         public void TestRead() { new Test().Read(new byte[1], 0, 1); }
         [Test, DebuggerNonUserCode, ExpectedException(typeof(NotSupportedException))]
         public void TestWrite() { new Test().Write(new byte[1], 0, 1); }
+
+        [Test, DebuggerNonUserCode, ExpectedException(typeof(NotSupportedException))]
+        public void TestReadByte() { new Test().ReadByte(); }
+        [Test, DebuggerNonUserCode, ExpectedException(typeof(NotSupportedException))]
+        public void TestWriteByte() { new Test().WriteByte(1); }
     }
 
     [TestFixture]

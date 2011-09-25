@@ -55,7 +55,7 @@ namespace CSharpTest.Net.Html
 		/// <summary>
 		/// Writes the re-constructed innerXML
 		/// </summary>
-		public override void WriteXml(XmlTextWriter wtr)
+		public override void WriteXml(XmlWriter wtr)
         {
             foreach (XmlLightElement e in Children)
                 e.WriteXml(wtr);

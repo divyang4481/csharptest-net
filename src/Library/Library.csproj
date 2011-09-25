@@ -31,11 +31,20 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.Core" Condition="'$(TargetFrameworkVersion)' == 'v3.5'" />
+    <Reference Include="System.Core">
+      <Private>False</Private>
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
     <Reference Include="System.configuration" />
-    <Reference Include="System.Data" />
+    <Reference Include="System.Data">
+      <Private>False</Private>
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
     <Reference Include="System.Security" />
-    <Reference Include="System.Web" />
+    <Reference Include="System.Web">
+      <Private>False</Private>
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
   </ItemGroup>
@@ -63,6 +72,9 @@
     <Compile Include="Bases\Equatable.cs" />
     <Compile Include="Collections\SynchronizedDictionary.cs" />
     <Compile Include="Collections\SynchronizedList.cs" />
+    <Compile Include="Crypto\SecureTransferMessage.cs" />
+    <Compile Include="Crypto\SecureTransferServer.cs" />
+    <Compile Include="Crypto\SecureTransferClient.cs" />
     <Compile Include="Interfaces\IFactory.cs">
     </Compile>
     <Compile Include="Cloning\ClonableExtensions.cs" />
@@ -133,6 +145,7 @@
     <Compile Include="Delegates\EventHandlerForControl.cs" />
     <Compile Include="Delegates\Functions.cs" />
     <Compile Include="Interfaces\ITransactable.cs" />
+    <Compile Include="Interfaces\DefaultFactories.cs" />
     <Compile Include="IO\AggregateStream.cs" />
     <Compile Include="IO\BaseStream.cs" />
     <Compile Include="Formatting\HexStream.cs" />
@@ -177,6 +190,7 @@
     </Compile>
     <Compile Include="Serialization\INameValueStore.cs" />
     <Compile Include="Serialization\ISerializer.cs" />
+    <Compile Include="Serialization\LimitedSerializer.cs" />
     <Compile Include="Serialization\PrimitiveSerializer.cs" />
     <Compile Include="Serialization\Storage.cs" />
     <Compile Include="Serialization\StorageClasses.cs" />

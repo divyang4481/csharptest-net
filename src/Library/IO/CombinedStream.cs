@@ -38,6 +38,7 @@ namespace CSharpTest.Net.IO
         /// <summary> Reads from the next stream available </summary>
         public override int Read(byte[] buffer, int offset, int count)
         {
+            if (count == 0) return 0;
             while (_valid)
             {
                 int len = _streams.Current.Read(buffer, offset, count);

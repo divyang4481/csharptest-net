@@ -59,6 +59,40 @@ namespace CSharpTest.Net.Html
 		public XmlQuoteStyle Quote;
 		/// <summary> The white-space characters preceeding the attribute name </summary>
 		public string Before;
+
+        /// <summary>
+        /// Returns the namespace or empty string
+        /// </summary>
+        public string Namespace
+        {
+            get
+            {
+                int ix = Name.IndexOf(':');
+                return ix < 0 ? String.Empty : Name.Substring(0, ix);
+            }
+        }
+        /// <summary>
+        /// Returns the namespace or null
+        /// </summary>
+        public string NamespaceOrNull
+        {
+            get
+            {
+                int ix = Name.IndexOf(':');
+                return ix < 0 ? null : Name.Substring(0, ix);
+            }
+        }
+        /// <summary>
+        /// Returns the name without the namespace prefix
+        /// </summary>
+        public string LocalName
+        {
+            get
+            {
+                int ix = Name.IndexOf(':');
+                return ix < 0 ? Name : Name.Substring(ix + 1);
+            }
+        }
 	}
 
 	/// <summary>

@@ -95,6 +95,7 @@ namespace CSharpTest.Net.Collections
             private int _keepAliveMaxHistory = 100;
             private int _keepAliveTimeout = 60000;
             private FileOptions _fileOptions = CSharpTest.Net.IO.FragmentedFile.OptionsDefault;
+            private bool _readOnly;
 
             /// <summary>
             /// Constructs the options configuration to initialize a BPlusTree instance using the default Comparer for TKey
@@ -165,7 +166,7 @@ namespace CSharpTest.Net.Collections
                     return BTreeFileStore.CreateNew(FileName, FileBlockSize, FileGrowthRate, ConcurrentWriters, FileOpenOptions);
 
                 InvalidConfigurationValueException.Assert(exists, "CreateFile", "The file does not exist and CreateFile is Never");
-                return new BTreeFileStore(FileName, FileBlockSize, FileGrowthRate, ConcurrentWriters, FileOpenOptions);
+                return new BTreeFileStore(FileName, FileBlockSize, FileGrowthRate, ConcurrentWriters, FileOpenOptions, ReadOnly);
             }
 #if BPlusTransaction
             /// <summary>
@@ -181,6 +182,24 @@ namespace CSharpTest.Net.Collections
                 set { _transactionFactory = value; }
             }
 #endif
+            /// <summary>
+            /// Sets the BTree into a read-only mode (only supported when opening an existing file)
+            /// </summary>
+            public bool ReadOnly
+            {
+                get { return _readOnly; }
+                set
+                {
+                    if (value)
+                    {
+                        InvalidConfigurationValueException.Assert(CreateFile == CreatePolicy.Never, "ReadOnly", "ReadOnly can only be used when CreateFile is Never");
+                        InvalidConfigurationValueException.Assert(StorageType == StorageType.Disk, "ReadOnly", "ReadOnly can only be used with the file storage");
+                        InvalidConfigurationValueException.Assert(File.Exists(FileName), "ReadOnly", "ReadOnly can only be used with an existing file");
+                    }
+                    _readOnly = value;
+                }
+            }
+
             /// <summary>
             /// Sets the custom implementation of the storage back-end to use for the BTree
             /// </summary>

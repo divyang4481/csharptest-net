@@ -34,8 +34,11 @@ namespace CSharpTest.Net.Generators.Test
             Console.SetError(serr);
             try
             {
-                AppDomain.CurrentDomain.ExecuteAssembly(a.Location, AppDomain.CurrentDomain.Evidence,
-                                                        new string[] { "Config" });
+                AppDomain.CurrentDomain.ExecuteAssembly(a.Location, 
+#if NET20 || NET35
+                    AppDomain.CurrentDomain.Evidence,
+#endif
+                    new string[] { "Config" });
             }
             finally
             {

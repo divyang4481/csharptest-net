@@ -276,7 +276,11 @@ namespace CSharpTest.Net.Processes
                     {
                         string[] arguments = args.Arguments;
                         Environment.CurrentDirectory = WorkingDirectory;
+#if NET20 || NET35
                         _exitCode = _workerDomain.ExecuteAssembly(_executable, AppDomain.CurrentDomain.Evidence, arguments);
+#else
+                        _exitCode = _workerDomain.ExecuteAssembly(_executable, arguments);
+#endif
                     }
                     finally
                     {

@@ -45,7 +45,7 @@ namespace CSharpTest.Net.Serialization
         /// <summary> Gets a singleton of the PrimitiveSerializer </summary>
         public static readonly PrimitiveSerializer Instance = new PrimitiveSerializer();
         /// <summary> Gets a typed version of the PrimitiveSerializer </summary>
-        public static readonly ISerializer<string> String = Instance;
+        public static readonly ISerializer<string> String = LimitedSerializer.Unlimited;
         /// <summary> Gets a typed version of the PrimitiveSerializer </summary>
         public static readonly ISerializer<bool> Boolean = Instance;
         /// <summary> Gets a typed version of the PrimitiveSerializer </summary>
@@ -53,7 +53,7 @@ namespace CSharpTest.Net.Serialization
         /// <summary> Gets a typed version of the PrimitiveSerializer </summary>
         public static readonly ISerializer<sbyte> SByte = Instance;
         /// <summary> Gets a typed version of the PrimitiveSerializer </summary>
-        public static readonly ISerializer<byte[]> Bytes = Instance;
+        public static readonly ISerializer<byte[]> Bytes = LimitedSerializer.Unlimited;
         /// <summary> Gets a typed version of the PrimitiveSerializer </summary>
         public static readonly ISerializer<char> Char = Instance;
         /// <summary> Gets a typed version of the PrimitiveSerializer </summary>
@@ -88,33 +88,12 @@ namespace CSharpTest.Net.Serialization
 
         void ISerializer<string>.WriteTo(string value, Stream stream)
         {
-            if (value == null)
-            {
-                VariantNumberSerializer.Int32.WriteTo(int.MinValue, stream);
-            }
-            else
-            {
-                VariantNumberSerializer.Int32.WriteTo(value.Length, stream);
-                foreach (char ch in value)
-                    VariantNumberSerializer.Int32.WriteTo(ch, stream);
-            }
+            String.WriteTo(value, stream);
         }
 
         string ISerializer<string>.ReadFrom(Stream stream)
         {
-            unchecked
-            {
-                int sz = VariantNumberSerializer.Int32.ReadFrom(stream);
-                if (sz == 0) return string.Empty;
-                if (sz == int.MinValue)
-                    return null;
-
-                Check.Assert<InvalidDataException>(sz >= 0);
-                char[] chars = new char[sz];
-                for (int i = 0; i < sz; i++)
-                    chars[i] = (char)VariantNumberSerializer.Int32.ReadFrom(stream);
-                return new String(chars);
-            }
+            return String.ReadFrom(stream);
         }
 
         #endregion
@@ -169,30 +148,11 @@ namespace CSharpTest.Net.Serialization
 
         void ISerializer<byte[]>.WriteTo(byte[] value, Stream stream)
         {
-            if (value == null)
-            {
-                VariantNumberSerializer.Int32.WriteTo(int.MinValue, stream);
-            }
-            else
-            {
-                VariantNumberSerializer.Int32.WriteTo(value.Length, stream);
-                foreach (byte b in value)
-                    stream.WriteByte(b);
-            }
+            Bytes.WriteTo(value, stream);
         }
         byte[] ISerializer<byte[]>.ReadFrom(Stream stream)
         {
-            int sz = VariantNumberSerializer.Int32.ReadFrom(stream);
-            if (sz == int.MinValue)
-                return null;
-
-            Check.Assert<InvalidDataException>(sz >= 0);
-            byte[] bytes = new byte[sz];
-            int pos = 0, len;
-            while (0 != (len = stream.Read(bytes, pos, sz - pos)))
-                pos += len;
-            Check.Assert<InvalidDataException>(pos == sz);
-            return bytes;
+            return Bytes.ReadFrom(stream);
         }
 
         #endregion

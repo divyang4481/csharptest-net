@@ -41,8 +41,11 @@ namespace CSharpTest.Net.Storage
         /// <summary>
         /// Opens an existing BPlusTree file at the path specified, for a new file use CreateNew()
         /// </summary>
-        public BTreeFileStore(string filePath, int blockSize, int growthRate, int concurrentWriters, FileOptions options)
-            : this(new FragmentedFile(filePath, blockSize, growthRate, concurrentWriters, options))
+        public BTreeFileStore(string filePath, int blockSize, int growthRate, int concurrentWriters, FileOptions options, bool readOnly)
+            : this(new FragmentedFile(filePath, blockSize, growthRate, concurrentWriters,
+                        readOnly ? FileAccess.Read : FileAccess.ReadWrite, 
+                        readOnly ? FileShare.Read : FileShare.ReadWrite, 
+                        options))
         {
            _fileId = Encoding.UTF8.GetBytes(Path.GetFullPath(filePath).ToLower());
         }
@@ -91,7 +94,7 @@ namespace CSharpTest.Net.Storage
             using (FragmentedFile file = FragmentedFile.CreateNew(filepath, blockSize))
                 CreateRoot(file);
 
-            return new BTreeFileStore(filepath, blockSize, growthRate, concurrentWriters, options);
+            return new BTreeFileStore(filepath, blockSize, growthRate, concurrentWriters, options, false);
         }
 
         /// <summary>

@@ -153,7 +153,7 @@ namespace CSharpTest.Net.Generators.Test
             if (FileUtils.TrySearchPath(exeName, out found))
                 return found;
 
-            foreach (string env in new string[] { "ProgramFiles(x86)", "ProgramFiles" })
+            foreach (string env in new string[] { "ProgramFiles(x86)", "ProgramFiles", "ProgramW6432" })
             {
                 string baseDir = Environment.GetEnvironmentVariable(env, EnvironmentVariableTarget.Process);
                 if (String.IsNullOrEmpty(baseDir))

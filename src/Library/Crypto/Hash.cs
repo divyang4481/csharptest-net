@@ -80,6 +80,41 @@ namespace CSharpTest.Net.Crypto
             _hashCode = hashCode;
         }
 
+        /// <summary>
+        /// Creates the hash algorithm associated with this length of hash
+        /// </summary>
+        public HashAlgorithm CreateAlgorithm()
+        {
+            return Check.IsAssignable<HashAlgorithm>(CryptoConfig.CreateFromName(AlgorithmName));
+        }
+
+        /// <summary>
+        /// If the hash provided is the same size as this hash both hash codes are feed back into
+        /// the hash algorithm associated with this length of hash to produce the result value.
+        /// If the hash provided is a different length, it is first hashed with this algorithm
+        /// before the two values are combined.
+        /// </summary>
+        public Hash Combine(Hash other)
+        {
+            if (Length != other.Length)
+                return Combine(other._hashCode);
+
+            //We have two hash values of equal lenth, we can now easily combine them.
+            HashAlgorithm alg = CreateAlgorithm();
+            alg.TransformBlock(_hashCode, 0, _hashCode.Length, _hashCode, 0);
+            alg.TransformFinalBlock(other._hashCode, 0, _hashCode.Length);
+            return FromBytes(alg.Hash);
+        }
+
+        /// <summary>
+        /// Combines the bytes provided by first computing a like sized hash of those bytes and
+        /// then combining the two equal hash values with the same hash algorithm.
+        /// </summary>
+        public Hash Combine(byte[] bytes)
+        {
+            return Combine(FromBytes(CreateAlgorithm().ComputeHash(Check.NotNull(bytes))));
+        }
+
         /// <summary> Returns the OID of the hash algorithm </summary>
         public string AlgorithmOID
         { get { return CryptoConfig.MapNameToOID(AlgorithmName); } }

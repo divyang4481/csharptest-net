@@ -67,7 +67,7 @@
     <StartProgram>$(ProjectDir)$(OutputPath)..\Tools\NUnit\nunit-console.exe</StartProgram>
     <StartArguments>/nologo /noshadow /labels /wait $(AssemblyName).dll</StartArguments>
     <StartWorkingDirectory>$(ProjectDir)$(OutputPath)</StartWorkingDirectory>
-    <PostBuildEvent>"$(FrameworkSDKDir)bin\xsd.exe" /nologo /out:$(ProjectDir) $(TargetPath)</PostBuildEvent>
+    <PostBuildEvent>REM "$(FrameworkSDKDir)bin\xsd.exe" /nologo /out:$(ProjectDir) $(TargetPath)</PostBuildEvent>
   </PropertyGroup>
   <Target Name="AfterBuild!">
     <Exec Command="$(StartProgram) /nologo /noshadow $(AssemblyName).dll" WorkingDirectory="$(StartWorkingDirectory)" />

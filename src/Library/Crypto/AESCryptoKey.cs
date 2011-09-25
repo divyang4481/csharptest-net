@@ -32,14 +32,38 @@ namespace CSharpTest.Net.Crypto
     /// </summary>
     public class AESCryptoKey : CryptoKey
     {
-        private static readonly byte[] _iv = DefaultIV();
+        private static byte[] _iv;
         /// <summary> Creates a default IV for the crypto provider if AESCryptoKey.CryptoIV is not set </summary>
         private static byte[] DefaultIV()
         {
+            System.Diagnostics.Trace.TraceWarning("The default IV has been deprecated, please set the AESCryptoKey.ProcessDefaultIV value.");
+
             Assembly asmKey = (Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly());
             AssemblyName asmName = asmKey.GetName();
             byte[] pk = Encoding.UTF8.GetBytes(asmName.Name);
             return Hash.MD5(pk).ToArray();
+        }
+
+        /// <summary>
+        /// Used to define the IV for AES keys created in this process, by default this is MD5(UTF8(Name)) where
+        /// Name is the short-name of either the entry-point assembly, or "CSharpTest.Net.Library" if undefined.
+        /// </summary>
+        /// <remarks>
+        /// The process default IV is used with AESCryptoKey instances that are created without explicitly
+        /// providing the IV value for the key.  This is done internally when using the Password class' 
+        /// CreateKey(...), Encrypt(...), or Decrypt(...) methods.  While this worked well enough for some
+        /// programs, this has proven to be a flawed approach as the entry-point assembly can change.  For example
+        /// if another .NET process call Assembly.Execute() on your executable.  
+        /// 
+        /// Applications are advised that they should capture the existing value and store that in App.Config, 
+        /// and set the following prior to using this class, or the Password class.  The entry-points related
+        /// to this that have been marked Obsolete() will be removed in the long-term and by capturing this
+        /// value and manually using it you can ensure your application will continue to function properly.
+        /// </remarks>
+        public static byte[] ProcessDefaultIV
+        {
+            get { return (byte[])(_iv ?? (_iv = DefaultIV())).Clone(); }
+            set { _iv = Check.ArraySize(value, 16, 16); }
         }
 
         readonly SymmetricAlgorithm _key;
@@ -50,20 +74,41 @@ namespace CSharpTest.Net.Crypto
             _key = new RijndaelManaged();
             _key.Padding = PaddingMode.PKCS7;
             _key.KeySize = 256;
-            _key.IV = _iv;
+            _key.IV = _iv ?? ProcessDefaultIV;
             _key.GenerateKey();
         }
+
         /// <summary> Creates an object representing the specified key </summary>
+        [Obsolete("Please use the overload that accepts IV bytes.")]
         public AESCryptoKey(byte[] key)
-            : this()
         {
+            _key = new RijndaelManaged();
+            _key.Padding = PaddingMode.PKCS7;
+            _key.KeySize = 256;
+            _key.IV = _iv ?? ProcessDefaultIV;
             _key.Key = Check.ArraySize(key, 32, 32);
         }
+
         /// <summary> Creates an object representing the specified key and init vector </summary>
         public AESCryptoKey(byte[] key, byte[] iv)
-            : this(key)
         {
+            _key = new RijndaelManaged();
+            _key.Padding = PaddingMode.PKCS7;
+            _key.KeySize = 256;
+            _key.Key = Check.ArraySize(key, 32, 32);
             _key.IV = Check.ArraySize(iv, 16, 16);
+        }
+
+        /// <summary>
+        /// Serializes the KEY and IV to a single array of bytes.  Use FromByteArray() to restore.
+        /// </summary>
+        public static AESCryptoKey FromBytes(byte[] serializedBytes)
+        {
+            Check.ArraySize(serializedBytes, 48, 48);
+            byte[] key = new byte[32], iv = new byte[16];
+            Buffer.BlockCopy(serializedBytes, 0, key, 0, 32);
+            Buffer.BlockCopy(serializedBytes, 32, iv, 0, 16);
+            return new AESCryptoKey(key, iv);
         }
 
         /// <summary> Returns the algorithm key or throws ObjectDisposedException </summary>
@@ -78,6 +123,17 @@ namespace CSharpTest.Net.Crypto
         {
             _key.Clear();
             base.Dispose(disposing);
+        }
+
+        /// <summary>
+        /// Serializes the KEY and IV to a single array of bytes.  Use FromByteArray() to restore.
+        /// </summary>
+        public byte[] ToArray()
+        {
+            byte[] result = new byte[32 + 16];
+            Buffer.BlockCopy(Key, 0, result, 0, 32);
+            Buffer.BlockCopy(IV, 0, result, 32, 16);
+            return result;
         }
 
         /// <summary> Returns the AES 256 bit key this object was created with </summary>

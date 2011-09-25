@@ -62,7 +62,7 @@ namespace CSharpTest.Net.Commands
 			_buildInCommands = new BuiltInCommands(
 				Command.Make(this, this.GetType().GetMethod("Get")),
 				Command.Make(this, this.GetType().GetMethod("Set", new Type[] { typeof(string), typeof(object), typeof(bool) } )),
-				Command.Make(this, this.GetType().GetMethod("Help")),
+				Command.Make(this, this.GetType().GetMethod("Help", new Type[] { typeof(string), typeof(bool) } )),
 				Option.Make(this, this.GetType().GetProperty("ErrorLevel")),
 				Option.Make(this, this.GetType().GetProperty("Prompt"))
 				);
