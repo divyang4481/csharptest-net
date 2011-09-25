@@ -100,7 +100,7 @@ namespace CSharpTest.Net.CSBuild
 				case FrameworkVersions.v20:
 				case FrameworkVersions.v30: frmwrk = "v2.0.50727"; break;
 				case FrameworkVersions.v35: frmwrk = "v3.5"; break;
-				//case FrameworkVersions.v40: frmwrk = "v4.0.30319"; break;
+				case FrameworkVersions.v40: frmwrk = "v4.0.30319"; break;
 				default: throw new ArgumentException("Unknown framework version");
 			}
 

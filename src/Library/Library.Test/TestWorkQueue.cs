@@ -15,9 +15,11 @@
 using System;
 using System.IO;
 using System.Threading;
-using CSharpTest.Net.Delegates;
 using CSharpTest.Net.Threading;
 using NUnit.Framework;
+#if NET20
+using Action = CSharpTest.Net.Delegates.Action;
+#endif
 
 namespace CSharpTest.Net.Library.Test
 {

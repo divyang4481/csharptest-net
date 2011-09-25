@@ -14,6 +14,7 @@
 #endregion
 using System;
 using System.Collections.Generic;
+using CSharpTest.Net.IO;
 using NUnit.Framework;
 using CSharpTest.Net.Crypto;
 using System.IO;
@@ -132,36 +133,159 @@ namespace CSharpTest.Net.Library.Test
             Assert.IsFalse(hash != hash2);
         }
 
-		[Test]
-		public void TestHashStream()
+        [Test]
+        public void TestCombinedSameHash()
+        {
+            Random r = new Random();
+            byte[] a = new byte[10], b = new byte[10];
+            r.NextBytes(a);
+            r.NextBytes(b);
+
+            Hash h1 = Hash.SHA256(a);
+            Hash h2 = Hash.SHA256(b);
+            Hash h3 = h1.Combine(h2);
+
+            Assert.AreEqual(h3.ToString(), Hash.SHA256(
+                new CombinedStream(
+                    new MemoryStream(h1.ToArray()),
+                    new MemoryStream(h2.ToArray())
+                    )).ToString());
+        }
+
+        [Test]
+        public void TestCombinedDifferentHash()
+        {
+            Random r = new Random();
+            byte[] a = new byte[10], b = new byte[10];
+            r.NextBytes(a);
+            r.NextBytes(b);
+
+            Hash h1 = Hash.SHA256(a);
+            Hash h2 = Hash.SHA1(b);
+            Hash h3 = h1.Combine(h2);
+
+            Assert.AreEqual(h3.ToString(), Hash.SHA256(
+                new CombinedStream(
+                    new MemoryStream(h1.ToArray()),
+                    new MemoryStream(Hash.SHA256(h2.ToArray()).ToArray()) //the dissimilar hash is first made the same length
+                    )).ToString());
+        }
+
+        [Test]
+        public void TestCombinedWithBytes()
+        {
+            Random r = new Random();
+            byte[] a = new byte[10], b = new byte[32];
+            r.NextBytes(a);
+            r.NextBytes(b);
+
+            Hash h1 = Hash.SHA256(a);
+            Hash h3 = h1.Combine(b);
+
+            Assert.AreEqual(h3.ToString(), Hash.SHA256(
+                new CombinedStream(
+                    new MemoryStream(h1.ToArray()),
+                    new MemoryStream(Hash.SHA256(b).ToArray())//bytes combined are hashed first
+                    )).ToString());
+        }
+
+        [Test]
+        public void TestCreateAlgorithms()
+        {
+            foreach(int sz in new int [] { 16, 20, 32, 48, 64 })
+            {
+                Hash test = Hash.FromBytes(new byte[sz]);
+                HashAlgorithm ha = test.CreateAlgorithm();
+                Assert.IsNotNull(ha);
+                Assert.AreEqual(sz, ha.ComputeHash(new byte[0]).Length);
+            }
+        }
+
+        [Test]
+        public void TestHashStreamRead()
+        {
+            Random r = new Random();
+            byte[] bytes = new byte[1000];
+            r.NextBytes(bytes);
+
+            using (HashStream hs = new HashStream(new SHA256Managed(), new MemoryStream(bytes)))
+            {
+                for (int i = 0; i < 5; i++)
+                
+                while (hs.Position < hs.Length)
+                {
+                    hs.ReadByte();
+                    int amt = r.Next(255);
+                    byte[] tmp = new byte[amt];
+                    hs.Read(tmp, 0, tmp.Length);
+                }
+
+                Hash expect = Hash.SHA256(bytes);
+                Hash actual = hs.FinalizeHash();
+
+                Assert.AreEqual(expect, actual);
+                Assert.AreEqual(expect.ToArray(), actual.ToArray());
+                Assert.AreEqual(expect.ToString(), actual.ToString());
+
+                //still valid after FinalizeHash(); however, hash is restarted
+                hs.Position = 0;
+                IOStream.Read(hs, bytes.Length);
+                actual = hs.FinalizeHash();
+
+                Assert.AreEqual(expect, actual);
+                Assert.AreEqual(expect.ToArray(), actual.ToArray());
+                Assert.AreEqual(expect.ToString(), actual.ToString());
+            }
+        }
+
+        [Test]
+		public void TestHashStreamWrite()
 		{
 			Random r = new Random();
 			byte[][] test =
 			new byte[][]
 				{
 					new byte[300], 
+					new byte[1], 
 					new byte[500], 
+					new byte[11],
+					new byte[1], 
 					new byte[1000], 
 				};
-			using(HashStream hs = new HashStream(new SHA256Managed()))
-			using(MemoryStream ms = new MemoryStream())
+            using (HashStream hs = new HashStream(new SHA256Managed()))
+            using (MemoryStream ms = new MemoryStream())
+            using (HashStream hsWrap = new HashStream(new SHA256Managed(), ms))
 			{
 				Assert.IsTrue(hs.CanWrite);
-				Assert.IsFalse(hs.CanRead);
-
+                long len = 0;
 				foreach (byte[] bytes in test)
 				{
+                    len += bytes.Length;
 					r.NextBytes(bytes);
-					ms.Write(bytes, 0, bytes.Length);
+                    hsWrap.Write(bytes, 0, bytes.Length);
 					hs.Write(bytes, 0, bytes.Length);
 				}
+                for (int i = 0; i < 5; i++)
+                {
+                    len += 1;
+                    byte val = (byte)r.Next(255);
+                    hsWrap.WriteByte(val);
+                    hs.WriteByte(val);
+                }
 
+			    Assert.AreEqual(len, ms.Position);
 				Hash expect = Hash.SHA256(ms.ToArray());
 				Hash actual = hs.Close();
 
 				Assert.AreEqual(expect, actual);
 				Assert.AreEqual(expect.ToArray(), actual.ToArray());
 				Assert.AreEqual(expect.ToString(), actual.ToString());
+
+                //wrapped test
+                actual = hsWrap.FinalizeHash();
+                Assert.AreEqual(expect, actual);
+                Assert.AreEqual(expect.ToArray(), actual.ToArray());
+                Assert.AreEqual(expect.ToString(), actual.ToString());
 			}
 		}
 

@@ -39,6 +39,11 @@ namespace CSharpTest.Net.Utils
 		public static readonly Regex HttpUrl = new Regex(@"https?://[-\w]+(\.\w[-\w]*)+(:\d+)?(/[^.!,?;""\'<>()\[\]\{\}\s\x7F-\xFF]*([.!,?]+[^.!,?;""\'<>\(\)\[\]\{\}\s\x7F-\xFF]+)*)?");
 
         /// <summary>
+        /// Finds html/xml entity references in text, test patterns: hex = #xae6f278 decimal = #1234567890 or named = lt
+        /// </summary>
+        public static readonly Regex HtmlEntity = new Regex(@"&(?<entity>#(?<number>x(?<hex>[\da-f]{1,8})|(?<decimal>\d{1,10}))|(?<name>[\w-[\d]]\w{1,10}));", RegexOptions.IgnoreCase);
+
+        /// <summary>
         /// Matches a makefile macro name in text, i.e. "$(field:name=value)" where field is any alpha-numeric + ('_', '-', or '.') text identifier 
         /// returned from group "field".  the "replace" group contains all after the identifier and before the last ')'.  "name" and "value" groups
         /// match the name/value replacement pairs.
@@ -91,5 +96,5 @@ namespace CSharpTest.Net.Utils
 		/// ways to validate by using the build-in checksums.
 		/// </summary>
 		public static readonly Regex CreditCard = new Regex(@"^(?:(?<Mastercard>5[1-5]\d{14})|(?<Visa>4(?:\d{15}|\d{12}))|(?<Amex>3[47]\d{13})|(?<DinersClub>3(?:0[0-5]|6[0-9]|8[0-9])\d{11})|(?<Discover>6011\d{12}))$");
-	}
+    }
 }

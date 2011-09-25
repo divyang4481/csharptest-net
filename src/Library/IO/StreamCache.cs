@@ -154,22 +154,36 @@ namespace CSharpTest.Net.IO
             public override void SetLength(long value)
             {
                 IsNotDisposed();
-                Check.Assert<NotSupportedException>(CanWrite);
+                Check.Assert<InvalidOperationException>(CanWrite);
                 base.SetLength(value);
             }
 
             public override int Read(byte[] buffer, int offset, int count)
             {
                 IsNotDisposed();
-                Check.Assert<NotSupportedException>(CanRead);
+                Check.Assert<InvalidOperationException>(CanRead);
                 return base.Read(buffer, offset, count);
+            }
+
+            public override int ReadByte()
+            {
+                IsNotDisposed();
+                Check.Assert<InvalidOperationException>(CanRead);
+                return base.ReadByte();
             }
 
             public override void Write(byte[] buffer, int offset, int count)
             {
                 IsNotDisposed();
-                Check.Assert<NotSupportedException>(CanWrite);
+                Check.Assert<InvalidOperationException>(CanWrite);
                 base.Write(buffer, offset, count);
+            }
+
+            public override void WriteByte(byte value)
+            {
+                IsNotDisposed();
+                Check.Assert<InvalidOperationException>(CanWrite);
+                base.WriteByte(value);
             }
         }
     }

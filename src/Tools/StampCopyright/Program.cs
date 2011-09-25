@@ -19,8 +19,8 @@ using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Xml;
 using CSharpTest.Net.CustomTool;
-using CSharpTest.Net.Html;
 using CSharpTest.Net.Utils;
 using CSharpTest.Net.CustomTool.Projects;
 
@@ -285,8 +285,9 @@ namespace CSharpTest.Net.StampCopyright
                 p.WaitForExit(60000);
                 if (p.ExitCode == 0)
                 {
-                    XmlLightDocument doc = new XmlLightDocument(capture.Output);
-                    foreach (XmlLightElement e in doc.Select("/log/logentry/date"))
+                    XmlDocument doc = new XmlDocument();
+                    doc.LoadXml(capture.Output);
+                    foreach (XmlElement e in doc.SelectNodes("/log/logentry/date"))
                     {
                         int tmp;
                         if (int.TryParse(e.InnerText.Substring(0, 4), out tmp) && tmp > 1900 && tmp <= DateTime.Now.Year)

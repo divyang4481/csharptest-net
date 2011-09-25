@@ -124,7 +124,11 @@ namespace CSharpTest.Net.Html
             settings.ValidationType = _requiresDtd == XhtmlDTDSpecification.None ? ValidationType.Auto : ValidationType.DTD;
 #pragma warning restore 612, 618
             settings.ValidationEventHandler += errorHandler;
+#if NET20 || NET35
             settings.ProhibitDtd = false;
+#else
+            settings.DtdProcessing = DtdProcessing.Parse;
+#endif
             settings.XmlResolver = resolver;
             return settings;
         }

@@ -20,6 +20,7 @@ using CSharpTest.Net.CustomTool.CodeGenerator;
 using CSharpTest.Net.CustomTool.Projects;
 using BE=Microsoft.Build.BuildEngine;
 
+#pragma warning disable 618
 namespace CSharpTest.Net.CustomTool.VsInterop
 {
 	[ComVisible(true)]

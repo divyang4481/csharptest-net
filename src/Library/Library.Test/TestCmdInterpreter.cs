@@ -249,7 +249,17 @@ namespace CSharpTest.Net.Library.Test
 			ci.AddHandler(new TestCommands());
 			Assert.AreEqual(2, ci.Options.Length);
 			Assert.AreEqual(4, ci.Commands.Length);
-		}
+        }
+
+        [Test]
+        public void TestHtmlHelp()
+        {
+            CommandInterpreter ci = new CommandInterpreter(DefaultCommands.Help, new TestCommands());
+            string helptext = ci.GetHtmlHelp(null);
+            Assert.IsTrue(0 == helptext.IndexOf("<html>"));
+            Assert.IsTrue(helptext.Contains("COMMAND"));
+            Assert.IsTrue(helptext.IndexOf("SOMEDATA",StringComparison.OrdinalIgnoreCase) >= 0);
+        }
 
 		[Test]
 		public void TestHelpText()

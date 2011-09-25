@@ -29,20 +29,36 @@ namespace CSharpTest.Net.Serialization.StorageClasses
 	/// </summary>
 	public class RegistryStorage : INameValueStore
 	{
-		private readonly string PathRoot;
+        private readonly Microsoft.Win32.RegistryKey _hiveRoot;
+		private readonly string _pathRoot;
 
 		/// <summary>
 		/// Stores values in the registry at HKCU\Software\{Company}\{Product} path.
 		/// </summary>
-		public RegistryStorage() 
-		{
-			PathRoot = Constants.RegistrySoftwarePath;
-		}
+        public RegistryStorage()
+            : this(Constants.RegistrySoftwarePath)
+		{ }
+
+        /// <summary>
+        /// Stores values in the registry at HKCU\Software\{Company}\{Product} path.
+        /// </summary>
+        public RegistryStorage(string hkcuPath)
+            : this(Microsoft.Win32.Registry.CurrentUser, hkcuPath)
+        { }
+
+        /// <summary>
+        /// Stores values in the registry at path.
+        /// </summary>
+        public RegistryStorage(Microsoft.Win32.RegistryKey hiveRoot, string path)
+        {
+            _hiveRoot = hiveRoot;
+            _pathRoot = path;
+        }
 
 		private string FullPath(string path)
 		{
-			if (String.IsNullOrEmpty(path)) return PathRoot;
-			return Path.Combine(PathRoot, StringUtils.SafeFilePath(path));
+			if (String.IsNullOrEmpty(path)) return _pathRoot;
+			return Path.Combine(_pathRoot, StringUtils.SafeFilePath(path));
 		}
 
 		/// <summary>
@@ -53,7 +69,7 @@ namespace CSharpTest.Net.Serialization.StorageClasses
 		{
 			path = FullPath(path);
 			name = Check.NotEmpty(StringUtils.SafeFileName(name));
-			using (Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(path))
+            using (Microsoft.Win32.RegistryKey key = _hiveRoot.CreateSubKey(path))
 				value = key.GetValue(name, null) as string;
 			return value != null;
 		}
@@ -65,7 +81,7 @@ namespace CSharpTest.Net.Serialization.StorageClasses
 		{
 			path = FullPath(path);
 			name = Check.NotEmpty(StringUtils.SafeFileName(name));
-			using (Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(path))
+            using (Microsoft.Win32.RegistryKey key = _hiveRoot.CreateSubKey(path))
 				key.SetValue(name, value, Microsoft.Win32.RegistryValueKind.String);
 		}
 
@@ -76,7 +92,7 @@ namespace CSharpTest.Net.Serialization.StorageClasses
 		{
 			path = FullPath(path);
 			name = Check.NotEmpty(StringUtils.SafeFileName(name));
-			using (Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(path))
+            using (Microsoft.Win32.RegistryKey key = _hiveRoot.CreateSubKey(path))
 				key.DeleteValue(name, false);
 		}
 	}
@@ -86,18 +102,26 @@ namespace CSharpTest.Net.Serialization.StorageClasses
 	/// </summary>
 	public class IsolatedStorage : INameValueStore
 	{
-		private readonly string PathRoot;
+		private readonly string _pathRoot;
 		
 		private enum StorageType { App, Domain, Assembly }
 		private readonly StorageType _type;
-		/// <summary>
+		
+        /// <summary>
 		/// Stores values in the IsolatedStorage for the application in {Company}\{Product} path.
 		/// </summary>
 		public IsolatedStorage()
-		{
-			PathRoot = Path.Combine(Constants.CompanyName, Constants.ProductName);
+            : this(Path.Combine(Constants.CompanyName, Constants.ProductName))
+		{ }
 
-			IsolatedStorageFile file = null;
+        /// <summary>
+        /// Stores values in the IsolatedStorage for the application in path.
+        /// </summary>
+        public IsolatedStorage(string relativePath)
+        {
+            _pathRoot = relativePath;
+    
+            IsolatedStorageFile file = null;
 			try { file = IsolatedStorageFile.GetUserStoreForApplication(); _type = StorageType.App; }
 			catch(IsolatedStorageException)
 			{
@@ -111,8 +135,8 @@ namespace CSharpTest.Net.Serialization.StorageClasses
 
 		private string FullPath(string path)
 		{
-			if (String.IsNullOrEmpty(path)) return PathRoot;
-			return Path.Combine(PathRoot, StringUtils.SafeFilePath(path));
+			if (String.IsNullOrEmpty(path)) return _pathRoot;
+			return Path.Combine(_pathRoot, StringUtils.SafeFilePath(path));
 		}
 
 		private IsolatedStorageFile Open()
@@ -192,20 +216,27 @@ namespace CSharpTest.Net.Serialization.StorageClasses
 	/// </summary>
 	public class FileStorage : INameValueStore
 	{
-		private readonly string PathRoot;
+		private readonly string _pathRoot;
 
 		/// <summary>
 		/// Stores values in the local %AppData% folder in the path {Company}\{Product}.
 		/// </summary>
 		public FileStorage()
-		{
-			PathRoot = Constants.LocalApplicationData;
-		}
+            : this(Constants.LocalApplicationData)
+		{ }
+
+        /// <summary>
+        /// Stores values in the local %AppData% folder in the path {Company}\{Product}.
+        /// </summary>
+        public FileStorage(string pathRoot)
+        {
+            _pathRoot = pathRoot;
+        }
 
 		private string FullPath(string path)
 		{
-			if (String.IsNullOrEmpty(path)) return PathRoot;
-			return Path.Combine(PathRoot, StringUtils.SafeFilePath(path));
+			if (String.IsNullOrEmpty(path)) return _pathRoot;
+			return Path.Combine(_pathRoot, StringUtils.SafeFilePath(path));
 		}
 
 		/// <summary>

@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.Build.BuildEngine;
 
+#pragma warning disable 618
 namespace CSharpTest.Net.CustomTool.Projects
 {
 	class MsBuildProject : IProjectInfo

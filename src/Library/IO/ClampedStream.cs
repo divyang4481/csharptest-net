@@ -15,9 +15,6 @@
 using System;
 using System.IO;
 
-// disables non-comment warning
-#pragma warning disable 1591
-
 namespace CSharpTest.Net.IO
 {
     /// <summary>
@@ -38,10 +35,17 @@ namespace CSharpTest.Net.IO
         /// </summary>
         /// <param name="rawStream">The stream to use for read/write</param>
         /// <param name="start">The position in the stream that should start the range of allowed bytes</param>
-        /// <param name="length"></param>
+        /// <param name="length">The maximum length that can be read from the stream</param>
         public ClampedStream(Stream rawStream, long start, long length)
             : this(rawStream, start, length, true) { }
 
+        /// <summary>
+        /// Creates a stream that limits the users ability to modify data to the specified range
+        /// </summary>
+        /// <param name="rawStream">The stream to use for read/write</param>
+        /// <param name="start">The position in the stream that should start the range of allowed bytes</param>
+        /// <param name="length">The maximum length that can be read from the stream</param>
+        /// <param name="disposeOfStream">True to dispose of the rawStream when this stream is disposed</param>
         public ClampedStream(Stream rawStream, long start, long length, bool disposeOfStream)
         {
             _rawStream = rawStream;

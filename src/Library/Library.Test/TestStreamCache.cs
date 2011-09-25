@@ -60,10 +60,10 @@ namespace CSharpTest.Net.Library.Test
             Assert.IsFalse(stream.CanRead || stream.CanWrite);
             try
             {
-                stream.WriteByte(1);
+                stream.ReadByte();
                 Assert.Fail();
-            }/* why NotSupported?, the underlying stream was disposed, not the stream itself */
-            catch (NotSupportedException) { }
+            }/* why InvalidOperation?, the underlying stream was disposed, not the stream itself */
+            catch (InvalidOperationException) { }
 
             stream.Dispose();
             try

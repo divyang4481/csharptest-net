@@ -14,7 +14,6 @@
 #endregion
 using System;
 using System.Security.Cryptography;
-using CSharpTest.Net.Delegates;
 using CSharpTest.Net.Reflection;
 
 namespace CSharpTest.Net.Crypto
@@ -102,7 +101,7 @@ namespace CSharpTest.Net.Crypto
 		/// </summary>
 		public override ICryptoTransform CreateEncryptor(byte[] keybytes, byte[] iv)
 		{
-			return ModifyTransform(keybytes, iv, delegate(SymmetricAlgorithm sa) { return sa.CreateEncryptor(); });
+			return ModifyTransform(keybytes, iv, true);
 		}
 
 		/// <summary>
@@ -110,10 +109,10 @@ namespace CSharpTest.Net.Crypto
 		/// </summary>
 		public override ICryptoTransform CreateDecryptor(byte[] keybytes, byte[] iv)
 		{
-			return ModifyTransform(keybytes, iv, delegate(SymmetricAlgorithm sa) { return sa.CreateDecryptor(); });
+			return ModifyTransform(keybytes, iv, false);
 		}
 
-		private ICryptoTransform ModifyTransform(byte[] keybytes, byte[] iv, Func<SymmetricAlgorithm, ICryptoTransform> open)
+		private ICryptoTransform ModifyTransform(byte[] keybytes, byte[] iv, bool encrypting)
 		{
 			ICryptoTransform xform;
 			using(RijndaelManaged algo = new RijndaelManaged())
@@ -124,7 +123,7 @@ namespace CSharpTest.Net.Crypto
 				algo.Padding = Padding;
 				algo.IV = iv;
 				algo.Key = keybytes.Length <= 32 ? keybytes : new SHA256Managed().ComputeHash(keybytes);
-				xform = open(algo);
+                xform = encrypting ? algo.CreateEncryptor() : algo.CreateDecryptor();
 			}
 
 			int ikeylen = keybytes.Length / 4;

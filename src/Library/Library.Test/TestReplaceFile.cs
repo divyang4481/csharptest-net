@@ -103,29 +103,61 @@ namespace CSharpTest.Net.Library.Test
             string testdata = Guid.NewGuid().ToString();
             string tmpPath;
 
-            TempFile replace = new TempFile();
-            using (TransactFile temp = new TransactFile(replace.TempPath))
+            using (TempFile replace = new TempFile())
             {
-                Assert.AreEqual(temp.TargetFile, replace.TempPath);
-                tmpPath = temp.TempPath;
-                Assert.IsTrue(temp.Exists);
-                temp.WriteAllText(testdata);
-                //missing commit:
-                //temp.Commit();
-            }
-            Assert.AreEqual(0, replace.Length);
-            Assert.IsFalse(File.Exists(tmpPath));
+                using (TransactFile temp = new TransactFile(replace.TempPath))
+                {
+                    Assert.AreEqual(temp.TargetFile, replace.TempPath);
+                    tmpPath = temp.TempPath;
+                    Assert.IsTrue(temp.Exists);
+                    temp.WriteAllText(testdata);
+                    //missing commit:
+                    //temp.Commit();
+                }
+                Assert.AreEqual(0, replace.Length);
+                Assert.IsFalse(File.Exists(tmpPath));
 
-            //now for real
+                //now for real
+                using (TransactFile temp = new TransactFile(replace.TempPath))
+                {
+                    tmpPath = temp.TempPath;
+                    Assert.IsTrue(temp.Exists);
+                    temp.WriteAllText(testdata);
+                    temp.Commit();
+                }
+                Assert.IsFalse(File.Exists(tmpPath));
+                Assert.AreEqual(testdata, replace.ReadAllText());
+            }
+        }
+
+        [Test]
+        public void TestTransactRollback()
+        {
+            string testdata = Guid.NewGuid().ToString();
+
+            using (TempFile replace = new TempFile())
             using (TransactFile temp = new TransactFile(replace.TempPath))
             {
-                tmpPath = temp.TempPath;
-                Assert.IsTrue(temp.Exists);
                 temp.WriteAllText(testdata);
-                temp.Commit();
+                Assert.IsTrue(temp.Exists);
+                temp.Rollback();
+                Assert.IsFalse(temp.Exists);
             }
-            Assert.IsFalse(File.Exists(tmpPath));
-            Assert.AreEqual(testdata, replace.ReadAllText());
+        }
+
+        [Test]
+        public void TestReplaceRollback()
+        {
+            string testdata = Guid.NewGuid().ToString();
+
+            using (TempFile replace = new TempFile())
+            using (ReplaceFile temp = new ReplaceFile(replace.TempPath))
+            {
+                temp.WriteAllText(testdata);
+                Assert.IsTrue(temp.Exists);
+                temp.Rollback();
+                Assert.IsFalse(temp.Exists);
+            }
         }
 
         [Test]

@@ -20,17 +20,24 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <DocumentationFile Condition="'$(OutputType)' == 'Library'">$(OutputPath)\$(AssemblyName).XML</DocumentationFile>
+    <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
+    <NoWarn>1591</NoWarn>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
     <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
     <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Build.Engine" />
     <Reference Include="Microsoft.Build.Framework" />
     <Reference Include="System" />
     <Reference Include="System.configuration" />
-    <Reference Include="System.Data" />
+    <Reference Include="System.Data">
+      <Private>False</Private>
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
@@ -116,9 +123,9 @@
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>"$(FrameworkSDKDir)bin\xsd.exe" /nologo /t:CSharpTest.Net.CSBuild.Configuration.CSBuildConfig /out:$(TargetDir) $(TargetPath)
-COPY /Y $(TargetDir)schema0.xsd $(ProjectDir)CSBuild.xsd
-COPY /Y $(TargetDir)Sample.config.xml $(TargetDir)CSBuild.config
+    <PostBuildEvent>REM "$(FrameworkSDKDir)bin\xsd.exe" /nologo /t:CSharpTest.Net.CSBuild.Configuration.CSBuildConfig /out:$(TargetDir) $(TargetPath)
+REM COPY /Y $(TargetDir)schema0.xsd $(ProjectDir)CSBuild.xsd
+REM COPY /Y $(TargetDir)Sample.config.xml $(TargetDir)CSBuild.config
 REM "$(FrameworkSDKDir)bin\sgen.exe" /nologo /force "/c: /platform:$(Platform)" /a:$(TargetPath) /o:$(TargetDir)
 </PostBuildEvent>
   </PropertyGroup>

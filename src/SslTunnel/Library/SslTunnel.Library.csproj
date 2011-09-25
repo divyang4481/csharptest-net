@@ -68,8 +68,8 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>"C:\Program Files\Microsoft SDKs\Windows\v6.0A\bin\xsd.exe" /nologo $(TargetPath) /type:CSharpTest.Net.SslTunnel.TunnelConfig /out:$(TargetDir)
-COPY /Y $(TargetDir)schema0.xsd $(ProjectDir)SslTunnel.xsd
-DEL $(TargetDir)schema0.xsd</PostBuildEvent>
+    <PostBuildEvent>REM "C:\Program Files\Microsoft SDKs\Windows\v6.0A\bin\xsd.exe" /nologo $(TargetPath) /type:CSharpTest.Net.SslTunnel.TunnelConfig /out:$(TargetDir)
+REM COPY /Y $(TargetDir)schema0.xsd $(ProjectDir)SslTunnel.xsd
+REM DEL $(TargetDir)schema0.xsd</PostBuildEvent>
   </PropertyGroup>
 </Project>

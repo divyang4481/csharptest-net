@@ -16,9 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Threading;
 using CSharpTest.Net.CustomTool.Projects;
-using CSharpTest.Net.Delegates;
 using CSharpTest.Net.Utils;
 using Microsoft.Build.BuildEngine;
 
@@ -51,13 +49,16 @@ namespace CSharpTest.Net.CustomTool
 			e.Ignore = false == StringComparer.OrdinalIgnoreCase.Equals(e.File.Extension, ".csproj");
 		}
 
-		public void VisitProjects(Action<IProjectInfo> visitor)
+		public void VisitProjects(VisitProject visitor)
 		{
+#if !MSVISITOR
 			if (_fastLoader) FastVisitProjects(visitor);
-			else MsVisitProjects(visitor);
+			else 
+#endif                
+                MsVisitProjects(visitor);
 		}
 
-		void MsVisitProjects(Action<IProjectInfo> visitor)
+		void MsVisitProjects(VisitProject visitor)
 		{
 			Engine e = new Engine(RuntimeEnvironment.GetRuntimeDirectory());
             if(e.GetType().Assembly.GetName().Version.Major == 2)
@@ -83,8 +84,8 @@ namespace CSharpTest.Net.CustomTool
 			}
 		}
 
-		delegate void VisitProjectList(IEnumerable<FileInfo> projects, Action<IProjectInfo> visitor);
-		void FastVisitProjects(Action<IProjectInfo> visitor)
+#if !MSVISITOR
+		void FastVisitProjects(VisitProject visitor)
 		{
 			VisitProjectList proc = FauxVisitProjects;
 			List<IAsyncResult> results = new List<IAsyncResult>();
@@ -103,13 +104,13 @@ namespace CSharpTest.Net.CustomTool
 				proc.EndInvoke(r);
 		}
 
-		static void FauxVisitProjects(IEnumerable<FileInfo> projects, Action<IProjectInfo> visitor)
+		static void FauxVisitProjects(IEnumerable<FileInfo> projects, VisitProject visitor)
 		{
 			foreach (FileInfo file in projects)
 				FauxVisit(file, visitor);
 		}
 
-		static void FauxVisit(FileInfo file, Action<IProjectInfo> visitor)
+		static void FauxVisit(FileInfo file, VisitProject visitor)
 		{
 			IProjectInfo prj;
 			try
@@ -125,8 +126,9 @@ namespace CSharpTest.Net.CustomTool
 
 			visitor(prj);
 		}
+#endif
 
-		public void VisitProjectItems(Action<IProjectInfo, IProjectItem> visitor)
+        public void VisitProjectItems(VisitProjectItem visitor)
 		{
 			VisitProjects(
 				delegate(IProjectInfo p)
@@ -139,4 +141,8 @@ namespace CSharpTest.Net.CustomTool
 			);
 		}
 	}
+
+    delegate void VisitProjectList(IEnumerable<FileInfo> projects, VisitProject visitor);
+    public delegate void VisitProject(IProjectInfo prj);
+    public delegate void VisitProjectItem(IProjectInfo prj, IProjectItem itm);
 }

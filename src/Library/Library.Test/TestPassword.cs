@@ -14,6 +14,7 @@
 #endregion
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using NUnit.Framework;
 using CSharpTest.Net.Crypto;
 using System.Text;
@@ -60,7 +61,6 @@ namespace CSharpTest.Net.Library.Test
 			}
 		}
 
-
         [Test, ExpectedException(typeof(ObjectDisposedException))]
         public void TestDisposal()
         {
@@ -71,6 +71,20 @@ namespace CSharpTest.Net.Library.Test
 
             key.Decrypt(test);
             Assert.Fail();
+        }
+
+        [Test]
+        public void TestSetIv()
+        {
+            using (PasswordKey key = new PasswordKey("bla"))
+            {
+                Assert.AreEqual(AESCryptoKey.ProcessDefaultIV, key.IV);
+                byte[] newIv = Guid.NewGuid().ToByteArray();
+                key.IV = newIv;
+
+                Assert.AreEqual(newIv, key.IV);
+                Assert.AreEqual(newIv, key.CreateKey().IV);
+            }
         }
 
         [Test]

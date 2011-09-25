@@ -53,7 +53,7 @@ c"" , extra
                 for (int i = 0; i < r.FieldCount; i++)
                 {
                     Assert.AreEqual(typeof(String), r.GetFieldType(i));
-                    Assert.AreEqual(typeof(String).Name, r.GetDataTypeName(i));
+                    Assert.AreEqual(typeof(String).Name, ((IDataReader)r).GetDataTypeName(i));
                     Assert.AreEqual("f" + (i + 1).ToString(), r.GetName(i).ToString());
                     Assert.AreEqual(i, r.GetOrdinal("f" + (i + 1).ToString()));
                 }
@@ -62,7 +62,7 @@ c"" , extra
                 { }
 
                 Assert.IsFalse(r.IsClosed);
-                Assert.IsFalse(r.NextResult());
+                Assert.IsFalse(((IDataReader)r).NextResult());
                 Assert.IsTrue(r.IsClosed);
             }
         }

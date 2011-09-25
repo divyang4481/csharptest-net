@@ -39,6 +39,8 @@
     <PlatformTarget>x86</PlatformTarget>
     <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
     <IntermediateOutputPath>$(OutputPath)obj\$(AssemblyName)\</IntermediateOutputPath>
+    <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
+    <NoWarn>1591</NoWarn>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\..\keys\csharptest.net.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
@@ -64,16 +66,21 @@
     </Reference>
     <Reference Include="System.configuration" />
     <Reference Include="System.Data">
-      <Name>System.Data</Name>
+      <Private>False</Private>
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
+    <Reference Include="System.Core">
+      <Private>False</Private>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="System.Design" />
-    <Reference Include="System.Web" />
+    <Reference Include="System.Web">
+      <Private>False</Private>
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
     <Reference Include="System.Xml">
       <Name>System.XML</Name>
     </Reference>
-  </ItemGroup>
-  <ItemGroup Condition="'$(TargetFrameworkVersion)' == 'v3.5'">
-    <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\..\Library\Cloning\MemberwiseClone.cs">

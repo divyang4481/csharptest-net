@@ -76,7 +76,9 @@ namespace CSharpTest.Net.IpcChannel
         static readonly IWorkState<IpcEventMessage> StartState = new CStartState();
         class CStartState : CTransitionalState, IWorkState<IpcEventMessage>
         {
+            [Obsolete]
             public bool GetSuccess(IpcEventMessage msg) { return false; }
+            [Obsolete]
             public bool GetCompleted(IpcEventMessage msg) { return false; }
             public IWorkState<IpcEventMessage> Transition(IpcEventMessage msg)
             {
@@ -181,7 +183,9 @@ namespace CSharpTest.Net.IpcChannel
         static readonly IWorkState<IpcEventMessage> WaitingReadyState = new CWaitingReadyState();
         class CWaitingReadyState : IWorkState<IpcEventMessage>
         {
+            [Obsolete]
             public bool GetSuccess(IpcEventMessage msg) { return false; }
+            [Obsolete]
             public bool GetCompleted(IpcEventMessage msg) { return false; }
             public int GetHandleCount(IpcEventMessage msg) { return 2; }
             public void CopyHandles(IpcEventMessage msg, WaitHandle[] array, int offset)
@@ -213,7 +217,9 @@ namespace CSharpTest.Net.IpcChannel
         static readonly IWorkState<IpcEventMessage> FailedState = new CFailedState();
         class CFailedState : CTransitionalState, IWorkState<IpcEventMessage>
         {
+            [Obsolete]
             public bool GetSuccess(IpcEventMessage msg) { return false; }
+            [Obsolete]
             public bool GetCompleted(IpcEventMessage msg) { return true; }
             public IWorkState<IpcEventMessage> Transition(IpcEventMessage msg)
             {

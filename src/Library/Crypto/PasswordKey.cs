@@ -31,13 +31,15 @@ namespace CSharpTest.Net.Crypto
         public const int DefaultIterations = 8192;
 
         readonly IPasswordDerivedBytes _derivedBytes;
-		Salt _salt;
+        private Salt _salt;
+        private byte[] _iv;
 
         /// <summary> Creates the password from the given bytes and salt </summary>
 		public PasswordKey(IPasswordDerivedBytes derivedBytes, Salt salt)
 		{
 			_derivedBytes = derivedBytes;
 			_salt = salt;
+            _iv = null;
 		}
 
         /// <summary> Creates the password from the given bytes and salt </summary>
@@ -80,7 +82,7 @@ namespace CSharpTest.Net.Crypto
         /// <summary> Returns the key generated with the current password and salt </summary>
         public AESCryptoKey CreateKey()
         {
-			return CreateKey(_salt);
+			return CreateKey(_salt, IV);
         }
 
         /// <summary> Returns the key generated with the current password and the provided salt </summary>
@@ -89,7 +91,23 @@ namespace CSharpTest.Net.Crypto
 			DerivedBytes.Salt = salt.ToArray();
 			DerivedBytes.Reset();
 			byte[] key = DerivedBytes.GetBytes(32);
-			return new AESCryptoKey(key);
+			return new AESCryptoKey(key, IV);
+        }
+
+        /// <summary> Returns the key generated with the current password and the provided salt </summary>
+        public AESCryptoKey CreateKey(Salt salt, byte[] iv)
+        {
+			DerivedBytes.Salt = salt.ToArray();
+			DerivedBytes.Reset();
+			byte[] key = DerivedBytes.GetBytes(32);
+			return new AESCryptoKey(key, iv);
+        }
+
+        /// <summary> Sets or Gets the IV used when deriving the encryption key </summary>
+        public virtual byte[] IV
+        {
+            get { if (_iv != null) return (byte[])_iv.Clone(); return AESCryptoKey.ProcessDefaultIV; }
+            set { _iv = Check.ArraySize(value, 16, 16); }
         }
 
         /// <summary> Sets or Gets the salt used with deriving the encryption key </summary>

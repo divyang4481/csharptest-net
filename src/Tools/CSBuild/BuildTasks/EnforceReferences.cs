@@ -29,12 +29,14 @@ namespace CSharpTest.Net.CSBuild.BuildTasks
 		readonly List<ReferenceFolder> _folders = new List<ReferenceFolder>();
 		readonly Dictionary<String, String> _failedReferences = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 		readonly Dictionary<String, ReferenceWorkItem> _assemblyNameToFile = new Dictionary<string, ReferenceWorkItem>(StringComparer.OrdinalIgnoreCase);
-        readonly IDictionary<String, String> _namedValues;
+	    private readonly FrameworkVersions _framework;
+	    readonly IDictionary<String, String> _namedValues;
 		
 		readonly bool _strict, _noStdLib, _noprojectrefs;
-		public EnforceReferences(IDictionary<String, String> namedValues, bool strictReferences, bool noStdLib, bool noProjectReferences)
+		public EnforceReferences(FrameworkVersions framework, IDictionary<String, String> namedValues, bool strictReferences, bool noStdLib, bool noProjectReferences)
 		{
-            _namedValues = namedValues;
+		    _framework = framework;
+		    _namedValues = namedValues;
 			_strict = strictReferences;
 			_noStdLib = noStdLib;
 			_noprojectrefs = noProjectReferences;
@@ -57,6 +59,8 @@ namespace CSharpTest.Net.CSBuild.BuildTasks
 				resolveType.Add("{HintPathFromItem}");
 				if (!_noprojectrefs)
 					resolveType.Add("{CandidateAssemblyFiles}");
+                if (_framework == FrameworkVersions.v40)
+                    resolveType.Add("{TargetFrameworkDirectory}"); //TODO: unable to avoid this for System.Core?
 
 				project.Properties[MSProp.AssemblySearchPaths] = String.Join(";", resolveType.ToArray());
 				//C:\Windows\Microsoft.NET\Framework\v2.0.50727\Microsoft.Common.targets: line 441

@@ -15,20 +15,30 @@
 using System;
 using System.Security.Cryptography;
 using CSharpTest.Net.IO;
+using System.IO;
 
 namespace CSharpTest.Net.Crypto
 {
     /// <summary> Represents a writtable stream for computing the hash value without retaining the data </summary>
-    public sealed class HashStream : BaseStream
+    public sealed class HashStream : AggregateStream
     {
-        private readonly HashAlgorithm _algo;
-        private bool _closed;
         private static readonly byte[] EmptyBytes = new byte[0];
 
+        private readonly HashAlgorithm _algo;
+        private CryptoStream _hashStream;
+        private bool _closed;
+
         /// <summary> Represents a writtable stream for computing the hash value without retaining the data </summary>
-        public HashStream(HashAlgorithm algo)
+        public HashStream(HashAlgorithm algo) 
+            : this(algo, Stream.Null)
+        { }
+
+        /// <summary> Wraps an existing stream while computing a hash on all bytes read from/written to the stream</summary>
+        public HashStream(HashAlgorithm algo, Stream underlyingStream)
+            : base(underlyingStream)
         {
             _algo = algo;
+            _hashStream = new CryptoStream(Stream.Null, _algo, CryptoStreamMode.Write);
         }
 
         /// <summary>
@@ -37,11 +47,45 @@ namespace CSharpTest.Net.Crypto
         public override bool CanWrite { get { return true; } }
 
         /// <summary>
-        /// When overridden in a derived class, writes a sequence of bytes to the current stream and advances the current position within this stream by the number of bytes written.
+        /// When overridden in a derived class, writes a sequence of bytes to the current stream and advances the current 
+        /// position within this stream by the number of bytes written.
         /// </summary>
         public override void Write(byte[] buffer, int offset, int count)
         {
-            _algo.TransformBlock(buffer, 0, buffer.Length, buffer, 0);
+            _hashStream.Write(buffer, offset, count);
+            base.Write(buffer, offset, count);
+        }
+
+        /// <summary>
+        /// When overridden in a derived class, writes a sequence of bytes to the current stream and advances the current 
+        /// position within this stream by the number of bytes written.
+        /// </summary>
+        public override void WriteByte(byte value)
+        {
+            _hashStream.WriteByte(value);
+            base.WriteByte(value);
+        }
+
+        /// <summary>
+        /// When overridden in a derived class, reads a sequence of bytes from the current stream and advances the position 
+        /// within the stream by the number of bytes read.
+        /// </summary>
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            int amount = base.Read(buffer, offset, count);
+            _hashStream.Write(buffer, offset, amount);
+            return amount;
+        }
+
+        /// <summary>
+        /// Reads a byte from the stream and advances the position within the stream by one byte, or returns -1 if at the end of the stream.
+        /// </summary>
+        public override int ReadByte()
+        {
+            int value = base.ReadByte();
+            if(value >= 0)
+                _hashStream.WriteByte((byte)value);
+            return value;
         }
 
         /// <summary>
@@ -53,23 +97,44 @@ namespace CSharpTest.Net.Crypto
             base.Dispose(disposing);
         }
 
+        /// <summary>
+        /// Can be called once, and only once, to obtain the hash generated while reading/writing.  After this is
+        /// called the stream will reset the hash and start computing a new hash value.
+        /// </summary>
+        public Hash FinalizeHash()
+        {
+            try
+            {
+                _hashStream.FlushFinalBlock();
+                return Hash.FromBytes(_algo.Hash);
+            }
+            finally
+            {
+                _algo.Initialize();
+                _hashStream = new CryptoStream(Stream.Null, _algo, CryptoStreamMode.Write);
+            }
+        }
+
         /// <summary> Represents a writtable stream for computing the hash value without retaining the data </summary>
         /// <returns> The hash code computed by the series of Write(...) calls </returns>
         public new Hash Close()
         {
             if (_closed)
                 throw new ObjectDisposedException(GetType().FullName);
-            try
-            {
-                _algo.TransformFinalBlock(EmptyBytes, 0, 0);
-                return Hash.FromBytes(_algo.Hash);
-            }
-            finally 
+            try { return FinalizeHash(); }
+            finally
             {
                 _closed = true;
-                _algo.Initialize();
                 base.Close();
             }
+        }
+
+        /// <summary>
+        /// Change the underlying stream that is being written to / read from without affecting the current hash
+        /// </summary>
+        public void ChangeStream(Stream stream)
+        {
+            base.Stream = stream ?? Stream.Null;
         }
     }
 }

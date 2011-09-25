@@ -58,9 +58,9 @@ namespace CSharpTest.Net.CSBuild.Build
         [XmlEnum("v3.0")]
         v30 = 30,
         [XmlEnum("v3.5")]
-		v35 = 35,
-		//[XmlEnum("v4.0")]
-		//v40 = 40,
+        v35 = 35,
+        [XmlEnum("v4.0")]
+        v40 = 40,
     }
 
     public enum BuildPlatforms

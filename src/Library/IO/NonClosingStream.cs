@@ -28,6 +28,13 @@ namespace CSharpTest.Net.IO
             : base(stream) 
         { }
 
+        /// <summary> Disposes of this.Stream </summary>
+        public override void Close()
+        {
+            base.Stream = null;
+            base.Close();
+        }
+
         /// <summary> Prevents the disposal of the aggregated stream </summary>
         protected override void Dispose(bool disposing)
         {

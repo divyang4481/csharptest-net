@@ -142,11 +142,14 @@ namespace CSharpTest.Net.Crypto
 			return buffer;
 		}
 
-		/// <summary>
-		/// Disposes of the object
-		/// </summary>
-		public void Dispose()
-		{
+#if NET20 || NET35 // NOTE: .NET 4.0 finally implemented
+        /// <summary>Disposes of the object</summary>
+        public void Dispose()
+#else
+		/// <summary>Disposes of the object</summary>
+        protected override void Dispose(bool disposing)
+#endif
+        {
 			_block = -1;
 			_salt = new byte[8];
 			_iterations = 1;

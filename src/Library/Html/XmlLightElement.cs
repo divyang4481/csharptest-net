@@ -14,10 +14,12 @@
 #endregion
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.Web;
 using System.IO;
 using System.Xml;
 using System.Xml.XPath;
+using CSharpTest.Net.Utils;
 
 namespace CSharpTest.Net.Html
 {
@@ -44,7 +46,7 @@ namespace CSharpTest.Net.Html
 		/// Creates a new xml element
 		/// </summary>
 		public XmlLightElement(XmlLightElement parent, string tagName)
-			: this(parent, false, tagName, String.Empty)
+			: this(parent, true, tagName, String.Empty)
 		{ }
 		internal XmlLightElement(XmlLightElement parent, bool closed, string tagName, string tagContent)
 			: this(parent, closed, tagName, String.Empty, tagContent, null)
@@ -54,13 +56,12 @@ namespace CSharpTest.Net.Html
 		{ }
 		internal XmlLightElement(XmlLightElement parent, bool closed, string tagName, string closingWs, string tagContent, IEnumerable<XmlLightAttribute> attrs)
 		{
-            this.OriginalTag = tagContent;
-			this.Parent = parent;
-			this.TagName = tagName;
-			this.OpeningTagWhitespace = closingWs;
-			this.ClosingTagWhitespace = String.Empty;
-			this.IsEmpty = closed;
-            this.IsSpecialTag = tagName == ROOT || tagName == TEXT || tagName == CDATA || tagName == COMMENT || tagName == CONTROL || tagName == PROCESSING;
+            _originalTag = tagContent;
+			Parent = parent;
+            _tagName = tagName;
+			OpeningTagWhitespace = closingWs;
+			ClosingTagWhitespace = String.Empty;
+			IsEmpty = closed;
 
 			if (parent != null)
 				parent.Children.Add(this);
@@ -68,17 +69,47 @@ namespace CSharpTest.Net.Html
 			Attributes = new XmlLightAttributes(attrs ?? new XmlLightAttribute[0]);
         }
 
+        private XmlLightElement _parent;
+        private readonly string _tagName;
+        private bool _isEmpty;
+        private string _originalTag;
+        private string _openingTagWhitespace;
+        private string _closingTagWhitespace;
+
         /// <summary> Returns the tag name of this html element </summary>
-		public readonly string TagName;
-		/// <summary> Whitespace appearing before the close of the start tag (&lt;div   &gt;) </summary>
-		public readonly string OpeningTagWhitespace;
+        public string TagName
+        {
+            get { return _tagName; }
+        }
 
-    	private string _closingWs;
-    	/// <summary> Whitespace appearing before the close of the end tag (&lt;/div   &gt;) </summary>
-    	public string ClosingTagWhitespace { get { return _closingWs; } internal set { _closingWs = value; } }
+        /// <summary> Whitespace appearing before the close of the start tag (&lt;div   &gt;) </summary>
+        public string OpeningTagWhitespace
+        {
+            get { return _openingTagWhitespace ?? String.Empty; }
+            set { _openingTagWhitespace = value; }
+        }
 
-    	/// <summary> Returns the text in it's original format </summary>
-        public readonly string OriginalTag;
+        /// <summary> Whitespace appearing before the close of the end tag (&lt;/div   &gt;) </summary>
+        public string ClosingTagWhitespace
+        {
+            get { return _closingTagWhitespace ?? String.Empty; }
+            set { _closingTagWhitespace = value; }
+        }
+
+        /// <summary> 
+        /// Returns the text in it's original format. Where IsSpecial == true, this is used to rewrite
+        /// the content.
+        /// </summary>
+        public string OriginalTag
+        {
+            get { return _originalTag; }
+            set
+            {
+                Check.Assert<InvalidOperationException>(IsSpecialTag && TagName != ROOT);
+                _originalTag = value;
+            }
+        }
+
         /// <summary> Returns the value (if any) of this html element </summary>
         public string Value
         {
@@ -96,11 +127,33 @@ namespace CSharpTest.Net.Html
                 else
                     return String.Empty;
             }
+            set
+            {
+                if (TagName == TEXT)
+                    _originalTag = HttpUtility.HtmlEncode(value);
+                else if (TagName == CDATA)
+                    _originalTag = "<![CDATA[" + value + "]]>";
+                else if (TagName == COMMENT)
+                    _originalTag = "<!--" + value + "-->";
+                else
+                {
+                    throw new NotSupportedException();
+                }
+            }
         }
-        /// <summary> Returns the parent (if any) of this html element </summary>
-        public readonly XmlLightElement Parent;
 
-		/// <summary>
+        /// <summary> Returns the parent (if any) of this html element </summary>
+        public XmlLightElement Parent
+        {
+            get { return _parent; }
+            set
+            {
+                Check.Assert<InvalidOperationException>(_parent == null || value == null);
+                _parent = value; 
+            }
+        }
+
+        /// <summary>
 		/// Returns the root-level node
 		/// </summary>
 		public XmlLightElement Document
@@ -147,15 +200,25 @@ namespace CSharpTest.Net.Html
         /// Returns true if the node is a comment
         /// </summary>
         public bool IsComment { get { return TagName == COMMENT; } }
+
         /// <summary>
         /// Returns true if the node is self-closing (i.e. ends with '/>')
         /// </summary>
-        public readonly bool IsEmpty;
+        public bool IsEmpty
+        {
+            get { return _isEmpty && Children.Count == 0; }
+            set { _isEmpty = value; }
+        }
+
         /// <summary>
         /// Returns true if the node is not a normal element
         /// </summary>
-        public readonly bool IsSpecialTag;
-		/// <summary>
+        public bool IsSpecialTag
+        {
+            get { return TagName == ROOT || TagName == TEXT || TagName == CDATA || TagName == COMMENT || TagName == CONTROL || TagName == PROCESSING; }
+        }
+
+        /// <summary>
 		/// Returns the namespace or empty string
 		/// </summary>
 		public string Namespace
@@ -165,7 +228,18 @@ namespace CSharpTest.Net.Html
 				int ix = TagName.IndexOf(':');
 				return ix < 0 ? String.Empty : TagName.Substring(0, ix);
 			}
-		}
+        }
+        /// <summary>
+        /// Returns the namespace or null
+        /// </summary>
+        public string NamespaceOrNull
+        {
+            get
+            {
+                int ix = TagName.IndexOf(':');
+                return ix < 0 ? null : TagName.Substring(0, ix);
+            }
+        }
 		/// <summary>
 		/// Returns the name without the namespace prefix
 		/// </summary>
@@ -186,6 +260,17 @@ namespace CSharpTest.Net.Html
 
         /// <summary> Returns the inner text of this html element </summary>
         public string InnerText { get { return NormalizeText(GetInnerText()); } }
+
+        /// <summary> Removes this node from it's parent element </summary>
+        public void Remove()
+        {
+            Check.Assert<InvalidOperationException>(Parent != null);
+            int ix = Parent.Children.IndexOf(this);
+            Check.Assert<InvalidOperationException>(ix >= 0);
+            Parent.Children.RemoveAt(ix);
+            Parent = null;
+        }
+
         /// <summary>
         /// Returns the next sibling element
         /// </summary>
@@ -227,7 +312,7 @@ namespace CSharpTest.Net.Html
 		{
 			using (StringWriter sw = new StringWriter())
 			{
-				this.WriteText(sw);
+				WriteText(sw);
 				return sw.ToString();
 			}
 		}
@@ -261,47 +346,99 @@ namespace CSharpTest.Net.Html
 			return null;
 		}
 
-		/// <summary>
+        private string FindPrefixUri(string nsPrefix)
+        {
+            if (String.IsNullOrEmpty(nsPrefix))
+                return null;
+
+            string attr = String.Format("xmlns:{0}", nsPrefix);
+            XmlLightElement e = this;
+            while (e != null)
+            {
+                string value;
+                if (e.Attributes.TryGetValue(attr, out value))
+                    return value;
+                e = e.Parent;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Writes the text to the xml writer while preserving entities and still ensuring 
+        /// the remainder of the text is properly encoded.
+        /// </summary>
+        protected virtual void WriteText(XmlWriter wtr, string encodedValue)
+        {
+            int currIx = 0;
+            //we want to 
+            foreach (Match match in RegexPatterns.HtmlEntity.Matches(encodedValue))
+            {
+                wtr.WriteString(encodedValue.Substring(currIx, match.Index - currIx));
+                wtr.WriteRaw(match.Value);
+                currIx = match.Index + match.Length;
+            }
+
+            wtr.WriteString(encodedValue.Substring(currIx, encodedValue.Length - currIx));
+        }
+
+        /// <summary>
 		/// Writes XML to an xml writer to ensure proper formatting
 		/// </summary>
-		public virtual void WriteXml(XmlTextWriter wtr)
+		public virtual void WriteXml(XmlWriter wtr)
 		{
 			if (TagName == TEXT)
 			{
-				if (this.Value.Trim().Length > 0)//non-whitespace?
-					wtr.WriteString(this.Value);
-				return;
+                if (OriginalTag.Trim().Length > 0)//non-whitespace?
+                    WriteText(wtr, OriginalTag);
+			    return;
 			}
 			if (TagName == CDATA)
 			{
-				wtr.WriteCData(this.Value);
+				wtr.WriteCData(Value);
 				return;
 			}
 			if (TagName == COMMENT)
 			{
-				wtr.WriteComment(this.OriginalTag.Substring(4, this.OriginalTag.Length-7));
+				wtr.WriteComment(OriginalTag.Substring(4, OriginalTag.Length-7));
 				return;
 			}
 			if (IsSpecialTag)
 			{
-				wtr.WriteRaw(this.OriginalTag);
+				wtr.WriteRaw(OriginalTag);
 				return;
 			}
+            
+            wtr.WriteStartElement(NamespaceOrNull, LocalName, 
+                Attributes.ContainsKey("xmlns") 
+                ? Attributes["xmlns"] 
+                : FindPrefixUri(NamespaceOrNull));
 
-			wtr.WriteStartElement(this.TagName);
-			foreach (XmlLightAttribute kv in Attributes.ToArray())
-				wtr.WriteAttributeString(kv.Name, HttpUtility.HtmlDecode(kv.Value));
+            foreach (XmlLightAttribute kv in Attributes.ToArray())
+            {
+                if (kv.Name == "xmlns") { }
+                else if (kv.Namespace == "xmlns")
+                {
+                    wtr.WriteAttributeString(kv.Namespace, kv.LocalName, null, kv.Value);
+                }
+                else
+                {
+                    wtr.WriteAttributeString(kv.NamespaceOrNull, kv.LocalName, 
+                        FindPrefixUri(kv.NamespaceOrNull), 
+                        HttpUtility.HtmlDecode(kv.Value));
+                }
+            }
 
-			foreach (XmlLightElement e in Children)
+		    foreach (XmlLightElement e in Children)
 				e.WriteXml(wtr);
 
-			if (!IsEmpty && Children.Count == 0)
-				wtr.WriteRaw(String.Empty);
-
-			wtr.WriteEndElement();
+            if (IsEmpty && Children.Count == 0)
+                wtr.WriteEndElement();
+            else
+                wtr.WriteFullEndElement();
 		}
 
-		/// <summary>
+        /// <summary>
 		/// Writes the re-constructed innerHTML in a well-formed Xml format
 		/// </summary>
 		public void WriteXml(TextWriter wtr)
@@ -321,7 +458,7 @@ namespace CSharpTest.Net.Html
 		/// </summary>
 		public virtual void WriteUnformatted(TextWriter wtr)
 		{
-			if (TagName == TEXT || TagName == CDATA || TagName == COMMENT || IsSpecialTag)
+			if (IsSpecialTag)
 			{
 				wtr.Write(OriginalTag);
 				return;

@@ -135,4 +135,7 @@
   <data name="DebugAssertionFailedException(string message)" xml:space="preserve">
     <value>Debug Assertion Failed: {0}</value>
   </data>
+  <data name="FailedToConstructSingleton(System.Type type)" xml:space="preserve">
+    <value>The singleton for type {0} threw an excpetion.</value>
+  </data>
 </root>

@@ -26,7 +26,7 @@ namespace CSharpTest.Net.IO
     /// TransactFile if you MUST be certain to succeed then Commit(), otherwise this implementation
     /// provides a 'good-enough' transaction and is optimized for larger files.
     /// </summary>
-    public class ReplaceFile : TempFile
+    public class ReplaceFile : TempFile, Interfaces.ITransactable
     {
         Stream _lock;
         bool _committed;
@@ -130,10 +130,20 @@ namespace CSharpTest.Net.IO
         /// Returns the originally provided filename that is being replaced
         /// </summary>
         public string TargetFile { get { return _targetFile; } }
+        
         /// <summary>
         /// Commits the replace operation on the file
         /// </summary>
         public void Commit() { _committed = true; Dispose(true); }
+        
+        /// <summary> 
+        /// Aborts the operation and reverts pending changes 
+        /// </summary>
+        public void Rollback()
+        {
+            Check.Assert<InvalidOperationException>(_committed == false);
+            Dispose(true);
+        }
 
         /// <summary>
         /// Disposes of the open stream and the temporary file.

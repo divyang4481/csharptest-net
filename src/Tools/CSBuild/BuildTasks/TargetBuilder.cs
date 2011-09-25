@@ -105,7 +105,7 @@ namespace CSharpTest.Net.CSBuild.BuildTasks
 			errors += new SetSolutionDir().Perform(engine);
 			errors += new NewerFrameworkReferences().Perform(engine);
 
-			EnforceReferences folders = new EnforceReferences(_namedValues, _config.Options.StrictReferences, _config.Options.NoStdReferences, _config.Options.ForceReferencesToFile);
+			EnforceReferences folders = new EnforceReferences(engine.Framework, _namedValues, _config.Options.StrictReferences, _config.Options.NoStdReferences, _config.Options.ForceReferencesToFile);
 			folders.Add(_config.Projects.ReferenceFolders);
 			folders.Add(_target.ReferenceFolders);
 			errors += folders.Perform(engine);

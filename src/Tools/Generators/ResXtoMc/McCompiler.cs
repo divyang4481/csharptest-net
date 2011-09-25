@@ -63,9 +63,12 @@ namespace CSharpTest.Net.Generators.ResXtoMc
             using (ProcessRunner mc = new ProcessRunner(mcexe, "-U", "{0}", "-r", "{1}", "-h", "{1}"))
             using (StringWriter stdio = new StringWriter())
             {
-                mc.OutputReceived += delegate(object o, ProcessOutputEventArgs e) { stdio.WriteLine(e.Data); Trace.WriteLine(e.Data, mcexe); };
+                mc.OutputReceived += delegate(object o, ProcessOutputEventArgs e) { stdio.WriteLine(e.Data); };
                 if (0 != (code = mc.RunFormatArgs(_mcFile, IntermediateFiles)))
+                {
+                    Trace.WriteLine(stdio.ToString());
                     throw new ApplicationException(String.Format("mc.exe failed ({0:x}):\r\n{1}", code, stdio));
+                }
             }
 
             string rcFile = Path.Combine(IntermediateFiles, Path.ChangeExtension(Path.GetFileName(_mcFile), ".rc"));

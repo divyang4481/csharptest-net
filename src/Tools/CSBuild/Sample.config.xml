@@ -1,37 +1,83 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <CSBuildConfig xsi:noNamespaceSchemaLocation="CSBuild.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-
-    <options>
-        <console level="Minimal"/>
-        <logfile path=".\CSBuild.log" relative-to="csbuild.exe" />
-        <strict-references enabled="true"/>
-        <continue-on-error enabled="true"/>
-    </options>
-    
-    <projects>
-        <add path=".\" relative-to="csbuild.exe"/>
-        <remove path="CSBuild.csproj"/>
-        <reference path="%SystemRoot%\Microsoft.Net\Framework\v2.0.50727\" relative-to="absolute-path"/>
-        <reference path="%SystemRoot%\assembly\GAC\" recursive="true" relative-to="absolute-path"/>
-    </projects>
-
-    <target tools="v2.0" configuration="Debug" platform="AnyCPU">
-        <framework version="v2.0"/>
-        <output path=".\bin20" relative-to="working-folder"/>
-        <intermediateFiles path=".\bin20\obj" relative-to="working-folder"/>
-        <define value="FRAMEWORK20" />
-        <log relative-to="csbuild.exe" path=".\bin20\msbuild.txt" level="Detailed"/>
-        <xml relative-to="csbuild.exe" path=".\bin20\msbuild.xml" level="Normal"/>
-    </target>
-    <target tools="v3.5" configuration="Debug" platform="AnyCPU">
-        <framework version="v3.5"/>
-        <add path="./35Only" relative-to="csbuild.exe" />
-        <reference path="%ProgramFiles%\Reference Assemblies\Microsoft\Framework\v3.5\" relative-to="absolute-path"/>
-        <output path=".\bin35" relative-to="working-folder"/>
-        <intermediateFiles path=".\bin35\obj" relative-to="working-folder"/>
-        <define value="FRAMEWORK35" />
-        <log relative-to="csbuild.exe" path=".\bin35\msbuild.txt" level="Detailed"/>
-        <xml relative-to="csbuild.exe" path=".\bin35\msbuild.xml" level="Normal"/>
-    </target>
-
+  <!-- Global settings and options -->
+  <options>
+    <!-- Configure the default output level for the console -->
+    <console level="Minimal" enabled="true" />
+    <!-- Defines the path to the text log file to write for CSBuild logging (not related to MSBuild log) -->
+    <logfile path=".\CSBuild.log" relative-to="csbuild.exe"  enabled="false" />
+    <!-- Save any changes made to projects, level defines the output type where Error will stop the build -->
+    <save-project-changes enabled="false" level="Warning" />
+    <!-- Import settings from a text file that contains "Name: Value" or "Name = Value" -->
+    <import path="%userprofile%\environment.txt" relative-to="absolute-path" />
+    <!-- Specify a single global property that can used in MSBuild or in the paths of this file -->
+    <global-property name="MyCustomProperty" value="Value" global="true" />
+    <!-- Adds the NoStdLib property to add projects and adds an explicit reference to mscorlib from the reference paths -->
+    <no-standard-references enabled="false"/>
+    <!-- Enforces that all references come from a reference directory specified in this file -->
+    <strict-references enabled="false"/>
+    <!-- Changes any Project-to-Project references into file references pointing to that project's primary output -->
+    <force-file-references enabled="false"/>
+    <!-- When enabled CSBuild will continue building all projects reguardless of how many errors are produced -->
+    <continue-on-error enabled="false"/>
+  </options>
+  <!-- Inclusions and reference directories that apply to all target groups -->
+  <projects>
+    <!-- Adds all projects recursivly found in this path to all build targets defined below -->    
+    <add path=".\src\common" relative-to="csbuild.exe" />
+    <!-- Excludes all projects found in this directory, excludes overwrite the add -->
+    <remove path=".\src\common\tests" relative-to="csbuild.exe" />
+    <!-- Reference assemblies from these directories -->
+    <reference path="%SystemRoot%\Microsoft.Net\Framework\v2.0.50727\" relative-to="absolute-path" recursive="false" />
+  </projects>
+  <!-- Define the .NET 2.0 build, using only 2.0 tools (i.e. Linq will not work) -->
+  <target group="v20" tools="v2.0" configuration="Debug" platform="AnyCPU">
+    <!-- Set every project's TargetFrameworkVersion to this value, omit to leave alone -->
+    <framework version="v2.0"/>
+    <!-- Define "FRAMEWORK20" and undefine "FRAMEWORK35" -->
+    <define value="FRAMEWORK20;-FRAMEWORK35" />
+    <!-- Force all projects to use the same output directory -->
+    <output path=".\bin\2.0\$(Configuration)\$(Platform)\obj" relative-to="csbuild.exe" />
+    <!-- Force all projects to write intermediate files to this location -->
+    <intermediateFiles path=".\bin\2.0\$(Configuration)\$(Platform)\obj\$(AssemblyName)\" relative-to="csbuild.exe"/>
+    <!-- Disable the missing comment warning on all projects -->
+    <property name="NoWarn" value="1591" global="false" />
+    <!-- Set all warnings should be treated as errors -->
+    <property name="TreatWarningsAsErrors" value="True" global="false" />
+    <!-- Save the changes and fail the build if any of the non-global settings are modified -->
+    <save-project-changes enabled="true" level="Error" />
+    <!-- Add the projects specific to this target -->
+    <add path="src\2.0" relative-to="csbuild.exe" />
+    <!-- Remove anything you don't want -->
+    <remove path="src\2.0\tests\BrokenNunit\BrokenNunit.csproj" relative-to="csbuild.exe" />
+    <!-- Set the log output and detail level desired for text logging -->
+    <log relative-to="csbuild.exe" path=".\bin\2.0\$(Configuration)\$(Platform)\msbuild.txt" level="Detailed"/>
+    <!-- Set the log output and detail level desired for xml logging -->
+    <xml relative-to="csbuild.exe" path=".\bin\2.0\$(Configuration)\$(Platform)\msbuild.xml" level="Normal"/>
+  </target>
+  <!-- Same thing again for the next target -->
+  <target tools="v3.5" configuration="Debug" platform="AnyCPU">
+    <framework version="v3.5"/>
+    <!-- Allow 3.0/3.5 specific includes -->
+    <reference path="%ProgramFiles%\Reference Assemblies\Microsoft\Framework\v3.0\" relative-to="absolute-path" recursive="true"/>
+    <reference path="%ProgramFiles%\Reference Assemblies\Microsoft\Framework\v3.5\" relative-to="absolute-path" recursive="true"/>
+    <!-- Undefine "FRAMEWORK20" and Define "FRAMEWORK35" -->
+    <define value="-FRAMEWORK20;FRAMEWORK35" />
+    <!-- Force all projects to use the same output directory -->
+    <output path=".\bin\3.5\$(Configuration)\$(Platform)\obj" relative-to="csbuild.exe" />
+    <!-- Force all projects to write intermediate files to this location -->
+    <intermediateFiles path=".\bin\3.5\$(Configuration)\$(Platform)\obj\$(AssemblyName)\" relative-to="csbuild.exe"/>
+    <!-- Disable the missing comment warning on all projects -->
+    <property name="NoWarn" value="1591" global="false" />
+    <!-- Set all warnings should be treated as errors -->
+    <property name="TreatWarningsAsErrors" value="True" global="false" />
+    <!-- Don't save project changes -->
+    <save-project-changes enabled="false" level="Verbose" />
+    <!-- Add the projects specific to this target -->
+    <add path="src\3.5" relative-to="csbuild.exe" />
+    <!-- Set the log output and detail level desired for text logging -->
+    <log relative-to="csbuild.exe" path=".\bin\3.5\$(Configuration)\$(Platform)\msbuild.txt" level="Detailed"/>
+    <!-- Set the log output and detail level desired for xml logging -->
+    <xml relative-to="csbuild.exe" path=".\bin\3.5\$(Configuration)\$(Platform)\msbuild.xml" level="Normal"/>
+  </target>
 </CSBuildConfig>
