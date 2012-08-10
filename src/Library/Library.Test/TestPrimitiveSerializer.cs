@@ -1,4 +1,4 @@
-﻿#region Copyright 2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2011-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,6 +13,7 @@
  */
 #endregion
 using System;
+using System.Collections.Generic;
 using System.IO;
 using CSharpTest.Net.Serialization;
 using NUnit.Framework;
@@ -250,6 +251,34 @@ namespace CSharpTest.Net.Library.Test
             {
                 for (ulong i = 1; i != 0; i *= 2)
                     ReadWrite(new UIntPtr(i));
+            }
+        }
+
+        [Test]
+        public void TestSerializeKeyValuePair()
+        {
+            ISerializer<KeyValuePair<int, Guid>> ser = new KeyValueSerializer<int, Guid>(PrimitiveSerializer.Int32, PrimitiveSerializer.Guid);
+            Dictionary<int, Guid> values = new Dictionary<int, Guid>
+            {
+                { -1, Guid.NewGuid() },
+                { 0, Guid.NewGuid() },
+                { 1, Guid.NewGuid() },
+                { int.MaxValue, Guid.NewGuid() },
+            };
+
+            foreach (KeyValuePair<int, Guid> value in values)
+            {
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    ser.WriteTo(value, ms);
+                    // add random bytes, every value should know it's length and not rely on EOF.
+                    byte[] bytes = new byte[256 - ms.Position];
+                    _random.NextBytes(bytes);
+                    ms.Write(bytes, 0, bytes.Length);
+                    // seek begin and read.
+                    ms.Position = 0;
+                    Assert.AreEqual(value, ser.ReadFrom(ms));
+                }
             }
         }
     }

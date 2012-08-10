@@ -12,6 +12,7 @@
       <xs:element minOccurs="1" maxOccurs="unbounded" name="generator" type="GeneratorConfig" />
     </xs:sequence>
     <xs:attribute name="filespec" type="FileMatchPattern" use="required" />
+    <xs:attribute name="stop" type="xs:boolean" use="optional" default="false" />
   </xs:complexType>
   <xs:complexType name="MatchAppliesTo">
     <xs:attribute name="folder" type="FilePathPattern" use="required"/>

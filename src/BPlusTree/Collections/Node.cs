@@ -1,4 +1,4 @@
-﻿#region Copyright 2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2011-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -92,12 +92,12 @@ namespace CSharpTest.Net.Collections
             public IStorageHandle StorageHandle { get { return _handle; } }
             public bool IsReadOnly { get { return _ltype == LockType.Read; } }
 
-            public void Invalidate()
-            {
-                _count = int.MinValue;
-                Array.Clear(_list, 0, _list.Length);
-                _ltype = LockType.Read;
-            }
+            //public void Invalidate()
+            //{
+            //    _count = int.MinValue;
+            //    Array.Clear(_list, 0, _list.Length);
+            //    _ltype = LockType.Read;
+            //}
 
             public Node ToReadOnly()
             {
@@ -144,13 +144,16 @@ namespace CSharpTest.Net.Collections
                 }
                 return true;
             }
+
+            public void ReplaceKey(int ordinal, TKey minKey)
+            { ReplaceKey(ordinal, minKey, null); }
             
             public void ReplaceKey(int ordinal, TKey minKey, IComparer<TKey> comparer)
             {
                 Assert(!IsRoot, "Invalid operation on root.");
                 Assert(_ltype != LockType.Read, "Node is currently read-only");
                 Assert(ordinal >= 0 && ordinal < _count, "Index out of range.");
-                if (comparer.Compare(minKey, _list[ordinal].Key) != 0)
+                if (comparer == null || comparer.Compare(minKey, _list[ordinal].Key) != 0)
                     _list[ordinal] = new Element(minKey, _list[ordinal]);
             }
 
@@ -175,12 +178,12 @@ namespace CSharpTest.Net.Collections
                 _list[ordinal] = new Element(key, value);
             }
 
-            public bool Insert(int ordinal, Element item)
+            public void Insert(int ordinal, Element item)
             {
                 Assert(!IsRoot, "Invalid operation on root.");
                 Assert(_ltype != LockType.Read, "Node is currently read-only");
                 if (ordinal < 0 || ordinal > _count || ordinal >= _list.Length)
-                    return false;
+                    throw new AssertionFailedException();
 
                 if (ordinal < _count)
                     Array.Copy(_list, ordinal, _list, ordinal + 1, _count - ordinal);
@@ -188,15 +191,15 @@ namespace CSharpTest.Net.Collections
                 _list[ordinal] = item;
 
                 _count++;
-                return true;
             }
 
-            public bool Remove(int ordinal, Element item, IComparer<TKey> comparer)
+            public void Remove(int ordinal, Element item, IComparer<TKey> comparer)
             {
                 Assert(!IsRoot, "Invalid operation on root.");
                 Assert(_ltype != LockType.Read, "Node is currently read-only");
                 if (ordinal < 0 || ordinal >= _count)
-                    return false;
+                    throw new AssertionFailedException();
+
                 Assert(comparer.Compare(_list[ordinal].Key, item.Key) == 0);
 
                 if (ordinal < _count - 1)
@@ -204,7 +207,6 @@ namespace CSharpTest.Net.Collections
 
                 _count--;
                 _list[_count] = new Element();
-                return true;
             }
 
             /// <summary> For enumeration </summary>

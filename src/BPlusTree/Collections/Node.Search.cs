@@ -1,4 +1,4 @@
-﻿#region Copyright 2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2011-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,13 +12,65 @@
  * limitations under the License.
  */
 #endregion
-
 using System;
+using System.Collections.Generic;
 
 namespace CSharpTest.Net.Collections
 {
     partial class BPlusTree<TKey, TValue>
     {
+        private struct UpdateInfo : IUpdateValue<TKey, TValue>
+        {
+            private bool _updated;
+            private TValue _oldValue, _newValue;
+            private KeyValueUpdate<TKey, TValue> _fnUpdate;
+            public UpdateInfo(KeyValueUpdate<TKey, TValue> fnUpdate) : this()
+            {
+                _fnUpdate = fnUpdate;
+            }
+            public UpdateInfo(TValue newValue) : this()
+            {
+                _newValue = newValue;
+            }
+            public bool UpdateValue(TKey key, ref TValue value)
+            {
+                _updated = true;
+                _oldValue = value;
+                if (_fnUpdate != null)
+                    value = _fnUpdate(key, value);
+                else
+                    value = _newValue;
+                return !EqualityComparer<TValue>.Default.Equals(value, _oldValue);
+            }
+            public bool Updated { get { return _updated; } }
+        }
+        private struct UpdateIfValue : IUpdateValue<TKey, TValue>
+        {
+            private bool _updated;
+            private TValue _comparisonValue, _newValue;
+            public UpdateIfValue(TValue newValue, TValue comparisonValue)
+                : this()
+            {
+                _newValue = newValue;
+                _comparisonValue = comparisonValue;
+            }
+
+            public bool UpdateValue(TKey key, ref TValue value)
+            {
+                if(EqualityComparer<TValue>.Default.Equals(value, _comparisonValue))
+                {
+                    _updated = true;
+                    if(!EqualityComparer<TValue>.Default.Equals(value, _newValue))
+                    {
+                        value = _newValue;
+                        return true;
+                    }
+                }
+                return false;
+            }
+            public bool Updated { get { return _updated; } }
+        }
+
         private bool Seek(NodePin thisLock, TKey key, out NodePin pin, out int offset)
         {
             NodePin myPin = thisLock, nextPin = null;
@@ -70,43 +122,79 @@ namespace CSharpTest.Net.Collections
             return false;
         }
 
-        private bool Update(NodePin thisLock, TKey key, TValue value)
+        private bool SeekToEdge(NodePin thisLock, bool first, out NodePin pin, out int offset)
         {
-            NodePin pin;
-            int offset;
-            if (Seek(thisLock, key, out pin, out offset))
-                using (pin)
+            NodePin myPin = thisLock, nextPin = null;
+            try
+            {
+                while (myPin != null)
                 {
-                    using (NodeTransaction trans = _storage.BeginTransaction())
+                    Node me = myPin.Ptr;
+                    int ordinal = first ? 0 : me.Count - 1;
+                    if (me.IsLeaf)
                     {
-                        trans.BeginUpdate(pin);
-                        pin.Ptr.SetValue(offset, key, value, _keyComparer);
-                        trans.Commit();
+                        if (ordinal < 0 || ordinal >= me.Count)
+                            break;
+
+                        pin = myPin;
+                        myPin = null;
+                        offset = ordinal;
                         return true;
                     }
+
+                    nextPin = _storage.Lock(myPin, me[ordinal].ChildNode);
+                    myPin.Dispose();
+                    myPin = nextPin;
+                    nextPin = null;
                 }
+            }
+            finally
+            {
+                if (myPin != null) myPin.Dispose();
+                if (nextPin != null) nextPin.Dispose();
+            }
+
+            pin = null;
+            offset = -1;
             return false;
         }
 
-        private bool Update(NodePin thisLock, TKey key, Converter<TValue, TValue> fnUpdate)
+        private bool TryGetEdge(NodePin thisLock, bool first, out KeyValuePair<TKey, TValue> item)
+        {
+            NodePin pin;
+            int offset;
+            if (SeekToEdge(thisLock, first, out pin, out offset))
+            {
+                using (pin)
+                {
+                    item = new KeyValuePair<TKey, TValue>(
+                        pin.Ptr[offset].Key,
+                        pin.Ptr[offset].Payload);
+                    return true;
+                }
+            }
+            item = default(KeyValuePair<TKey, TValue>);
+            return false;
+        }
+
+        private bool Update<T>(NodePin thisLock, TKey key, ref T value) where T : IUpdateValue<TKey, TValue>
         {
             NodePin pin;
             int offset;
             if (Seek(thisLock, key, out pin, out offset))
                 using (pin)
                 {
-                    TValue original = pin.Ptr[offset].Payload;
-                    TValue value = Check.NotNull(fnUpdate)(original);
-                    if ((value == null && original == null) ||
-                        (value != null && value.Equals(original)))
-                        return false;
-
-                    using (NodeTransaction trans = _storage.BeginTransaction())
+                    TValue newValue = pin.Ptr[offset].Payload;
+                    if (value.UpdateValue(key, ref newValue))
                     {
-                        trans.BeginUpdate(pin);
-                        pin.Ptr.SetValue(offset, key, value, _keyComparer);
-                        trans.Commit();
-                        return true;
+                        using (NodeTransaction trans = _storage.BeginTransaction())
+                        {
+                            trans.BeginUpdate(pin);
+                            pin.Ptr.SetValue(offset, key, newValue, _keyComparer);
+                            trans.UpdateValue(key, newValue);
+                            trans.Commit();
+                            return true;
+                        }
                     }
                 }
             return false;

@@ -1,4 +1,4 @@
-﻿#region Copyright 2010-2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2010-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -35,7 +35,7 @@ namespace CSharpTest.Net.Generators.ResXtoMc
         private string _tempDir;
         private string _toolsBin;
         private string _namespace;
-        private string _iconFile;
+        private string _iconFile, _manifestFile, _resourceScript;
 
         public McCompiler(McFileGenerator genInfo, string mcFile)
         {
@@ -54,6 +54,8 @@ namespace CSharpTest.Net.Generators.ResXtoMc
         public string ToolsBin { set { _toolsBin = value; } }
         public string Namespace { get { return _namespace; } set { _namespace = value; } }
         public string IconFile { get { return _iconFile; } set { _iconFile = value; } }
+        public string ManifestFile { get { return _manifestFile; } set { _manifestFile = value; } }
+        public string ResourceScript { get { return _resourceScript; } set { _resourceScript = value; } }
 
         public void CreateResFile(string output, out string resFile)
         {
@@ -74,7 +76,11 @@ namespace CSharpTest.Net.Generators.ResXtoMc
             string rcFile = Path.Combine(IntermediateFiles, Path.ChangeExtension(Path.GetFileName(_mcFile), ".rc"));
             VersionInfo.AppendToRc(Path.GetFileName(output), rcFile);
             if (!String.IsNullOrEmpty(IconFile) && File.Exists(IconFile))
-                File.AppendAllText(rcFile, String.Format("\r\n1 ICON \"{0}\"\r\n", IconFile));
+                File.AppendAllText(rcFile, String.Format("\r\n1 ICON \"{0}\"\r\n", IconFile.Replace(@"\", @"\\")));
+            if (!String.IsNullOrEmpty(ManifestFile) && File.Exists(ManifestFile))
+                File.AppendAllText(rcFile, String.Format("\r\n1 24 \"{0}\"\r\n", ManifestFile.Replace(@"\", @"\\")));
+            if (!String.IsNullOrEmpty(ResourceScript))
+                File.AppendAllText(rcFile, "\r\n" + ResourceScript + "\r\n");
 
             string rcexe = "rc.exe";
             if (!String.IsNullOrEmpty(_toolsBin)) rcexe = Path.Combine(_toolsBin, rcexe);

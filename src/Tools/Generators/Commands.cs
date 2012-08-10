@@ -86,6 +86,8 @@ namespace CSharpTest.Net.Generators
             string naming,
             [Argument("versionInfo", Description = "A csproj containing or an AssemblyInfo.cs file -- or -- a dll to extract version info from.", DefaultValue = null)]
             string versionInfo,
+            [Argument("resources", Description = "A string to inject into the resource script file prior to compilation.", DefaultValue = null)]
+            string resourceScript,
             [Argument("tools", Description = "The directory used to locate the mc.exe and rc.exe command line tools.", DefaultValue = null)]
             string toolsBin
             )
@@ -95,6 +97,7 @@ namespace CSharpTest.Net.Generators
 
             string mcFile = Path.Combine(Path.GetDirectoryName(project), naming + ".mc");
             string dir = Path.GetDirectoryName(mcFile);
+            string projDir = Path.GetDirectoryName(project);
             Directory.CreateDirectory(dir);
 
             string nsSuffix = Path.GetDirectoryName(naming).Replace('/', '.').Replace('\\', '.').Trim('.');
@@ -119,9 +122,13 @@ namespace CSharpTest.Net.Generators
                 mc.ToolsBin = toolsBin;
 
             if (vars.ContainsKey("ApplicationIcon"))
-                mc.IconFile = Path.Combine(dir, vars["ApplicationIcon"]);
+                mc.IconFile = Path.Combine(projDir, vars["ApplicationIcon"]);
+
+            if (vars.ContainsKey("ApplicationManifest"))
+                mc.ManifestFile = Path.Combine(projDir, vars["ApplicationManifest"]);
 
             string rcFile;
+            mc.ResourceScript = resourceScript;
             mc.CreateResFile(vars["TargetFileName"], out rcFile);
             File.WriteAllText(Path.ChangeExtension(rcFile, ".Constants.cs"), mc.CreateConstants(Path.ChangeExtension(rcFile, ".h")));
             File.WriteAllText(Path.ChangeExtension(rcFile, ".InstallUtil.cs"), mc.CreateInstaller());

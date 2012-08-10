@@ -1,0 +1,169 @@
+===Library History===
+*2.12.810.409*
+
+NOTES:  Major version increment primarily due to extensive changes in BPlusTree's capabilities and storage format.  The next release will flag the v1 Options class as Obsolete to ensure people are using the latest version.  All new code should be using 'OptionsV2' when constructing a BPlusTree.
+
+Additions in this release:
+
+  # Added BPlusTree.OptionsV2 to provide a more simple set of options and uses the v2 file format.
+  # BPlusTree now supports key range enumeration as well as accessing first/last key in the tree.
+  # BPlusTree now supports optimized AddRange and BulkInsert methods.
+  # BPlusTree now supports transaction logging for improved durability and recovery.
+  # BPlusTree now has a completely new file format (use the OptionsV2 class) for improved performance and reliability.
+  # The generator's ResXtoMC complier now supports application manifest files and the inclusion of win32 resource files.
+  # Added the IConcurrentDictionary interface to provide an abstraction on concurrent dictionary implementations.
+  # BPlusTree now supports all relevent members of the .NET ConcurrentDictionary class and implements IConcurrentDictionary.
+  # Updated SynchronizedDictionary to implement IConcurrentDictionary, great for testing code without a BPlusTree backend.
+  # Added BTreeDictionary<TKey,TValue> to support in-memory always sorted key/value dictionary.
+  # Added BTreeList<T> to support an in-memory B+Tree backed sorted list.
+  # Added collection classes to deal with KeyValue comparision, ordering, enumerating, etc.
+  # Added MergeSort (stable sorting) static class for more efficient sorting with custom comparer implementations.
+  # Added an alternative to FragmentedFile called TransactedCompoundFile to support the rewite of the BPlusTree file format.
+  # CmdTool.exe now supports a boolean 'stop' attribute on the FileMatch tag, allowing complete override of files that appear higher in the folder structure.
+
+
+Fixes in this release:
+
+  # XmlLightElement CDATA handling was incorrectly decoding html content.
+  # OrdinalList had a bug in the IntersectWith and UnionWith implementations where the inputs were the same length.
+  # BPlusTree enumeration of Keys or Values would load the entire tree into a list, this is now fixed.
+
+
+Breaking changes in this release:
+
+  # The following breaking changes were made to BPlusTree to bring it's concurrent interface members inline with .NET 4's ConcurrentDictionary.
+    * BPlusTree changed the delegate type provided to TryUpdate to include both Key and Value.
+    * BPlusTree changed the method name and delegate type of Add(TKey, delegate) to TryAdd(TKey, delegate).
+    * BPlusTree changed the delegate types provided to AddOrUpdate to include both Key and Value.
+  # BPlusTree.Options is still backwards compatible with existing files; however, BPlusTree.OptionsV2 uses a new format.
+
+
+*v1.11.924.348*
+
+Minor update release:
+
+  # Addition of Cyrpto.SecureTransfer to provide file transfers via shared public keys.
+  # The Crypto.AESCryptoKey now has ToArray() and FromBytes() like other keys.
+  # HashStream can now aggregate read/write calls to actual storage stream while computing the hash.
+  # The Crypto.Hash class received a new method, Combine(...)
+  # Html.XmlLightElement and related classes are now fully modifiable.
+  # BPlusTree.Options now supports a ReadOnly property to ensure no writes at the file handle level.
+
+
+*v1.11.426.305*
+
+Additions in this release:
+
+  # Introduced [http://csharptest.net/browse/src/BPlusTree CSharpTest.Net.BPlusTree.dll] - a fairly full featured IDictionary implementation backed by a B+Tree on disk.
+  # Collections.[http://csharptest.net/browse/src/Library/Collections/LListNode.cs LListNode] - a doubly linked list implementation that can support asynchronous iteration.
+  # Collections.[http://csharptest.net/browse/src/Library/Collections/SynchronizedDictionary.cs SynchronizedDictionary]/[http://csharptest.net/browse/src/Library/Collections/SynchronizedList.cs SynchronizedList] to support synchronization of a list/dictionary given a locking strategy from the Synchronization namespace.
+  # IO.[http://csharptest.net/browse/src/Library/IO/ClampedStream.cs ClampedStream] to provide an IO stream aggregation for a subset of the provided stream.
+  # IO.[http://csharptest.net/browse/src/Library/IO/Crc32.cs Crc32] to provide calculation of a CRC32 value from bytes or strings.
+  # IO.[http://csharptest.net/browse/src/Library/IO/FileStreamFactory.cs FileStreamFactory] an IFactory producer of streams for a given file.
+  # IO.[http://csharptest.net/browse/src/Library/IO/FragmentedFile.cs FragmentedFile] an underpinning of the B+Tree implementation that provides sub-allocations within a single file.
+  # IO.[http://csharptest.net/browse/src/Library/IO/SharedMemoryStream.cs SharedMemoryStream] a block allocating memory stream that can be simultaneously used by multiple threads at the same time.
+  # IO.[http://csharptest.net/browse/src/Library/IO/StreamCache.cs StreamCache] a pool of open file streams that a thread can open and close without the overhead of actually opening or closing the underlying file streams.
+  # Interfaces.[http://csharptest.net/browse/src/Library/Interfaces/IFactory.cs IFactory] provides a simple generic factory interface for supplying instances of type T.
+  # Interfaces.[http://csharptest.net/browse/src/Library/Interfaces/ITransactable.cs ITransactable] provides a simple transaction interface.
+  # IpcChannel.[http://csharptest.net/browse/src/Library/IpcChannel/IpcEventChannel.cs IpcEventChannel] provides a cross domain/process connectionless communication built on events.  [http://stackoverflow.com/questions/5007247/finding-or-building-an-inter-process-broadcast-communication-channel see this SO post].
+  # Serialization.[http://csharptest.net/browse/src/Library/Serialization/ISerializer.cs ISerializer] provides a simple interface for an object that can read and write an instance of type T to and from a stream.
+  # Serialization.[http://csharptest.net/browse/src/Library/Serialization/PrimitiveSerializer.cs PrimitiveSerializer] provides basic implementation of the ISerializer interface for the primitive types.
+  # Serialization.[http://csharptest.net/browse/src/Library/Serialization/VariantNumberSerializer.cs VariantNumberSerializer] provides a protobuffer-like encoding for numeric types.
+  # Threading.[http://csharptest.net/browse/src/Library/Threading/WaitAndContinueList.cs WaitAndContinueList] a work list based on WaitHandles and resulting actions so that multiple activities can be performed on a single thread.
+  # Threading.[http://csharptest.net/browse/src/Library/Threading/WaitAndContinueWorker.cs WaitAndContinueWorker] a single worker thread that processes a WaitAndContinueList.
+  # [http://csharptest.net/browse/src/Library/Threading/WorkQueue.cs WorkQueue] and [http://csharptest.net/browse/src/Library/Threading/WorkQueue.cs WorkQueue] provide simple thread pool processing of tasks that the caller can wait for completion on.
+  # Utils.[http://csharptest.net/browse/src/Library/Utils/ObjectKeepAlive.cs ObjectKeepAlive] a simple object to track references to other instances to avoid garbage collection.
+  # Utils.[http://csharptest.net/browse/src/Library/Utils/WeakReference.cs WeakReference] a derivation of WeakReference that is type-safe.
+  # [http://csharptest.net/browse/src/Library/Synchronization Synchronization] classes are newly rewritten.
+
+
+Breaking changes in this release:
+
+  # The [http://csharptest.net/browse/src/Library/Synchronization Synchronization namespace] has undergone a complete overhaul.  If your currently depending upon it's interfaces or implementation you may want to stay with the version you have until you can determine the impact.  Some simple uses of the previous classes may still work, but this a complete rewrite.  Why?  Simply put the last version was junk.  The added cost of the abstraction layer was more than the lock itself.  I've retooled it to avoid new instances on lock, removed the use of TimeSpan, removed the upgrade locks, and simplified the interfaces.  The end result is a very clean interface that is easy to use and fast.
+
+
+*April 26th, 2011*
+
+*Fully converted over to mercurial...*
+
+*v1.10.1124.358*
+
+  # Introduction of the RpcLibrary to provide pure c# interop with the Win32 RPC API.
+  # Added GeneratedCode attributes to nested classes within the resource generator
+
+*v1.10.1102.349*
+
+  # Added Library.Processes.AssemblyRunner to provide execution of managed EXE files inside an appdomain while still provide redirection of std IO.
+  # Bug fixes in CSharpTest.Net.Generators.exe
+  # Bug fixes and performance issues in CmdTool.exe
+
+*v1.10.1024.336*
+
+  # Added CSharpTest.Net.Generators.exe to integrate with the CmdTool's VS integration:
+    * Provides ResX loose-typed string formatting via simply using "{0}" in a resource string.
+    * Provides ResX strong-typed string formatting via resource names like "Name(string x)"
+    * Adds exception generation to resources via names like "NameException"
+    * Exceptions can be derived from explicit type via comments: " : ArgumentException"
+  # Added Crypto.ModifiedRijndael class to overload the construction of the of BCL's RijndaelManaged transform.  This allows you to specify non-AES-standard key lengths and encryption rounds supported by the Rijndael algorithm.
+  # Added Formatting namespace to contain classes for string-based byte encoding.
+    * Base64Stream - Streams data to a text format using base-64 encoding.
+    * ByteEncoding - Provides a base abstract class/interface for encoding bytes.
+    * HexEncoding - Converts a series of bytes to a string of hexidecimal charcters.
+    * HexStream - Streams data to a text format using hexidecimal characters.
+    * Safe64Encoding - Replaces AsciiEncoder, a base-64 derived encoding ('-_' instead of '+/=')
+    * Safe64Stream - Streams data to a text format using the Safe64Encoding.
+  # Extended the IEncryptDecrypt interface to support string encryption with a specified byte encoding.
+  # Merged the 'Shared source' files with the Library
+  
+*v1.10.913.269*
+  # Added CmdTool.exe - the last Visual Studio code generator you'll ever need :)  
+    * Code generation made easy, just write a command line tool.
+    * No shutting down Visual Studio when you change your code generation tool.
+    * Integrates with Visual Studio 2005, 2008, or 2010.
+    * Displays console output in Visual Studio's output window.
+    * Clean or Build generated content directly from a command-line.
+    * Self-registering, simply run: CmdTool.exe register
+    * Read [http://csharptest-net.googlecode.com/svn/trunk/src/Tools/CmdTool/CmdTool.config the sample configuration file] for more information.
+  # Added CSharpTest.Net.Bases.Disposable - a default base class implementing IDisposable with a Disposed event.
+  # Added CSharpTest.Net.Crypto.HashStream - for creating a hash value by simply writing values to a stream.
+  # Added CSharpTest.Net.Delegates.TimeoutAction - for executing a delegate after a fixed period of time.
+  # Added CSharpTest.Net.IO.TempDirectory - same as TempFile but creates/deletes an entire directory.
+  # Added CSharpTest.Net.Processes.ScriptRunner - for executing and capturing the output of various scripts.
+  # Added CSharpTest.Net.Synchronization namespace - Provides common interfaces to reader/writer and exclusive locking.
+  # CSharpTest.Net.Delegates.EventHandlerForControl - Fix for COM hosted controls - TopLevelControl returns null.
+  # CSharpTest.Net.Html.IXmlLightReader - Breaking change - extended Start/End tag with structured argument.
+  # CSharpTest.Net.Html.XmlLightElement - Now has the ability to recreate the input via WriteUnformatted(TextWriter).
+  # CSharpTest.Net.Processes.ProcessRunner - Fixed some issues with IsRunning on STA threads, and fixed Kill().
+  # CSharpTest.Net.Reflection.PropertyType - Now exposes attributes defined on the member reflected.
+  # Build.bat - Default framework is now 3.5, see CSBuild.exe.config to change build to 2.0.
+*v1.10.607.213*
+  # Library.Crypto namespace was added with a fairly complete cryptography API (at least what I needed) including:
+    * Added Library.Crypto.WhirlpoolManaged a managed implementation of the whirlpool hash function.
+    * Added Library.Crypto.Password to wrap up the complexities of using a password for authentication and/or encryption.
+    * Loads of other stuff from managing RSA keys to creating verifying salted hashs etc.
+  # Library.IO namespace was added to include several new stream derivations including:
+    * Added Library.IO.SegmentedMemoryStream for memory streaming while avoiding LOH allocations.
+    * Added Library.IO.TempFile to manage temp files and remove them when disposed.
+    * Added Library.IO.ReplaceFile to transact replacing a file.
+  # Library.Html namespace was added to help with manipulation of html and xhtml:
+    * Added Library.Html.XhtmlValidation will use the w3c xhtml 1.0 DTDs to validate xhtml files.
+    * Added Library.Html.HtmlLightDocument to a provide fast DOM parsing of HTML using regular expressions.
+    * Added Library.Html.XmlLightDocument to a provide fast DOM parsing of XML using regular expressions.
+*v1.10.420.164*
+  # CSBuild initial release - a command-line compilation utility that drives MSBuild to compile designated project files.  
+  # Added Library.Cloning namespace to support deep-object cloning of any object using either memberwize or serializable copy.
+  # Added Library.Collections.ReadOnlyList to provide a read-only collection interface and implementation.
+  # Added Library.Collections.OrdinalList to provide a collection of integers stored as a bit-array that can be operated on as a set (intersect/union/etc).
+  # Added Library.Collections.SetList to provide a generic collection of that can be operated on as a set (intersect/union/etc).
+  # CommandInterpreter can now read SET operations from stream, also added an IgnoreMember attribute.
+*v1.9.1004.144*
+  # Added a command-line interpreter and parser under Library.Commands
+  # Added a WinForms cross-threaded event delegate class that prevents deadlocking
+  # Added Library.Processes.ProcessRunner utility class for spawning a process and correctly collecting the Output
+  # Added a few FileUtils to allow searching the environment path and granting full access on a file for a well-known account
+  # Dropped usage of [DebuggerStepThrough] attribute
+  # Added static methods on ArgumentList for Join, Parse, and Remove
+  # Added an implementation of a SSL tunneling service for securing non-secure TCP/IP communications
+*v1.0.723.126*
+  # Changes mostly encompassed the release of the Jira/SVN integration via the IBugTraqProvider
+----

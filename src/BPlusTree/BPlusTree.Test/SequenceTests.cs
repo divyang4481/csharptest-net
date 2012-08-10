@@ -1,4 +1,4 @@
-﻿#region Copyright 2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2011-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -123,7 +123,7 @@ namespace CSharpTest.Net.BPlusTree.Test
                 time.Start();
                 //large order-forward
                 for (int i = start; i != stop; i += incr)
-                    if (!data.Add(i, myTestValue1)) throw new ApplicationException();
+                    if (!data.TryAdd(i, myTestValue1)) throw new ApplicationException();
 
                 Trace.TraceInformation("{0} insert  {1} in {2}", name, count, time.ElapsedMilliseconds);
                 time.Reset();
@@ -137,7 +137,7 @@ namespace CSharpTest.Net.BPlusTree.Test
                 time.Start();
 
                 for (int i = start; i != stop; i += incr)
-                    if (!data.Update(i, myTestValue2)) throw new ApplicationException();
+                    if (!data.TryUpdate(i, myTestValue2)) throw new ApplicationException();
 
                 Trace.TraceInformation("{0} modify  {1} in {2}", name, count, time.ElapsedMilliseconds);
                 time.Reset();

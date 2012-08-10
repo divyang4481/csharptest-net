@@ -1,4 +1,4 @@
-﻿#region Copyright 2009-2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2009-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -47,13 +47,15 @@ namespace CSharpTest.Net.CustomTool.CodeGenerator
                 SearchConfig(_generators, di);
 
             CmdToolConfig config = ReadAppConfig();
-            PerformMatch(_generators, config);
+            bool ignore;
+            PerformMatch(_generators, config, out ignore);
 		}
 
         public int Count { get { return _generators.Count; } }
 
 		private void SearchConfig(List<ICodeGenerator> generators, DirectoryInfo dir)
 		{
+            bool visitParent = true;
 			FileInfo[] cfgfiles = dir.GetFiles(CONFIG_FILE_NAME, SearchOption.TopDirectoryOnly);
 			foreach (FileInfo file in cfgfiles)//0 or 1
 			{
@@ -74,15 +76,19 @@ namespace CSharpTest.Net.CustomTool.CodeGenerator
                     throw new ApplicationException(String.Format("Unable to load configuration file: {0}\r\nReason: {1}", file.FullName, e.Message), e);
                 }
 				config.MakeFullPaths(dir.FullName);
-				PerformMatch(generators, config);
+			    bool stop;
+                PerformMatch(generators, config, out stop);
+                if (stop)
+                    visitParent = false;
 			}
 
-			if (dir.Parent != null)
+            if (dir.Parent != null && visitParent)
 				SearchConfig(generators, dir.Parent);
 		}
 
-		private void PerformMatch(List<ICodeGenerator> generators, CmdToolConfig config)
+		private void PerformMatch(List<ICodeGenerator> generators, CmdToolConfig config, out bool stop)
 		{
+            stop = false;
 		    foreach (FileMatch match in config.Matches)
 		    {
 		        string directory = Path.GetDirectoryName(_args.InputPath);
@@ -98,6 +104,9 @@ namespace CSharpTest.Net.CustomTool.CodeGenerator
                     ismatch |= directory.StartsWith(appliesTo.FolderPath, StringComparison.OrdinalIgnoreCase);
                 if (!ismatch)
                     continue;
+
+                if (match.StopHere)
+                    stop = true;
 
                 Dictionary<string, ICodeGenerator> usedExtensions = new Dictionary<string, ICodeGenerator>(StringComparer.OrdinalIgnoreCase);
                 foreach (ICodeGenerator gen in generators)

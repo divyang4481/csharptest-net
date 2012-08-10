@@ -1,4 +1,4 @@
-﻿#region Copyright 2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2011-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,6 +24,7 @@ using CSharpTest.Net.Synchronization;
 using CSharpTest.Net.Threading;
 using NUnit.Framework;
 using CSharpTest.Net.Collections;
+using CSharpTest.Net.Reflection;
 
 namespace CSharpTest.Net.BPlusTree.Test
 {
@@ -56,12 +57,12 @@ namespace CSharpTest.Net.BPlusTree.Test
             int threads = Environment.ProcessorCount;
             const int updates = 10000;
 
-            Converter<int, int> fnIncrement = delegate(int i) { return i + 1; };
-            Action<BPlusTree<int, int>> fnDoUpdates = delegate(BPlusTree<int, int> t) { for (int i = 0; i < updates; i++) t.Update(1, fnIncrement); };
+            KeyValueUpdate<int, int> fnIncrement = delegate(int k, int i) { return i + 1; };
+            Action<BPlusTree<int, int>> fnDoUpdates = delegate(BPlusTree<int, int> t) { for (int i = 0; i < updates; i++) t.TryUpdate(1, fnIncrement); };
 
             Stopwatch time = new Stopwatch();
             time.Start();
-            using (BPlusTree<int, int> tree = new BPlusTree<int, int>(new BPlusTree<int, int>.Options(PrimitiveSerializer.Instance, PrimitiveSerializer.Instance)))
+            using (BPlusTree<int, int> tree = new BPlusTree<int, int>(new BPlusTree<int, int>.OptionsV2(PrimitiveSerializer.Instance, PrimitiveSerializer.Instance)))
             {
                 tree[1] = 0;
                 using (WorkQueue w = new WorkQueue(threads))
@@ -81,7 +82,7 @@ namespace CSharpTest.Net.BPlusTree.Test
         [Test]
         public void TestCallLevelLocking()
         {
-            BPlusTree<int, int>.Options options = new BPlusTree<int, int>.Options(
+            BPlusTree<int, int>.OptionsV2 options = new BPlusTree<int, int>.OptionsV2(
                 new PrimitiveSerializer(), new PrimitiveSerializer());
             options.LockTimeout = 100;
             options.CallLevelLock = new ReaderWriterLocking();
@@ -91,7 +92,7 @@ namespace CSharpTest.Net.BPlusTree.Test
                 bool canwrite = false, canread = false;
                 ThreadStart proc = delegate()
                 {
-                    try { dictionary.Add(1, 1); canwrite = true; } catch { canwrite = false; }
+                    try { dictionary[1] = 1; canwrite = true; } catch { canwrite = false; }
                     try { int i; dictionary.TryGetValue(1, out i); canread = true; } catch { canread = false; }
                 };
 
@@ -138,33 +139,18 @@ namespace CSharpTest.Net.BPlusTree.Test
             using (TempFile copy = new TempFile())
             {
                 copy.Delete();
-                RecordsCreated = 0;
-                int minRecordCreated;
-                using (BPlusTree<KeyInfo, DataValue> dictionary = new BPlusTree<KeyInfo, DataValue>(options))
-                using (WorkQueue work = new WorkQueue(options.ConcurrentWriters))
-                {
-                    Exception lastError = null;
-                    work.OnError += delegate(object o, ErrorEventArgs e) { lastError = e.GetException(); };
-
-                    Thread.Sleep(1);
-                    for (int i = 0; i < options.ConcurrentWriters; i++)
-                        work.Enqueue(new ThreadedTest(dictionary, 10000000).Run);
-
-                    while (RecordsCreated < 1000)
-                        Thread.Sleep(1);
-
-                    minRecordCreated = Interlocked.CompareExchange(ref RecordsCreated, 0, 0);
-                    File.Copy(options.FileName, copy.TempPath);//just grab a copy any old time.
-                    work.Complete(false, 0); //hard-abort all threads
-                }
+                int minRecordCreated = StartAndAbortWriters(options, copy);
 
                 using (TempFile.Attach(copy.TempPath + ".recovered")) //used to create the new copy
                 using (TempFile.Attach(copy.TempPath + ".deleted"))  //renamed existing file
                 {
                     options.CreateFile = CreatePolicy.Never;
-                    options.FileName = copy.TempPath;
-
                     int recoveredRecords = BPlusTree<KeyInfo, DataValue>.RecoverFile(options);
+                    if (recoveredRecords != RecordsCreated)
+                        Assert.Fail("Unable to recover records, recieved ({0} of {1}).", recoveredRecords, RecordsCreated);
+
+                    options.FileName = copy.TempPath;
+                    recoveredRecords = BPlusTree<KeyInfo, DataValue>.RecoverFile(options);
                     Assert.IsTrue(recoveredRecords >= minRecordCreated);
 
                     using (BPlusTree<KeyInfo, DataValue> dictionary = new BPlusTree<KeyInfo, DataValue>(options))
@@ -184,10 +170,95 @@ namespace CSharpTest.Net.BPlusTree.Test
             }
         }
 
+        int StartAndAbortWriters(BPlusTreeOptions<KeyInfo, DataValue> options, TempFile copy)
+        {
+            RecordsCreated = 0;
+            int minRecordCreated;
+            BPlusTree<KeyInfo, DataValue> dictionary = new BPlusTree<KeyInfo, DataValue>(options);
+            try
+            {
+                using (WorkQueue work = new WorkQueue(Environment.ProcessorCount))
+                {
+                    Exception lastError = null;
+                    work.OnError += delegate(object o, ErrorEventArgs e) { lastError = e.GetException(); };
+
+                    Thread.Sleep(1);
+                    for (int i = 0; i < Environment.ProcessorCount; i++)
+                        work.Enqueue(new ThreadedTest(dictionary, 10000000).Run);
+
+                    while (RecordsCreated < 1000)
+                        Thread.Sleep(1);
+
+                    minRecordCreated = Interlocked.CompareExchange(ref RecordsCreated, 0, 0);
+                    if (copy != null)
+                        File.Copy(options.FileName, copy.TempPath); //just grab a copy any old time.
+                    work.Complete(false, 0); //hard-abort all threads
+
+                    //if(lastError != null)
+                    //    Assert.AreEqual(typeof(InvalidDataException), lastError.GetType());
+                }
+
+                // force the file to close without disposing the btree
+                IDisposable tmp = (IDisposable)new PropertyValue(dictionary, "_storage").Value;
+                tmp.Dispose();
+            }
+            catch
+            {
+                dictionary.Dispose();
+                throw;
+            }
+            return minRecordCreated;
+        }
+
+        class ExpectedException : ApplicationException {}
+
+        [Test]
+        public void TestErrorsOnInsertAndDelete()
+        {
+            const int CountPerThread = 100;
+
+            BPlusTree<KeyInfo, DataValue>.OptionsV2 options = new BPlusTree<KeyInfo, DataValue>.OptionsV2(
+                new KeyInfoSerializer(), new DataValueSerializer(), new KeyInfoComparer());
+            options.CalcBTreeOrder(32, 300);
+            options.FileName = TempFile.TempPath;
+            options.CreateFile = CreatePolicy.Always;
+
+            using (BPlusTree<KeyInfo, DataValue> dictionary = new BPlusTree<KeyInfo, DataValue>(options))
+            using (WorkQueue work = new WorkQueue(Environment.ProcessorCount))
+            {
+                Exception lastError = null;
+                work.OnError += delegate(object o, ErrorEventArgs e) { lastError = e.GetException(); };
+
+                for (int i = 0; i < Environment.ProcessorCount; i++)
+                    work.Enqueue(new ThreadedTest(dictionary, CountPerThread).Run);
+
+                for (int i = 0; i < CountPerThread; i++)
+                {
+                    if(i%2 == 0)
+                    {
+                        try {
+                            dictionary.TryAdd(new KeyInfo(Guid.NewGuid(), i), k => { throw new ExpectedException(); });
+                        } catch { }
+                    }
+                    else
+                    {
+                        try
+                        {
+                            dictionary.TryRemove(dictionary.First().Key, (k, v) => { throw new ExpectedException(); });
+                        }
+                        catch { }
+                    }
+                }
+
+                Assert.IsTrue(work.Complete(true, 60000));
+                Assert.IsNull(lastError, "Exception raised in worker: {0}", lastError);
+            }
+        }
+
         [Test]
         public void TestConcurrentCreateReadUpdateDelete8000()
         {
-            BPlusTree<KeyInfo, DataValue>.Options options = new BPlusTree<KeyInfo, DataValue>.Options(
+            BPlusTree<KeyInfo, DataValue>.OptionsV2 options = new BPlusTree<KeyInfo, DataValue>.OptionsV2(
                 new KeyInfoSerializer(), new DataValueSerializer(), new KeyInfoComparer());
             
             const int keysize = 16 + 4;
@@ -197,8 +268,6 @@ namespace CSharpTest.Net.BPlusTree.Test
             options.FileName = TempFile.TempPath;
             options.CreateFile = CreatePolicy.Always;
             options.FileBlockSize = 8192;
-            options.FileGrowthRate = 50;
-            options.FileOpenOptions = FileOptions.RandomAccess;
             options.StorageType = StorageType.Disk;
             
             options.CacheKeepAliveTimeout = 10000;
@@ -208,15 +277,14 @@ namespace CSharpTest.Net.BPlusTree.Test
             options.CallLevelLock = new ReaderWriterLocking();
             options.LockingFactory = new LockFactory<SimpleReadWriteLocking>();
             options.LockTimeout = 10000;
-            options.ConcurrentWriters = 8;
 
             using(BPlusTree<KeyInfo, DataValue> dictionary = new BPlusTree<KeyInfo, DataValue>(options))
-            using(WorkQueue work = new WorkQueue(options.ConcurrentWriters))
+            using(WorkQueue work = new WorkQueue(Environment.ProcessorCount))
             {
                 Exception lastError = null;
                 work.OnError += delegate(object o, ErrorEventArgs e) { lastError = e.GetException(); };
 
-                for( int i=0; i < options.ConcurrentWriters; i++ )
+                for (int i = 0; i < Environment.ProcessorCount; i++)
                     work.Enqueue(new ThreadedTest(dictionary, 1000).Run);
 
                 Assert.IsTrue(work.Complete(true, 60000));

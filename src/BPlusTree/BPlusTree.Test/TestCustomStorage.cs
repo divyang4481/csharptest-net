@@ -1,4 +1,4 @@
-﻿#region Copyright 2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2011-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,7 +24,7 @@ namespace CSharpTest.Net.BPlusTree.Test
     [TestFixture]
     public class TestCustomStorage : BasicTests
     {
-        protected override BPlusTree<int, string>.Options Options
+        protected override BPlusTreeOptions<int, string> Options
         {
             get
             {
@@ -39,14 +39,14 @@ namespace CSharpTest.Net.BPlusTree.Test
         [Test]
         public void TestStorageSystemOption()
         {
-            BPlusTree<int, string>.Options options = Options;
+            BPlusTreeOptions<int, string> options = Options;
             Assert.AreEqual(StorageType.Custom, options.StorageType);
         }
 
         [Test, ExpectedException(typeof(InvalidOperationException))]
         public void TestFailedWrite()
         {
-            BPlusTree<int, string>.Options options = Options;
+            BPlusTreeOptions<int, string> options = Options;
             using (BPlusTree<int, string> tree = new BPlusTree<int, string>(options))
             {
                 for(int i= 0; i < 10; i++ )

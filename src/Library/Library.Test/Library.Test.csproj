@@ -51,6 +51,15 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\..\BPlusTree\BPlusTree.Test\TestCollection.cs">
+      <Link>TestCollection.cs</Link>
+    </Compile>
+    <Compile Include="..\..\BPlusTree\BPlusTree.Test\TestDictionary.cs">
+      <Link>TestDictionary.cs</Link>
+    </Compile>
+    <Compile Include="TestTransactedCompoundFile.cs" />
+    <Compile Include="TestBackgroundWriter.cs" />
+    <Compile Include="TestBTreeList.cs" />
     <Compile Include="LockingTests\BaseLockTest.cs" />
     <Compile Include="LockingTests\BaseThreadedReaderWriterTest.cs" />
     <Compile Include="LockingTests\BaseThreadedWriterTest.cs" />
@@ -70,7 +79,10 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <EmbeddedResource Include="Resources\AssemblyRunnerSampleApp.cs" />
+    <Compile Include="TestBTreeDictionary.cs" />
     <Compile Include="TestFactories.cs" />
+    <Compile Include="TestFindFile.cs" />
+    <Compile Include="TestOrderedEnumeration.cs" />
     <Compile Include="TestSecureTransfer.cs" />
     <Compile Include="TestAssemblyRunner.cs" />
     <Compile Include="TestClampedStream.cs" />

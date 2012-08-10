@@ -1,4 +1,4 @@
-﻿#region Copyright 2009-2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2009-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Xml.Serialization;
+using System.ComponentModel;
 
 namespace CSharpTest.Net.CustomTool.XmlConfig
 {
@@ -22,9 +23,18 @@ namespace CSharpTest.Net.CustomTool.XmlConfig
 	[XmlRoot("match")]
 	public sealed class FileMatch
 	{
+	    private bool _stop;
 	    private string _fileSpec;
 		MatchAppliesTo[] _applyTo;
-		GeneratorConfig[] _generators;
+        GeneratorConfig[] _generators;
+
+        /// <summary> stop crawling the directory tree for configuration files </summary>
+        [XmlAttribute("stop"), DefaultValue(false)]
+        public bool StopHere
+        {
+            get { return _stop; }
+            set { _stop = value; }
+        }
 
 	    /// <summary> for any file that matches this filespec </summary>
 	    [XmlAttribute("filespec")]

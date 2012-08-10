@@ -1,4 +1,4 @@
-﻿#region Copyright 2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2011-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,6 +23,57 @@ namespace CSharpTest.Net.Collections
     partial class BPlusTree<TKey, TValue>
     {
         /// <summary>
+        /// Directly enumerates the contents of BPlusTree from disk in read-only mode.
+        /// </summary>
+        /// <param name="options"> The options normally used to create the <see cref="BPlusTree{TKey, TValue}"/> instance </param>
+        /// <returns> Yields the Key/Value pairs found in the file </returns>
+        public static IEnumerable<KeyValuePair<TKey, TValue>> EnumerateFile(BPlusTreeOptions<TKey, TValue> options)
+        {
+            options = options.Clone();
+            options.CreateFile = CreatePolicy.Never;
+            options.ReadOnly = true;
+
+            using (INodeStorage store = options.CreateStorage())
+            {
+                bool isnew;
+                Node root;
+                IStorageHandle hroot = store.OpenRoot(out isnew);
+                if (isnew)
+                    yield break;
+
+                NodeSerializer nodeReader = new NodeSerializer(options, new NodeHandleSerializer(store));
+                if (isnew || !store.TryGetNode(hroot, out root, nodeReader))
+                    throw new InvalidDataException();
+
+                Stack<KeyValuePair<Node, int>> todo = new Stack<KeyValuePair<Node, int>>();
+                todo.Push(new KeyValuePair<Node, int>(root, 0));
+
+                while (todo.Count > 0)
+                {
+                    KeyValuePair<Node, int> cur = todo.Pop();
+                    if (cur.Value == cur.Key.Count)
+                        continue;
+
+                    todo.Push(new KeyValuePair<Node, int>(cur.Key, cur.Value + 1));
+
+                    Node child;
+                    if (!store.TryGetNode(cur.Key[cur.Value].ChildNode.StoreHandle, out child, nodeReader))
+                        throw new InvalidDataException();
+
+                    if (child.IsLeaf)
+                    {
+                        for (int ix = 0; ix < child.Count; ix++)
+                            yield return child[ix].ToKeyValuePair();
+                    }
+                    else
+                    {
+                        todo.Push(new KeyValuePair<Node, int>(child, 0));
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Recovers as much file content as possible into a newly created <see cref="BPlusTree{TKey, TValue}"/>, if the operation returns
         /// a non-zero result it was successful and the file has been replaced with a new database containing
         /// the recovered data.  The original file remains in-tact but was renamed with a '.deleted' extension.
@@ -39,35 +90,36 @@ namespace CSharpTest.Net.Collections
         {
             int recoveredCount = 0;
             string filename = options.FileName;
+
+            if (String.IsNullOrEmpty(filename))
+                throw new InvalidConfigurationValueException("FileName", "The FileName property was not specified.");
+            if (!File.Exists(filename))
+                throw new InvalidConfigurationValueException("FileName", "The FileName specified does not exist.");
+            if (options.StorageType != StorageType.Disk)
+                throw new InvalidConfigurationValueException("StorageType", "The storage type is not set to 'Disk'.");
+
             int ix = 0;
             string tmpfilename = filename + ".recovered";
             while (File.Exists(tmpfilename))
                 tmpfilename = filename + ".recovered" + ix++;
 
-            BPlusTree<TKey, TValue> tmpFile = null;
             try
             {
-                foreach (KeyValuePair<TKey, TValue> entry in RecoveryScan(options, FileShare.None))
+                BPlusTreeOptions<TKey, TValue> tmpoptions = options.Clone();
+                tmpoptions.CreateFile = CreatePolicy.Always;
+                tmpoptions.FileName = tmpfilename;
+                tmpoptions.LockingFactory = new LockFactory<IgnoreLocking>();
+                
+                using (BPlusTree<TKey, TValue> tmpFile = new BPlusTree<TKey, TValue>(tmpoptions))
                 {
-                    if (tmpFile == null)
-                    {
-                        Options tmpoptions = options.Clone();
-                        tmpoptions.CreateFile = CreatePolicy.Always;
-                        tmpoptions.FileName = tmpfilename;
-                        tmpoptions.LockingFactory = new LockFactory<IgnoreLocking>();
-                        tmpoptions.ConcurrentWriters = 1;
-                        tmpFile = new BPlusTree<TKey, TValue>(tmpoptions);
-                    }
+                    BulkInsertOptions bulkOptions = new BulkInsertOptions();
+                    bulkOptions.DuplicateHandling = DuplicateHandling.LastValueWins;
 
-                    if (tmpFile.Add(entry.Key, entry.Value))
-                        recoveredCount++;
+                    recoveredCount = tmpFile.BulkInsert(RecoveryScan(options, FileShare.None), bulkOptions);
                 }
             }
             finally
             {
-                if (tmpFile != null) 
-                    tmpFile.Dispose();
-
                 if (recoveredCount == 0 && File.Exists(tmpfilename))
                     File.Delete(tmpfilename);
             }

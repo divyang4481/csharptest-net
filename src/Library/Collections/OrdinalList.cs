@@ -1,4 +1,4 @@
-﻿#region Copyright 2009-2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2009-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,7 +27,7 @@ namespace CSharpTest.Net.Collections
 	/// is smaller than 8,388,608 (one megabyte of bits).  Pre-allocate with Ceiling = max for better
 	/// performance, or add the integers in reverse order (highest to lowest).
 	/// </summary>
-	public class OrdinalList : ICollection<int>, ICollection, IEnumerable
+	public class OrdinalList : ICollection<int>, ICollection, IEnumerable, ICloneable
 	{
 		#region Static cache for Count { get; }
 		static readonly byte[] BitCount;
@@ -101,9 +101,13 @@ namespace CSharpTest.Net.Collections
 
 		private void AllocFor(int max)
 		{
-			if (max < 0) throw new ArgumentOutOfRangeException();
+            if (max >= 0)
+                max = 1 + (max >> 3);
+            else if (max == -1)
+                max = 0;
+            else
+                throw new ArgumentOutOfRangeException();
 
-			max = 1 + (max >> 3);
 			if (max > _bits.Length)
 				Array.Resize(ref _bits, max);
 		}
@@ -185,14 +189,36 @@ namespace CSharpTest.Net.Collections
 		public byte[] ToByteArray() { return (byte[])_bits.Clone(); }
 
 		#region Set Operations
+        /// <summary> Returns the 1's compliment (inverts) of the list up to Ceiling </summary>
+        public OrdinalList Invert(int ceiling)
+        {
+            unchecked
+            {
+                byte[] copy = new byte[_bits.Length];
+                for (int i = 0; i < _bits.Length; i++)
+                    copy[i] = (byte)~_bits[i];
 
-		/// <summary> Returns the set of items that are in both this set and the provided set </summary>
-		/// <example>{ 1, 2, 3 }.IntersectWith({ 2, 3, 4 }) == { 2, 3 }</example>
-		public OrdinalList IntersectWith(OrdinalList other)
+                OrdinalList result = new OrdinalList();
+                result._bits = copy;
+
+                result.Ceiling = ceiling;
+                int limit = result.Ceiling;
+                for (int i = Ceiling; i < limit; i++)
+                    result.Add(i);
+                for (int i = ceiling + 1; i <= limit; i++)
+                    result.Remove(i);
+
+                return result;
+            }
+        }
+
+        /// <summary> Returns the set of items that are in both this set and the provided set </summary>
+        /// <example>{ 1, 2, 3 }.IntersectWith({ 2, 3, 4 }) == { 2, 3 }</example>
+        public OrdinalList IntersectWith(OrdinalList other)
 		{
 			byte[] small, big;
 			big = _bits.Length > other._bits.Length ? _bits : other._bits;
-			small = _bits.Length < other._bits.Length ? _bits : other._bits;
+            small = _bits.Length > other._bits.Length ? other._bits : _bits;
 
 			byte[] newbits = (byte[])small.Clone();
 			for (int i = 0; i < small.Length; i++)
@@ -209,7 +235,7 @@ namespace CSharpTest.Net.Collections
 		{
 			byte[] small, big;
 			big = _bits.Length > other._bits.Length ? _bits : other._bits;
-			small = _bits.Length < other._bits.Length ? _bits : other._bits;
+            small = _bits.Length > other._bits.Length ? other._bits : _bits;
 
 			byte[] newbits = (byte[])big.Clone();
 			for (int i = 0; i < small.Length; i++)
@@ -244,29 +270,52 @@ namespace CSharpTest.Net.Collections
 			get { return this; }
 		}
 
-		/// <summary> Returns an enumeration of the ordinal values </summary>
-		public IEnumerator<int> GetEnumerator()
-		{
-			int ordinal = 0;
-			foreach (byte i in _bits)
-			{
-				if ((i & 0x0001) != 0) yield return ordinal + 0;
-				if ((i & 0x0002) != 0) yield return ordinal + 1;
-				if ((i & 0x0004) != 0) yield return ordinal + 2;
-				if ((i & 0x0008) != 0) yield return ordinal + 3;
-				if ((i & 0x0010) != 0) yield return ordinal + 4;
-				if ((i & 0x0020) != 0) yield return ordinal + 5;
-				if ((i & 0x0040) != 0) yield return ordinal + 6;
-				if ((i & 0x0080) != 0) yield return ordinal + 7;
-				ordinal += 8;
-			}
-		}
+        /// <summary> Returns an enumeration of the ordinal values </summary>
+        public IEnumerable<int> EnumerateFrom(int startAt)
+        {
+            int ordinal = startAt & ~0x07;
+            //foreach (byte i in _bits)
+            for(int ix = startAt >> 3; ix < _bits.Length; ix++)
+            {
+                if (_bits[ix] != 0)
+                {
+                    int i = _bits[ix];
+                    if ((i & 0x0001) != 0) yield return ordinal + 0;
+                    if ((i & 0x0002) != 0) yield return ordinal + 1;
+                    if ((i & 0x0004) != 0) yield return ordinal + 2;
+                    if ((i & 0x0008) != 0) yield return ordinal + 3;
+                    if ((i & 0x0010) != 0) yield return ordinal + 4;
+                    if ((i & 0x0020) != 0) yield return ordinal + 5;
+                    if ((i & 0x0040) != 0) yield return ordinal + 6;
+                    if ((i & 0x0080) != 0) yield return ordinal + 7;
+                }
+                ordinal += 8;
+            }
+        }
+
+        /// <summary> Returns an enumeration of the ordinal values </summary>
+        public IEnumerator<int> GetEnumerator()
+        {
+            return EnumerateFrom(0).GetEnumerator();
+        }
 
 		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-		{
-            return this.GetEnumerator();
+        {
+            return EnumerateFrom(0).GetEnumerator();
 		}
 
 		#endregion
+
+	    object ICloneable.Clone() { return Clone(); }
+
+        /// <summary>
+        /// Creates a new object that is a copy of the current instance.
+        /// </summary>
+	    public OrdinalList Clone()
+	    {
+            OrdinalList copy = new OrdinalList();
+            copy._bits = (byte[])_bits.Clone();
+            return copy;
+	    }
 	}
 }

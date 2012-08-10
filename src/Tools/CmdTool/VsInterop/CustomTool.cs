@@ -21,46 +21,68 @@ using CSharpTest.Net.CustomTool.Projects;
 using BE=Microsoft.Build.BuildEngine;
 
 #pragma warning disable 618
+
 namespace CSharpTest.Net.CustomTool.VsInterop
 {
-	[ComVisible(true)]
-	[ProgId("CSharpTest.CmdTool")]
-	[Guid("C0DE0000-3545-401d-821A-A6C0C5464F75")]
-	[ClassInterface(ClassInterfaceType.None)]
-	public class CmdTool : BaseCodeGeneratorWithSite
-	{
-	    private string _lastGeneratedExtension;
+    [ComVisible(true)]
+    [ProgId("CSharpTest.CmdTool")]
+    [Guid("C0DE0000-3545-401d-821A-A6C0C5464F75")]
+    [ClassInterface(ClassInterfaceType.None)]
+    public class CmdTool : BaseCodeGeneratorWithSite
+    {
+        private string _lastGeneratedExtension;
 
-		public override string GetExtension()
-		{
-            try { return _lastGeneratedExtension ?? ".Generated.cs"; }
-            finally { _lastGeneratedExtension = null; }
+        public override string GetExtension()
+        {
+            try
+            {
+                return _lastGeneratedExtension ?? ".Generated.cs";
+            }
+            finally
+            {
+                _lastGeneratedExtension = null;
+            }
         }
 
-		protected override byte[] GenerateCode(string defaultNamespace, string inputFileName)
+        protected override byte[] GenerateCode(string defaultNamespace, string inputFileName)
         {
-            if(!base.ProjectItem.ContainingProject.Saved)
+            byte[] resultBytes = null;
+            BE.Project project = null;
+
+            if (Project != null)
             {
-                //if (!String.IsNullOrEmpty(base.ProjectItem.ContainingProject.FileName))
-                    base.ProjectItem.ContainingProject.Save(String.Empty);
+                if (!Project.Saved)
+                {
+                    //if (!String.IsNullOrEmpty(Project.FileName))
+                    Project.Save(String.Empty);
+                }
+
+                project = BE.Engine.GlobalEngine.GetLoadedProject(Project.FullName);
+                if (project == null)
+                {
+                    project = new BE.Project(BE.Engine.GlobalEngine);
+                    try
+                    {
+                        project.Load(Project.FullName);
+                    }
+                    catch (Exception ex)
+                    {
+                        WriteLine(ex.ToString());
+                    }
+                }
             }
-		    byte[] resultBytes = null;
 
-            BE.Project project = BE.Engine.GlobalEngine.GetLoadedProject(ProjectItem.ContainingProject.FullName);
-			if(project == null)
-			{
-				project = new BE.Project(BE.Engine.GlobalEngine);
-				try { project.Load(ProjectItem.ContainingProject.FullName); }
-				catch(Exception ex) { WriteLine(ex.ToString()); }
-			}
+            if (project == null)
+                project = new Microsoft.Build.BuildEngine.Project(BE.Engine.GlobalEngine);
 
-            GeneratorArguments arguments = new GeneratorArguments(false, inputFileName, defaultNamespace, new MsBuildProject(project));
+            GeneratorArguments arguments = new GeneratorArguments(false, inputFileName, defaultNamespace,
+                                                                  new MsBuildProject(project));
             arguments.OutputMessage += base.WriteLine;
 
             using (CmdToolBuilder builder = new CmdToolBuilder())
                 builder.Generate(arguments);
 
-		    GeneratorArguments.OutputFile primaryFile;
+            GeneratorArguments.OutputFile primaryFile;
             foreach (GeneratorArguments.OutputFile file in arguments.GetOutput(out primaryFile))
             {
                 try
@@ -81,24 +103,28 @@ namespace CSharpTest.Net.CustomTool.VsInterop
                 resultBytes = Encoding.UTF8.GetBytes(File.ReadAllText(primaryFile.FileName));
             }
 
-			if (arguments.DisplayHelp)
-			{
-				string file = Path.Combine(Path.GetTempPath(), "CmdTool - Help.txt");
-				File.WriteAllText(file, arguments.Help());
-				try 
-				{ ProjectItem.DTE.Documents.Open(file, "Auto", true); }
-				catch 
-				{ System.Diagnostics.Process.Start(file); }
+            if (arguments.DisplayHelp)
+            {
+                string file = Path.Combine(Path.GetTempPath(), "CmdTool - Help.txt");
+                File.WriteAllText(file, arguments.Help());
+                try
+                {
+                    DTE.Documents.Open(file, "Auto", true);
+                }
+                catch
+                {
+                    System.Diagnostics.Process.Start(file);
+                }
 
-				//EnvDTE.Window window = ProjectItem.DTE.ItemOperations.NewFile(@"General\Text File", "CmdTool - Help.txt", Guid.Empty.ToString("B"));
-				//EnvDTE.TextSelection sel = window.Selection as EnvDTE.TextSelection;
-				//if (sel != null)
-				//{
-				//    sel.Text = arguments.ReplaceVariables("$(help)");
-				//}
-			}
+                //EnvDTE.Window window = DTE.ItemOperations.NewFile(@"General\Text File", "CmdTool - Help.txt", Guid.Empty.ToString("B"));
+                //EnvDTE.TextSelection sel = window.Selection as EnvDTE.TextSelection;
+                //if (sel != null)
+                //{
+                //    sel.Text = arguments.ReplaceVariables("$(help)");
+                //}
+            }
 
-		    return resultBytes;
-		}
-	}
+            return resultBytes;
+        }
+    }
 }

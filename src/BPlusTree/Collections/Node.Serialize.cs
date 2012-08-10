@@ -1,4 +1,4 @@
-﻿#region Copyright 2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2011-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,26 +12,36 @@
  * limitations under the License.
  */
 #endregion
-
-using System.Collections.Generic;
+using System;
 using System.IO;
+using System.Collections.Generic;
+using System.Diagnostics;
 using CSharpTest.Net.Serialization;
 
 namespace CSharpTest.Net.Collections
 {
     partial class BPlusTree<TKey, TValue>
     {
+        class InvalidSerializer<T> : ISerializer<T>
+        {
+            private InvalidSerializer() { }
+            internal static readonly ISerializer<T> Instance = new InvalidSerializer<T>();
+
+            [Obsolete] T ISerializer<T>.ReadFrom(Stream stream) { throw new NotSupportedException(); }
+            [Obsolete] void ISerializer<T>.WriteTo(T value, Stream stream) { throw new NotSupportedException(); }
+        }
+
         class NodeSerializer : ISerializer<Node>
         {
             readonly ISerializer<int> _intSerializer = VariantNumberSerializer.Instance;
             readonly ISerializer<bool> _boolSerializer = PrimitiveSerializer.Instance;
             private readonly ISerializer<IStorageHandle> _storageHandleSerializer;
             private readonly NodeHandleSerializer _handleSerializer;
-            private readonly Options _options;
+            private readonly BPlusTreeOptions<TKey, TValue> _options;
             private readonly ISerializer<TKey> _keySerializer;
             private readonly ISerializer<TValue> _valueSerializer;
 
-            public NodeSerializer(Options options, NodeHandleSerializer handleSerializer)
+            public NodeSerializer(BPlusTreeOptions<TKey, TValue> options, NodeHandleSerializer handleSerializer)
             {
                 _options = options;
                 _keySerializer = options.KeySerializer;
@@ -73,7 +83,7 @@ namespace CSharpTest.Net.Collections
 
             public IEnumerable<KeyValuePair<TKey, TValue>> RecoverLeaf(Stream stream)
             {
-                IStorageHandle handle = _storageHandleSerializer.ReadFrom(stream);
+                _storageHandleSerializer.ReadFrom(stream);
                 bool isLeaf = _boolSerializer.ReadFrom(stream);
                 if (isLeaf)
                 {

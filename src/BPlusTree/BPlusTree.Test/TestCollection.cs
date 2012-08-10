@@ -1,4 +1,4 @@
-﻿#region Copyright 2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2011-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,7 +12,6 @@
  * limitations under the License.
  */
 #endregion
-
 using System;
 using System.Collections.Generic;
 using CSharpTest.Net.Interfaces;
@@ -121,7 +120,7 @@ namespace CSharpTest.Net.BPlusTree.Test
                 TItem[] copy = new TItem[items.Count + 1];
                 list.CopyTo(copy, 1);
                 Assert.AreEqual(default(TItem), copy[0]);
-
+                
                 for (int i = 1; i < copy.Length; i++)
                     Assert.IsTrue(items.Remove(copy[i]));
 

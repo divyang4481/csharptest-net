@@ -1,4 +1,4 @@
-﻿#region Copyright 2010-2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2010-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -55,11 +55,15 @@ namespace CSharpTest.Net.IO
         public static void Read(Stream io, byte[] bytes, int length)
         {
             if (length != ReadChunk(io, bytes, length))
-				throw new IOException(Resources.IOStreamFailedToRead);
+                throw new IOException(Resources.IOStreamFailedToRead);
         }
 
         /// <summary> Attempts to read the number of bytes specified and returns the actual count </summary>
         public static int ReadChunk(Stream io, byte[] bytes, int length)
+        { return ReadChunk(io, bytes, 0, length); }
+
+        /// <summary> Attempts to read the number of bytes specified and returns the actual count </summary>
+        public static int ReadChunk(Stream io, byte[] bytes, int offset, int length)
         {
             int bytesRead = 0;
             int len = 0;

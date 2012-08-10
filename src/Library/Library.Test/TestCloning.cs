@@ -1,4 +1,4 @@
-﻿#region Copyright 2010-2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2010-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -96,7 +96,7 @@ namespace CSharpTest.Net.Library.Test
             Assert.IsTrue(objB.customData.Deserialized);
         }
 
-        //[Test]
+        [Test, Explicit]
         public void TestClonePerf()
         {
             const int Reps = 1000;

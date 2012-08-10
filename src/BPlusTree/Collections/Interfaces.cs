@@ -1,4 +1,4 @@
-﻿#region Copyright 2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2011-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,7 +12,6 @@
  * limitations under the License.
  */
 #endregion
-
 using System;
 using CSharpTest.Net.Serialization;
 
@@ -21,18 +20,6 @@ namespace CSharpTest.Net.Collections
     /// <summary> Identifies a class as a reference to a node instance </summary>
     public interface IStorageHandle : IEquatable<IStorageHandle>
     { }
-    
-#if BTreeTransactions
-    /// <summary> Represents an INodeStorage that can participate in serialized transactions </summary>
-    public interface IPersistentNodeStorage : INodeStorage
-    {
-        /// <summary> Returns a unique string of bytes that identifies the storage instance </summary>
-        byte[] PersistantIdentity { get; }
-
-        /// <summary> Compares a previous identity with the current instance for equality </summary>
-        bool IsPersistantIdentityEqual(byte[] persistantIdentity);
-    }
-#endif
 
     /// <summary> Represents a persistance mechanic for node data </summary>
     public interface INodeStorage : ISerializer<IStorageHandle>, IDisposable
