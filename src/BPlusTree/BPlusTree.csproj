@@ -35,18 +35,25 @@
       <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Collections\BPlusTree.Options.cs" />
     <Compile Include="Collections\BPlusTree.cs" />
     <Compile Include="Collections\BPlusTree.Debug.cs" />
+    <Compile Include="Collections\BPlusTree.Options.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Collections\BPlusTree.OptionsBase.cs" />
     <Compile Include="Collections\BPlusTree.Recovery.cs" />
+    <Compile Include="Collections\Node.BulkInsert.cs" />
     <Compile Include="Collections\NodeCache.Base.cs" />
     <Compile Include="Collections\Element.cs" />
     <Compile Include="Collections\Enumerator.cs" />
     <Compile Include="Collections\NodeCache.Full.cs" />
     <Compile Include="Collections\NodeCache.None.cs" />
     <Compile Include="Collections\NodeTransaction.cs" />
+    <Compile Include="Collections\TransactionLog.cs" />
     <Compile Include="Exceptions.cs" />
     <Compile Include="Collections\Interfaces.cs" />
     <Compile Include="Collections\Node.cs" />
@@ -57,6 +64,8 @@
     <Compile Include="Collections\NodeCache.Normal.cs" />
     <Compile Include="Collections\NodeHandle.cs" />
     <Compile Include="Collections\NodePin.cs" />
+    <Compile Include="Storage\Storage.Cache.cs" />
+    <Compile Include="Storage\Storage.DiskV2.cs" />
     <Compile Include="Storage\Storage.Disk.cs" />
     <Compile Include="Storage\Storage.Memory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -80,6 +89,9 @@
       <Link>LICENSE-2.0.txt</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="README.htm" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

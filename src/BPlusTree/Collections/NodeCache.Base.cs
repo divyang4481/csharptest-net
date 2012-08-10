@@ -1,4 +1,4 @@
-#region Copyright 2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
+#region Copyright 2011-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,6 +13,7 @@
  */
 #endregion
 using System;
+using CSharpTest.Net.Interfaces;
 using CSharpTest.Net.Serialization;
 using CSharpTest.Net.Synchronization;
 
@@ -25,17 +26,20 @@ namespace CSharpTest.Net.Collections
         {
             private NodeVersion _version;
 
-            public NodeCacheBase(Options options)
+            public NodeCacheBase(BPlusTreeOptions<TKey, TValue> options)
             {
                 Options = options;
                 LockFactory = Options.LockingFactory;
                 Storage = Options.CreateStorage();
+                if (Options.UseStorageCache)
+                    Storage = new StorageCache(Storage, Options.CacheKeepAliveMaximumHistory);
+
                 NodeSerializer = new NodeSerializer(Options, new NodeHandleSerializer(Storage));
                 _version = new NodeVersion();
             }
 
             public readonly ISerializer<Node> NodeSerializer;
-            public readonly Options Options;
+            public readonly BPlusTreeOptions<TKey, TValue> Options;
             public readonly INodeStorage Storage;
             public readonly ILockFactory LockFactory;
 
@@ -64,10 +68,6 @@ namespace CSharpTest.Net.Collections
 
             public void Load()
             {
-#if BPlusTransaction
-                if (Options.TransactionFactory != null)
-                    Options.TransactionFactory.ConnectStorage(Storage);
-#endif
                 LoadStorage(); 
             }
 
@@ -126,6 +126,7 @@ namespace CSharpTest.Net.Collections
                         t.Commit();
                     }
                 }
+
                 return rootNode;
             }
 

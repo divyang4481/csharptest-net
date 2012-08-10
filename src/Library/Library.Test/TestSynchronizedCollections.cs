@@ -1,4 +1,4 @@
-﻿#region Copyright 2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2011-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -75,6 +75,7 @@ namespace CSharpTest.Net.Library.Test
             string all = String.Join("", new List<string>(test.Keys).ToArray());
             Assert.AreEqual("a", all);
         }
+
         [Test]
         public void TestValues()
         {
@@ -83,6 +84,162 @@ namespace CSharpTest.Net.Library.Test
             string all = String.Join("", new List<string>(test.Values).ToArray());
             Assert.AreEqual("b", all);
         }
+
+        [Test]
+        public void TestAtomicAdd()
+        {
+            SynchronizedDictionary<int, string> data =
+                new SynchronizedDictionary<int, string>(new Dictionary<int, string>());
+            int[] counter = new int[] {-1};
+            for (int i = 0; i < 100; i++)
+                Assert.IsTrue(data.TryAdd(i, (k) => (++counter[0]).ToString()));
+            Assert.AreEqual(100, data.Count);
+            Assert.AreEqual(100, counter[0] + 1);
+
+            //Inserts of existing keys will not call method
+            Assert.IsFalse(data.TryAdd(50, (k) => { throw new InvalidOperationException(); }));
+            Assert.AreEqual(100, data.Count);
+        }
+
+        [Test]
+        public void TestAtomicAddOrUpdate()
+        {
+            SynchronizedDictionary<int, string> data =
+                new SynchronizedDictionary<int, string>(new Dictionary<int, string>());
+            int[] counter = new int[] {-1};
+
+            for (int i = 0; i < 100; i++)
+                data.AddOrUpdate(i, (k) => (++counter[0]).ToString(), (k, v) => { throw new InvalidOperationException(); });
+
+            for (int i = 0; i < 100; i++)
+                Assert.AreEqual((i & 1) == 1, data.TryRemove(i, (k, v) => (int.Parse(v) & 1) == 1));
+
+            for (int i = 0; i < 100; i++)
+                data.AddOrUpdate(i, (k) => (++counter[0]).ToString(), (k, v) => (++counter[0]).ToString());
+
+            Assert.AreEqual(100, data.Count);
+            Assert.AreEqual(200, counter[0] + 1);
+
+            for (int i = 0; i < 100; i++)
+                Assert.IsTrue(data.TryRemove(i, (k, v) => int.Parse(v) - 100 == i));
+
+            Assert.AreEqual(0, data.Count);
+        }
+
+        [Test]
+        public void TestNewAddOrUpdate()
+        {
+            SynchronizedDictionary<int, string> data =
+                new SynchronizedDictionary<int, string>(new Dictionary<int, string>());
+            Assert.AreEqual("a", data.AddOrUpdate(1, "a", (k, v) => k.ToString()));
+            Assert.AreEqual("1", data.AddOrUpdate(1, "a", (k, v) => k.ToString()));
+
+            Assert.AreEqual("b", data.AddOrUpdate(2, k => "b", (k, v) => k.ToString()));
+            Assert.AreEqual("2", data.AddOrUpdate(2, k => "b", (k, v) => k.ToString()));
+        }
+
+        struct AddUpdateValue : ICreateOrUpdateValue<int, string>, IRemoveValue<int, string>
+        {
+            public string OldValue;
+            public string Value;
+            public bool CreateValue(int key, out string value)
+            {
+                OldValue = null;
+                value = Value;
+                return Value != null;
+            }
+            public bool UpdateValue(int key, ref string value)
+            {
+                OldValue = value;
+                value = Value;
+                return Value != null;
+            }
+            public bool RemoveValue(int key, string value)
+            {
+                OldValue = value;
+                return value == Value;
+            }
+        }
+
+        [Test]
+        public void TestAtomicInterfaces()
+        {
+            SynchronizedDictionary<int, string> data =
+                new SynchronizedDictionary<int, string>(new Dictionary<int, string>());
+
+            data[1] = "a";
+
+            AddUpdateValue update = new AddUpdateValue();
+            Assert.IsFalse(data.AddOrUpdate(1, ref update));
+            Assert.AreEqual("a", update.OldValue);
+            Assert.IsFalse(data.AddOrUpdate(2, ref update));
+            Assert.IsNull(update.OldValue);
+            Assert.IsFalse(data.TryRemove(1, ref update));
+            Assert.AreEqual("a", update.OldValue);
+
+            Assert.AreEqual(1, data.Count);
+            Assert.AreEqual("a", data[1]);
+
+            update.Value = "b";
+            Assert.IsTrue(data.AddOrUpdate(1, ref update));
+            Assert.AreEqual("a", update.OldValue);
+            Assert.IsTrue(data.AddOrUpdate(2, ref update));
+            Assert.IsNull(update.OldValue);
+
+            Assert.AreEqual(2, data.Count);
+            Assert.AreEqual("b", data[1]);
+            Assert.AreEqual("b", data[2]);
+
+            Assert.IsTrue(data.TryRemove(1, ref update));
+            Assert.AreEqual("b", update.OldValue);
+            Assert.IsTrue(data.TryRemove(2, ref update));
+            Assert.AreEqual("b", update.OldValue);
+            Assert.AreEqual(0, data.Count);
+        }
+
+        [Test]
+        public void TestGetOrAdd()
+        {
+            SynchronizedDictionary<int, string> data =
+                new SynchronizedDictionary<int, string>(new Dictionary<int, string>());
+            Assert.AreEqual("a", data.GetOrAdd(1, "a"));
+            Assert.AreEqual("a", data.GetOrAdd(1, "b"));
+
+            Assert.AreEqual("b", data.GetOrAdd(2, k => "b"));
+            Assert.AreEqual("b", data.GetOrAdd(2, k => "c"));
+        }
+
+
+        [Test]
+        public void TestTryRoutines()
+        {
+            SynchronizedDictionary<int, string> data =
+                new SynchronizedDictionary<int, string>(new Dictionary<int, string>());
+
+            Assert.IsTrue(data.TryAdd(1, "a"));
+            Assert.IsFalse(data.TryAdd(1, "a"));
+
+            Assert.IsTrue(data.TryUpdate(1, "a"));
+            Assert.IsTrue(data.TryUpdate(1, "c"));
+            Assert.IsTrue(data.TryUpdate(1, "d", "c"));
+            Assert.IsFalse(data.TryUpdate(1, "f", "c"));
+            Assert.AreEqual("d", data[1]);
+            Assert.IsTrue(data.TryUpdate(1, "a", data[1]));
+            Assert.AreEqual("a", data[1]);
+            Assert.IsFalse(data.TryUpdate(2, "b"));
+
+            string val;
+            Assert.IsTrue(data.TryRemove(1, out val) && val == "a");
+            Assert.IsFalse(data.TryRemove(2, out val));
+            Assert.AreNotEqual(val, "a");
+
+            Assert.IsFalse(data.TryUpdate(1, (k, x) => x.ToUpper()));
+            data[1] = "a";
+            data[1] = "b";
+            Assert.IsTrue(data.TryUpdate(1, (k, x) => x.ToUpper()));
+            Assert.AreEqual("B", data[1]);
+        }
+
         [Test]
         public void TestReplaceDictionary()
         {

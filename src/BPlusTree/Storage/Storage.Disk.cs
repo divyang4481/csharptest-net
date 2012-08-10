@@ -1,4 +1,4 @@
-﻿#region Copyright 2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2011-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,7 +12,6 @@
  * limitations under the License.
  */
 #endregion
-
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -29,9 +28,6 @@ namespace CSharpTest.Net.Storage
     /// Provides a file-based storage for the BPlusTree dictionary
     /// </summary>
     class BTreeFileStore : INodeStorage
-#if BTreeTransactions
-        , IPersistentNodeStorage
-#endif
     {
         static readonly ISerializer<IStorageHandle> StorageHandleSerializer = new HandleSerializer();
         private readonly byte[] _fileId;
@@ -50,33 +46,11 @@ namespace CSharpTest.Net.Storage
            _fileId = Encoding.UTF8.GetBytes(Path.GetFullPath(filePath).ToLower());
         }
 
-        /// <summary>
-        /// Opens an existing BPlusTree file at the path specified, for a new file use CreateNew()
-        /// </summary>
-        public BTreeFileStore(IFactory<Stream> streamFactory, int blockSize, int growthRate, int concurrentWriters)
-            : this(new FragmentedFile(streamFactory, blockSize, growthRate, concurrentWriters))
-        {
-            _fileId = Guid.NewGuid().ToByteArray();
-        }
-
         private BTreeFileStore(FragmentedFile filestore)
         {
             _file = filestore;
             _rootId = new FileId(_file.FirstIdentity);
         }
-
-#if BTreeTransactions
-        public byte[] PersistantIdentity { get { return _fileId; } }
-        public bool IsPersistantIdentityEqual(byte[] persistantIdentity)
-        {
-            try
-            {
-                return BinaryComparer.Equals(persistantIdentity, _fileId);
-            }
-            catch
-            { return false; }
-        }
-#endif
 
         /// <summary>
         /// Closes the file in it's current state.
@@ -97,23 +71,12 @@ namespace CSharpTest.Net.Storage
             return new BTreeFileStore(filepath, blockSize, growthRate, concurrentWriters, options, false);
         }
 
-        /// <summary>
-        /// Creates an empty file store in the path specified
-        /// </summary>
-        public static BTreeFileStore CreateNew(IFactory<Stream> streamFactory, int blockSize, int growthRate, int concurrentWriters)
-        {
-            using (FragmentedFile file = FragmentedFile.CreateNew(streamFactory, blockSize, growthRate, concurrentWriters))
-                CreateRoot(file);
-
-            return new BTreeFileStore(streamFactory, blockSize, growthRate, concurrentWriters);
-        }
-
         private static void CreateRoot(FragmentedFile file)
         {
             long rootId;
             using (file.Create(out rootId)) { }
             if (rootId != file.FirstIdentity)
-                throw new ApplicationException();
+                throw new InvalidNodeHandleException();
         }
 
         public void Reset()

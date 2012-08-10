@@ -100,7 +100,9 @@ namespace CSharpTest.Net.SslTunnel.Server
                 makeCertPath,
                 "-r",//					Create a self signed certificate
                 "-pe",//				Mark generated private key as exportable
-                "-n", "CN={0}",//	Certificate subject X500 name (eg: CN=Fred Dews)
+                "-n", "CN={0}",//		Certificate subject X500 name (eg: CN=Fred Dews)
+				"-len", "2048",//		Generated Key Length (Bits)
+				"-a", "sha1",//			The signature algorithm <md5|sha1>.  Default to 'md5'
                 "-b", "01/01/2000",//	Start of the validity period; default to now.
                 "-e", "01/01/2036",//	End of validity period; defaults to 2039
                 "-eku",//				Comma separated enhanced key usage OIDs
@@ -112,7 +114,7 @@ namespace CSharpTest.Net.SslTunnel.Server
                 "-sp",//				Subject's CryptoAPI provider's name
                 "Microsoft RSA SChannel Cryptographic Provider",
                 "-sy", "12",//			Subject's CryptoAPI provider's type
-                "{1}"//				[outputCertificateFile]
+                "{1}"//					[outputCertificateFile]
                 );
 
             StringWriter swOut = new StringWriter();

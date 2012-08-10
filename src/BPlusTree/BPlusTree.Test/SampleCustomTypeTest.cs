@@ -1,4 +1,4 @@
-﻿#region Copyright 2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2011-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -52,10 +52,7 @@ namespace CSharpTest.Net.BPlusTree.Test
                         MaximumChildNodes = 24,
                         MinimumValueNodes = 4,
                         MaximumValueNodes = 12,
-                        SerializeInMemory = true,
                     };
-
-                Assert.AreEqual(true, options.SerializeInMemory);
 
                 BPlusTree<KeyInfo, DataValue> tree = new BPlusTree<KeyInfo, DataValue>(options);
                 tree.EnableCount();
@@ -87,6 +84,7 @@ namespace CSharpTest.Net.BPlusTree.Test
             options.CalcBTreeOrder(32, 300);//we can simply just guess close
             options.FileName = TempFile.TempPath;
             options.CreateFile = CreatePolicy.Always;//obviously this is just for testing
+            Assert.AreEqual(FileVersion.Version1, options.FileVersion);
 
             Random rand = new Random();
             KeyInfo k1 = new KeyInfo(), k2 = new KeyInfo();

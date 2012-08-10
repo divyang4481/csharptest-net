@@ -83,6 +83,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BPlusTree.Test", "BPlusTree
 		{FBD5EDD1-445C-46D1-A0B2-4B68CB51EADB} = {FBD5EDD1-445C-46D1-A0B2-4B68CB51EADB}
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Packaging", "Packaging", "{B4746C06-A769-4349-ADF5-F93FCB013990}"
+	ProjectSection(SolutionItems) = preProject
+		Packaging\CSharpTest.Net.BPlusTree.nuspec = Packaging\CSharpTest.Net.BPlusTree.nuspec
+		Packaging\CSharpTest.Net.Library.nuspec = Packaging\CSharpTest.Net.Library.nuspec
+		Packaging\CSharpTest.Net.Logging.nuspec = Packaging\CSharpTest.Net.Logging.nuspec
+		Packaging\CSharpTest.Net.RpcLibrary.nuspec = Packaging\CSharpTest.Net.RpcLibrary.nuspec
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

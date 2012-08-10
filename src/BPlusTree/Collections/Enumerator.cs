@@ -1,4 +1,4 @@
-﻿#region Copyright 2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2011-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,7 +19,7 @@ namespace CSharpTest.Net.Collections
 {
     partial class BPlusTree<TKey, TValue>
     {
-        class Enumerator : IEnumerator<KeyValuePair<TKey, TValue>>
+        class Enumerator : IEnumerator<KeyValuePair<TKey, TValue>>, IEnumerable<KeyValuePair<TKey, TValue>>
         {
             readonly BPlusTree<TKey, TValue> _tree;
             readonly Element[] _currentSet;
@@ -31,20 +31,52 @@ namespace CSharpTest.Net.Collections
             int _currentOffset;
             bool _enumComplete;
 
+            readonly bool _hasStart;
+            readonly TKey _startKey;
+            readonly Predicate<KeyValuePair<TKey, TValue>> _fnContinue;
+
             public Enumerator(BPlusTree<TKey, TValue> tree)
             {
+                tree.NotDisposed();
                 _tree = tree;
                 _currentSet = new Element[_tree._options.MaximumValueNodes];
                 Reset();
             }
 
+            public Enumerator(BPlusTree<TKey, TValue> tree, TKey startKey)
+            {
+                tree.NotDisposed();
+                _tree = tree;
+                _currentSet = new Element[_tree._options.MaximumValueNodes];
+                _hasStart = true;
+                _startKey = startKey;
+                Reset();
+            }
+
+            public Enumerator(BPlusTree<TKey, TValue> tree, TKey startKey, Predicate<KeyValuePair<TKey, TValue>> fnContinue)
+                : this(tree, startKey)
+            {
+                _fnContinue = fnContinue;
+            }
+
             public void Reset()
             {
-                using (RootLock root = _tree.LockRoot(LockType.Read, "Enumerator"))
-                using (NodePin first = SeekFirst(root.Pin, out _nextKey, out _hasMore))
+                if (_hasStart)
                 {
-                    FillFromNode(first.Ptr);
-                    _enumComplete = _currentLimit == 0;
+                    _enumComplete = false;
+                    _currentLimit = 0;
+                    _currentOffset = 0;
+                    _hasMore = true;
+                    _nextKey = _startKey;
+                }
+                else
+                {
+                    using (RootLock root = _tree.LockRoot(LockType.Read, "Enumerator"))
+                    using (NodePin first = SeekFirst(root.Pin, out _nextKey, out _hasMore))
+                    {
+                        FillFromNode(first.Ptr);
+                        _enumComplete = _currentLimit == 0;
+                    }
                 }
             }
 
@@ -62,7 +94,16 @@ namespace CSharpTest.Net.Collections
                 if (_enumComplete)
                     return false;
                 if (++_currentOffset < _currentLimit)
-                    return true;
+                {
+                    if(_fnContinue == null || _fnContinue(Current))
+                        return true;
+
+                    Array.Clear(_currentSet, 0, _currentSet.Length);
+                    _currentOffset = 0;
+                    _currentLimit = 0;
+                    _enumComplete = true;
+                    return false;
+                }
 
                 bool success = false;
                 using (RootLock root = _tree.LockRoot(LockType.Read, "Enumerator"))
@@ -85,7 +126,9 @@ namespace CSharpTest.Net.Collections
                 {
                     if (_currentOffset >= _currentLimit)
                         return MoveNext();
-                    return true;
+
+                    if(_fnContinue == null || _fnContinue(Current))
+                        return true;
                 }
 
                 Array.Clear(_currentSet, 0, _currentSet.Length);
@@ -155,13 +198,12 @@ namespace CSharpTest.Net.Collections
 
                 try
                 {
-                    bool found;
                     int ordinal;
 
                     while (true)
                     {
                         Node me = current.Ptr;
-                        found = me.BinarySearch(_tree._itemComparer, find, out ordinal);
+                        me.BinarySearch(_tree._itemComparer, find, out ordinal);
                         if (me.IsLeaf)
                         {
                             pin = current;
@@ -189,6 +231,17 @@ namespace CSharpTest.Net.Collections
                     if (next != null) next.Dispose();
                 }
             }
+
+            public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
+            {
+                if (_enumComplete)
+                    Reset();
+                return this;
+            }
+
+            [Obsolete]
+            System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+            { return GetEnumerator(); }
         }
     }
 }

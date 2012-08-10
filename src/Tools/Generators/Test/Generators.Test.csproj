@@ -19,6 +19,7 @@
     <ErrorReport>none</ErrorReport>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
     <WarningLevel>4</WarningLevel>
+    <ApplicationManifest>Resources\app.manifest</ApplicationManifest>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <Optimize>false</Optimize>
@@ -70,6 +71,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\App.ico" />
+    <EmbeddedResource Include="Resources\app.manifest" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

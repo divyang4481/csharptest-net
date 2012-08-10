@@ -1,4 +1,4 @@
-﻿#region Copyright 2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2011-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -63,8 +63,8 @@ namespace CSharpTest.Net.Collections
                     _lock.ReleaseWrite();
                     
                 _lockHeld = NoLock;
-                if (_temp != null)
-                    _temp.Invalidate();
+                //if (_temp != null)
+                //    _temp.Invalidate();
                 _temp = null;
             }
 
@@ -80,11 +80,9 @@ namespace CSharpTest.Net.Collections
             {
                 Assert(_ltype != LockType.Read, "Node is currently read-only");
                 _deleted = true;
-                if (_temp != null)
-                {
-                    _temp.Invalidate();
-                    _temp = null;
-                }
+                //if (_temp != null)
+                //  _temp.Invalidate();
+                _temp = null;
             }
 
             public void CommitChanges()
@@ -103,8 +101,8 @@ namespace CSharpTest.Net.Collections
             public void CancelChanges()
             {
                 Assert(_ltype != LockType.Read, "Node is currently read-only");
-                if (_temp == null) throw new InvalidOperationException("Node is not in a transaction");
-                _temp.Invalidate();
+                //if (_temp == null) throw new InvalidOperationException("Node is not in a transaction");
+                //_temp.Invalidate();
                 _temp = null;
             }
         }

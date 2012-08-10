@@ -70,6 +70,14 @@
     <Compile Include="Bases\Comparable.cs" />
     <Compile Include="Bases\Disposable.cs" />
     <Compile Include="Bases\Equatable.cs" />
+    <Compile Include="Collections\BTreeDictionary.cs" />
+    <Compile Include="Collections\BTreeList.cs" />
+    <Compile Include="Collections\IConcurrentDictionary.cs" />
+    <Compile Include="Collections\IDictionaryEx.cs" />
+    <Compile Include="Collections\KeyValueComparer.cs" />
+    <Compile Include="Collections\MergeSort.cs" />
+    <Compile Include="Collections\OrderedEnumeration.cs" />
+    <Compile Include="Collections\OrderedKeyValuePairs.cs" />
     <Compile Include="Collections\SynchronizedDictionary.cs" />
     <Compile Include="Collections\SynchronizedList.cs" />
     <Compile Include="Crypto\SecureTransferMessage.cs" />
@@ -147,11 +155,14 @@
     <Compile Include="Interfaces\ITransactable.cs" />
     <Compile Include="Interfaces\DefaultFactories.cs" />
     <Compile Include="IO\AggregateStream.cs" />
+    <Compile Include="IO\BackgroundWriter.cs" />
     <Compile Include="IO\BaseStream.cs" />
     <Compile Include="Formatting\HexStream.cs" />
     <Compile Include="IO\ClampedStream.cs" />
+    <Compile Include="IO\TransactedCompoundFile.cs" />
     <Compile Include="IO\Crc32.cs" />
     <Compile Include="IO\FileStreamFactory.cs" />
+    <Compile Include="IO\FindFile.cs" />
     <Compile Include="IO\FragmentedFile.cs" />
     <Compile Include="IO\MarshallingStream.cs" />
     <Compile Include="IO\SegmentedMemoryStream.cs" />
@@ -190,6 +201,7 @@
     </Compile>
     <Compile Include="Serialization\INameValueStore.cs" />
     <Compile Include="Serialization\ISerializer.cs" />
+    <Compile Include="Serialization\KeyValueSerializer.cs" />
     <Compile Include="Serialization\LimitedSerializer.cs" />
     <Compile Include="Serialization\PrimitiveSerializer.cs" />
     <Compile Include="Serialization\Storage.cs" />

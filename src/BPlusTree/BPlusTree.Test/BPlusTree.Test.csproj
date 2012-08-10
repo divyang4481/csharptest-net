@@ -23,6 +23,7 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <Optimize>False</Optimize>
+    <DefineConstants>NET35;TRACE</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
     <Optimize>True</Optimize>
@@ -51,6 +52,7 @@
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BasicMemoryTests.cs" />
     <Compile Include="BasicTests.cs" />
     <Compile Include="SampleCustomTypeTest.cs" />
     <Compile Include="SampleTypes\DataValue.cs" />
@@ -58,15 +60,21 @@
     <Compile Include="SampleTypes\KeyInfo.cs" />
     <Compile Include="SampleTypes\KeyInfoComparer.cs" />
     <Compile Include="SampleTypes\KeyInfoSerializer.cs" />
+    <Compile Include="TestBackupAndRecovery.cs" />
     <Compile Include="TestBPlusTreeOptions.cs" />
     <Compile Include="TestCustomStorage.cs" />
     <Compile Include="TestFileSerialized.cs" />
     <Compile Include="SequenceTests.cs" />
     <Compile Include="TestCollection.cs" />
     <Compile Include="TestDictionary.cs" />
-    <Compile Include="TestMemorySerialized.cs" />
+    <Compile Include="TestInfo.cs" />
+    <Compile Include="BasicTestsVersion2.cs" />
+    <Compile Include="TestBulkInsert.cs" />
+    <Compile Include="TestMultiInstance.cs" />
     <Compile Include="TestSimpleDictionary.cs" />
+    <Compile Include="TestTransactionLog.cs" />
     <Compile Include="ThreadedBTreeTest.cs" />
+    <Compile Include="ThreadedMassInsertTest.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

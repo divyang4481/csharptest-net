@@ -53,7 +53,39 @@ namespace CSharpTest.Net.Library.Test
 				Assert.AreEqual(test1, test2); //now they should be the same
 			}
 		}
-	}
+    }
+    [TestFixture]
+    public class TestRfc2898DeriveBytes : TestPasswordDerivedBytes
+    {
+        protected override IPasswordDerivedBytes DerivedBytes(string input)
+        { return new TestRfc2898(Password.Encoding.GetBytes(input), DefaultSalt.ToArray(), DefaultIterations); }
+
+        class TestRfc2898 : Rfc2898DeriveBytes, IPasswordDerivedBytes
+        {
+            public TestRfc2898(byte[] getBytes, byte[] toArray, int defaultIterations) : base(getBytes, toArray, defaultIterations)
+            { }
+            void IDisposable.Dispose() {}
+        }
+
+        [Test]
+        public void TestRfcRandom()
+        {
+            Rfc2898DeriveBytes pd1 = new Rfc2898DeriveBytes(Password.Encoding.GetBytes(TEST_PASSWORD), DefaultSalt.ToArray(), 10);
+            using (IPasswordDerivedBytes pd2 = new TestRfc2898(Password.Encoding.GetBytes(TEST_PASSWORD), DefaultSalt.ToArray(), 10))
+            {
+                Assert.AreEqual(pd1.GetBytes(20), pd2.GetBytes(20));
+                Assert.AreEqual(pd1.GetBytes(35), pd2.GetBytes(35));
+                Assert.AreEqual(pd1.GetBytes(16), pd2.GetBytes(16));
+
+                Random r = new Random();
+                for(int i=0; i < 1000; i++)
+                {
+                    int size = r.Next(2, 60);
+                    Assert.AreEqual(pd1.GetBytes(size), pd2.GetBytes(size));
+                }
+            }
+        }
+    }
 	[TestFixture]
 	public class TestMD5DerivedBytes : TestPasswordDerivedBytes
 	{

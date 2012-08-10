@@ -1,4 +1,4 @@
-﻿#region Copyright 2010-2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2010-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -124,9 +124,60 @@ namespace CSharpTest.Net.Library.Test
         }
 
         [Test]
+        public void TestClone()
+        {
+            OrdinalList lista = new OrdinalList(new int[] { 0 });
+            OrdinalList listb = (OrdinalList) ((ICloneable) lista).Clone();
+            Assert.IsFalse(ReferenceEquals(lista, listb));
+            Assert.AreEqual(lista.Count, listb.Count);
+            Assert.IsTrue(listb.Contains(0));
+
+            listb.Add(1);
+            Assert.IsTrue(listb.Contains(1));
+            Assert.IsFalse(lista.Contains(1));
+        }
+
+        [Test]
+        public void TestInvert()
+        {
+            OrdinalList lista = new OrdinalList(new int[] {0, 2, 4, 6, 8, 10, 12});
+            OrdinalList listb = new OrdinalList(new int[] {1, 3, 5, 7, 9, 11, 13});
+
+            OrdinalList invta = lista.Invert(13);
+            string invtatext = "", listbtext = "";
+            foreach (int i in invta)
+                invtatext += "," + i;
+            foreach (int i in listb)
+                listbtext += "," + i;
+            Assert.AreEqual(listbtext, invtatext);
+
+            lista = new OrdinalList(new int[] { 0 });
+            listb = new OrdinalList(new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 });
+            invta = lista.Invert(13);
+            invtatext = "";
+            listbtext = "";
+            foreach (int i in invta)
+                invtatext += "," + i;
+            foreach (int i in listb)
+                listbtext += "," + i;
+            Assert.AreEqual(listbtext, invtatext);
+
+            lista = new OrdinalList(new int[] { 0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 13 });
+            listb = new OrdinalList(new int[] { 3 });
+            invta = lista.Invert(4);
+            invtatext = "";
+            listbtext = "";
+            foreach (int i in invta)
+                invtatext += "," + i;
+            foreach (int i in listb)
+                listbtext += "," + i;
+            Assert.AreEqual(listbtext, invtatext);
+        }
+
+	    [Test]
         public void TestIntersectUnion()
         {
-            OrdinalList lista = new OrdinalList(new int[] { 5, 10, 20 });
+            OrdinalList lista = new OrdinalList(new int[] { 5, 10, 99 });
             OrdinalList listb = new OrdinalList(new int[] { 2, 4, 6, 8, 10 });
 
             OrdinalList union = lista.UnionWith(listb);
@@ -139,17 +190,48 @@ namespace CSharpTest.Net.Library.Test
             foreach (int i in inter)
                 Assert.AreEqual(10, i);
         }
-	}
+
+        [Test]
+        public void TestIntersectUnionSameLength()
+        {
+            OrdinalList lista = new OrdinalList(new int[] { 1, 4, 5 });
+            OrdinalList listb = new OrdinalList(new int[] { 2, 4, 6 });
+
+            OrdinalList union = lista.UnionWith(listb);
+            Assert.AreEqual(5, union.Count);
+            foreach (int i in union)
+                Assert.IsTrue(lista.Contains(i) || listb.Contains(i));
+
+            OrdinalList inter = lista.IntersectWith(listb);
+            Assert.AreEqual(1, inter.Count);
+            foreach (int i in inter)
+                Assert.AreEqual(4, i);
+        }
+    
+        /// <summary>
+        /// Previously it was thought to be invalid to set a negative ceiling; however, since ceiling
+        /// is an 'inclusive' value, the value of '0' actually requires 1 byte to be allocated.  In
+        /// order to allow explicitly clearing the array length, a -1 must be allowed; 
+        /// </summary>
+        [Test]
+        public void TestNegativeCeiling()
+        {
+            OrdinalList list = new OrdinalList();
+            list.Ceiling = -1;
+            Assert.AreEqual(-1, list.Ceiling);
+        }
+    }
     
 	[TestFixture]
 	public partial class TestOrdinalListNegative
 	{
-		[Test][ExpectedException(typeof(ArgumentOutOfRangeException))]
-		public void TestBadCeiling()
-		{
-			OrdinalList list = new OrdinalList();
-            list.Ceiling = -1;
-		}
+        /* '-1' is now allowed * see comments on TestNegativeCeiling */
+        [Test][ExpectedException(typeof(ArgumentOutOfRangeException))]
+        public void TestBadCeiling()
+        {
+            OrdinalList list = new OrdinalList();
+            list.Ceiling = -2;
+        }
 
         [Test]
         [ExpectedException(typeof(ArgumentException))]

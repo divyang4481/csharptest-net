@@ -21,3 +21,6 @@ Release
 *.mdf
 *.pdb
 *.snk
+src\Packaging
+src\TestResult.xml
+src\BPlusTree\README.htm

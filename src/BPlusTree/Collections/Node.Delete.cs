@@ -1,4 +1,4 @@
-﻿#region Copyright 2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2011-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,20 +12,59 @@
  * limitations under the License.
  */
 #endregion
-
 using System;
+using System.Collections.Generic;
 
 namespace CSharpTest.Net.Collections
 {
     partial class BPlusTree<TKey, TValue>
     {
-        private bool Delete(NodePin thisLock, TKey key) 
-        { return Delete(thisLock, key, null, int.MinValue); }
+        enum RemoveResult { Ignored = 0, Removed = 1, NotFound = 2 }
+        struct RemoveAlways : IRemoveValue<TKey, TValue>
+        {
+            private bool _removed;
+            private TValue _value;
+            public bool TryGetValue(out TValue value)
+            {
+                value = _value;
+                return _removed;
+            }
+            bool IRemoveValue<TKey, TValue>.RemoveValue(TKey key, TValue value)
+            {
+                _value = value;
+                return _removed = true;
+            }
+        }
+        struct RemoveIfValue : IRemoveValue<TKey, TValue>
+        {
+            private readonly TValue _value;
+            public RemoveIfValue(TKey key, TValue value)
+            {
+                _value = value;
+            }
+            bool IRemoveValue<TKey, TValue>.RemoveValue(TKey key, TValue value)
+            {
+                return EqualityComparer<TValue>.Default.Equals(value, _value);
+            }
+        }
+        struct RemoveIfPredicate : IRemoveValue<TKey, TValue>
+        {
+            private readonly KeyValuePredicate<TKey, TValue> _test;
+            public RemoveIfPredicate(KeyValuePredicate<TKey, TValue> test)
+            {
+                _test = test;
+            }
+            bool IRemoveValue<TKey, TValue>.RemoveValue(TKey key, TValue value)
+            {
+                return _test(key, value);
+            }
+        }
 
-        private bool Delete(NodePin thisLock, TKey key, NodePin parent, int parentIx)
+        private RemoveResult Delete<T>(NodePin thisLock, TKey key, ref T condition, NodePin parent, int parentIx)
+            where T : IRemoveValue<TKey, TValue>
         {
             Node me = thisLock.Ptr;
-            if (me.Count == 0) return false;
+            if (me.Count == 0) return RemoveResult.NotFound;
             int minimumKeys = me.IsLeaf ? _options.MinimumValueNodes : _options.MinimumChildNodes;
             if (me.Count <= minimumKeys && parent != null && !parent.Ptr.IsRoot)
             {
@@ -34,14 +73,14 @@ namespace CSharpTest.Net.Collections
                     using (NodePin bigger = _storage.Lock(parent, parent.Ptr[parentIx + 1].ChildNode))
                         Join(thisLock, bigger, false, parent, parentIx);
                     thisLock.Dispose();
-                    return Delete(parent, key, null, int.MinValue);
+                    return Delete(parent, key, ref condition, null, int.MinValue);
                 }
                 if (parentIx > 0)
                 {
                     using (NodePin smaller = _storage.Lock(parent, parent.Ptr[parentIx - 1].ChildNode))
                         Join(smaller, thisLock, true, parent, parentIx - 1);
                     thisLock.Dispose();
-                    return Delete(parent, key, null, int.MinValue);
+                    return Delete(parent, key, ref condition, null, int.MinValue);
                 }
                 Assert(false, "Failed to join node before delete.");
             }
@@ -56,7 +95,7 @@ namespace CSharpTest.Net.Collections
                         t.Destroy(thisLock);
                         t.Commit();
                     }
-                    return Delete(onlyChild, key, null, int.MinValue);
+                    return Delete(onlyChild, key, ref condition, null, int.MinValue);
                 }
             }
 
@@ -67,24 +106,26 @@ namespace CSharpTest.Net.Collections
             int ordinal;
             if (me.BinarySearch(_itemComparer, new Element(key), out ordinal) && isValueNode)
             {
-                using (NodeTransaction t = _storage.BeginTransaction())
+                if (condition.RemoveValue(key, me[ordinal].Payload))
                 {
-                    me = t.BeginUpdate(thisLock);
-                    if (me.Remove(ordinal, new Element(key), _keyComparer))
+                    using (NodeTransaction t = _storage.BeginTransaction())
                     {
+                        me = t.BeginUpdate(thisLock);
+                        me.Remove(ordinal, new Element(key), _keyComparer);
+                        t.RemoveValue(key);
                         t.Commit();
-                        return true;
+                        return RemoveResult.Removed;
                     }
                 }
-                return false;
+                return RemoveResult.Ignored;
             }
 
             if (isValueNode)
-                return false;
+                return RemoveResult.NotFound;
 
             if (ordinal >= me.Count) ordinal = me.Count - 1;
             using (NodePin child = _storage.Lock(thisLock, me[ordinal].ChildNode))
-                return Delete(child, key, thisLock, ordinal);
+                return Delete(child, key, ref condition, thisLock, ordinal);
         }
 
         private void CopyElements(Node src, int srcIndex, Node dest, int destIndex, int count, TKey firstSrcKey)
@@ -124,8 +165,7 @@ namespace CSharpTest.Net.Collections
                         Element removeItem = parent.Ptr[parentBigIndex];
                         Assert(removeItem.IsNode && removeItem.ChildNode.Equals(big.Handle),
                                "Invalid parent index in join.");
-                        bool removed = parent.Ptr.Remove(parentBigIndex, removeItem, _keyComparer);
-                        Assert(removed, "Failed to remove node.");
+                        parent.Ptr.Remove(parentBigIndex, removeItem, _keyComparer);
 
                         CopyElements(small.Ptr, 0, joinNode.Ptr, 0, small.Ptr.Count, small.Ptr[0].Key);
                         CopyElements(big.Ptr, 0, joinNode.Ptr, joinNode.Ptr.Count, big.Ptr.Count, bigZeroKey);

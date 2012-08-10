@@ -1,4 +1,4 @@
-﻿#region Copyright 2009-2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2009-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,7 +27,11 @@ namespace CSharpTest.Net.StampVersion
 			Console.WriteLine("");
 			Console.WriteLine("Usage:");
 			Console.WriteLine("    StampVersion.exe [/nologo] [/wait] /build:{Number}|{File Path} [/revision={Number}|{File Path}]");
-			Console.WriteLine("");
+            Console.WriteLine("");
+            Console.WriteLine("        /version:{Version} - defines the entire version string, i.e. 1.0.0.0");
+            Console.WriteLine("        /version:{File Path} - file path of a text file contain a line with:");
+            Console.WriteLine("                       Version: {Version}");
+            Console.WriteLine("");
 			Console.WriteLine("        /major:{Number} - defines the major (2th part) of the version");
 			Console.WriteLine("        /major:{File Path} - file path of a text file contain a line with:");
 			Console.WriteLine("                       Major: {Number}");
@@ -69,10 +73,21 @@ namespace CSharpTest.Net.StampVersion
 
 				try
 				{
-					string major = GetNumber("Major", args);
-					string minor = GetNumber("Minor", args);
-					string build = GetNumber("Build", args);
-					string revision = GetNumber("Revision", args);
+                    string major = null, minor = null, build = null, revision = null;
+				    string version;
+                    if(args.TryGetValue("version", out version))
+                    {
+                        string[] dotted = version.Split('.');
+                        major = dotted[0];
+                        minor = dotted.Length >= 1 ? dotted[1] : null;
+                        build = dotted.Length >= 2 ? dotted[2] : null;
+                        revision = dotted.Length >= 3 ? dotted[3] : null;
+                    }
+
+				    major = GetNumber("Major", args, major);
+					minor = GetNumber("Minor", args, minor);
+					build = GetNumber("Build", args, build);
+					revision = GetNumber("Revision", args, revision);
 
 					if (major == null && minor == null && build == null && revision == null)
 						return DoHelp();
@@ -163,12 +178,12 @@ namespace CSharpTest.Net.StampVersion
 		/// Retrieves only the numeric value specified or, if needed, reads the
 		/// specified configuration file and parses.
 		/// </summary>
-		static string GetNumber(string optionName, ArgumentList args)
+        static string GetNumber(string optionName, ArgumentList args, string defaultValue)
 		{
 			ushort value;
 			string text = args.SafeGet(optionName);
 
-			if (String.IsNullOrEmpty(text)) return null;
+			if (String.IsNullOrEmpty(text)) return defaultValue;
 			if (text == "*") return text;
 
 			if (!ushort.TryParse(text, out value)) // not already a number?

@@ -1,4 +1,4 @@
-﻿#region Copyright 2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2011-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -37,7 +37,7 @@ namespace CSharpTest.Net.BPlusTree.Test
         public void TearDown()
         { TempFile.Dispose(); }
 
-        protected override BPlusTree<int, string>.Options Options
+        protected override BPlusTreeOptions<int, string> Options
         {
             get
             {
@@ -55,15 +55,17 @@ namespace CSharpTest.Net.BPlusTree.Test
         [Test]
         public void TestRecoverCorruptedFile()
         {
-            BPlusTree<int, string>.Options options = Options;
+            BPlusTree<int, string>.Options options = (BPlusTree<int, string>.Options)Options;
             options.BTreeOrder = 4;
             options.FileBlockSize = 512;
             options.FileGrowthRate = 25;
+            options.ConcurrentWriters = 4;
+            options.FileOpenOptions = FileOptions.None;
 
             using (BPlusTree<int, string> tree = new BPlusTree<int, string>(options))
             {
                 for(int i=0; i < 100; i++)
-                    Assert.IsTrue(tree.Add(i, i.ToString()));
+                    Assert.IsTrue(tree.TryAdd(i, i.ToString()));
             }
 
             using (Stream io = TempFile.Open())
@@ -113,14 +115,19 @@ namespace CSharpTest.Net.BPlusTree.Test
             Assert.AreEqual(0, duplicates.Count);
         }
 
-        [Test, ExpectedException(typeof(IOException))]
+        [Test]
         public void TestDeleteUnderlyingFile()
         {
-            using (BPlusTree<int, string> tree = new BPlusTree<int, string>(Options))
+            try
             {
-                Assert.IsTrue(tree.Add(1, "hi"));
-                TempFile.Delete();
+                using (BPlusTree<int, string> tree = new BPlusTree<int, string>(Options))
+                {
+                    Assert.IsTrue(tree.TryAdd(1, "hi"));
+                    TempFile.Delete();
+                }
+                Assert.Fail();
             }
+            catch(IOException) { }
         }
 
         [Test]
@@ -129,7 +136,7 @@ namespace CSharpTest.Net.BPlusTree.Test
             System.Threading.ThreadStart fn = delegate()
             {
                 BPlusTree<int, string> tree = new BPlusTree<int, string>(Options);
-                Assert.IsTrue(tree.Add(1, "hi"));
+                Assert.IsTrue(tree.TryAdd(1, "hi"));
                 tree = null;
             };
             

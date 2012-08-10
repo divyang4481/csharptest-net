@@ -1,4 +1,4 @@
-﻿#region Copyright 2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2011-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -71,7 +71,7 @@ namespace CSharpTest.Net.Collections
             private CacheEntry _root;
             private ILockStrategy _cacheLock;
 
-            public NodeCacheNormal(Options options) : base(options)
+            public NodeCacheNormal(BPlusTreeOptions<TKey, TValue> options) : base(options)
             {
                 _keepAlive = new ObjectKeepAlive(options.CacheKeepAliveMinimumHistory, options.CacheKeepAliveMaximumHistory, TimeSpan.FromMilliseconds(options.CacheKeepAliveTimeout));
                 _cache = new Dictionary<NodeHandle, WeakReference<CacheEntry>>();
@@ -112,6 +112,11 @@ namespace CSharpTest.Net.Collections
                 _cache.Clear();
                 _cacheLock = new SimpleReadWriteLocking();
                 _root = GetCache(_root.Handle, true);
+
+                bool isnew;
+                Assert(_root.Handle.StoreHandle.Equals(Storage.OpenRoot(out isnew)));
+                if (isnew)
+                    _root.Node = CreateRoot(_root.Handle);
             }
 
             CacheEntry GetCache(NodeHandle handle, bool isNew)

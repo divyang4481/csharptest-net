@@ -54,13 +54,18 @@
     <Optimize>True</Optimize>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="EnvDTE">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="EnvDTE, PublicKeyToken=b03f5f7f11d50a3a">
       <Private>False</Private>
-      <HintPath>.\References\EnvDTE.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Depend\VStudio\EnvDTE.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Build.Engine" />
     <Reference Include="Microsoft.Build.Framework" />
+    <Reference Include="Microsoft.VisualStudio.OLE.Interop, PublicKeyToken=b03f5f7f11d50a3a">
+      <Private>False</Private>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Depend\VStudio\Microsoft.VisualStudio.OLE.Interop.dll</HintPath>
+    </Reference>
     <Reference Include="System">
       <Name>System</Name>
     </Reference>

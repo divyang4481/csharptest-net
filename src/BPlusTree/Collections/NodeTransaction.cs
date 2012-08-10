@@ -1,4 +1,4 @@
-﻿#region Copyright 2011 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2011-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,31 +23,59 @@ namespace CSharpTest.Net.Collections
         class NodeTransaction : IDisposable, ITransactable
         {
             readonly NodeCacheBase _cache;
-#if BPlusTransaction
-            readonly BPlusTransaction _transaction, _implicitTrans;
-#endif
             private NodePin _created, _deleted;
             private NodePin _parentItem;
             bool _disposed, _committed, _reverted;
 
+            private bool _hasLogToken;
+            private TransactionToken _logToken;
+
             public NodeTransaction(NodeCacheBase cache)
             {
                 _cache = cache;
-#if BPlusTransaction
-                if (_cache.Options.TransactionFactory != null)
-                    _transaction = _implicitTrans = _cache.Options.TransactionFactory.BeginTransaction();
-#endif
+                _hasLogToken = false;
+                _logToken = new TransactionToken();
             }
+
+            public void AddValue(TKey key, TValue value)
+            {
+                if(_cache.Options.LogFile != null)
+                {
+                    if (!_hasLogToken)
+                        _logToken = _cache.Options.LogFile.BeginTransaction();
+                    _hasLogToken = true;
+                    _cache.Options.LogFile.AddValue(ref _logToken, key, value);
+                }
+            }
+
+            public void UpdateValue(TKey key, TValue value)
+            {
+                if (_cache.Options.LogFile != null)
+                {
+                    if (!_hasLogToken)
+                        _logToken = _cache.Options.LogFile.BeginTransaction();
+                    _hasLogToken = true;
+                    _cache.Options.LogFile.UpdateValue(ref _logToken, key, value);
+                }
+            }
+
+            public void RemoveValue(TKey key)
+            {
+                if (_cache.Options.LogFile != null)
+                {
+                    if (!_hasLogToken)
+                        _logToken = _cache.Options.LogFile.BeginTransaction();
+                    _hasLogToken = true;
+                    _cache.Options.LogFile.RemoveValue(ref _logToken, key);
+                }
+            }
+
 
             public NodePin Create(NodePin parent, bool isLeaf)
             { return Create(parent.LockType, isLeaf); }
             public NodePin Create(LockType ltype, bool isLeaf)
             {
                 IStorageHandle storeHandle = _cache.Storage.Create();
-#if BPlusTransaction
-                if(_transaction != null)
-                    _transaction.AddCreatedHandle(_cache.Storage, storeHandle);
-#endif
                 NodeHandle handle = new NodeHandle(storeHandle);
                 object refobj;
                 ILockStrategy lck = _cache.CreateLock(handle, out refobj);
@@ -61,10 +89,6 @@ namespace CSharpTest.Net.Collections
             public void Destroy(NodePin pin)
             {
                 Assert(pin.LockType != LockType.Read, "Node is not locked for update");
-#if BPlusTransaction
-                if (_transaction != null)
-                    _transaction.AddDeleteHandle(_cache.Storage, pin.Handle.StoreHandle);
-#endif
                 NodePin.Append(ref _deleted, pin);
                 pin.MarkDeleted();
             }
@@ -73,10 +97,6 @@ namespace CSharpTest.Net.Collections
             {
                 Assert(pin.LockType != LockType.Read, "Node is not locked for update");
                 Assert(_parentItem == null, "An update is already in this operation");
-#if BPlusTransaction
-                if (_transaction != null)
-                    _transaction.AddModifyHandle(_cache.Storage, pin.Handle.StoreHandle);
-#endif
                 _parentItem = pin;
                 pin.BeginUpdate();
                 return pin.Ptr;
@@ -86,21 +106,9 @@ namespace CSharpTest.Net.Collections
             {
                 Assert(_committed == false, "Transaction has already been committed.");
                 //Assert(_parentItem != null || (_created != null && _created.Ptr.IsRoot), "The parent was not updated.");
-
-#if BPlusTransaction
-                if (_transaction != null)
-                    _transaction.JoinTransaction(this);
-
-                if (_implicitTrans != null)
-                    _implicitTrans.Commit();
-                else if (_transaction == null)
-#endif
-                    PerformCommit();
+                PerformCommit();
             }
 
-#if BPlusTransaction
-            void ITransactable.Commit() { PerformCommit(); }
-#endif
             void PerformCommit()
             {
                 if (_disposed) throw new ObjectDisposedException(GetType().FullName);
@@ -162,6 +170,12 @@ namespace CSharpTest.Net.Collections
 
                 if (_deleted != null)
                     _cache.AddVersion(_deleted);
+
+                if (_hasLogToken)
+                {
+                    _hasLogToken = false;
+                    _cache.Options.LogFile.CommitTransaction(ref _logToken);
+                }
             }
 
             public void Rollback()
@@ -195,6 +209,12 @@ namespace CSharpTest.Net.Collections
                     pin.Dispose();
                     pin = (NodePin)pin.Next;
                 }
+
+                if (_hasLogToken)
+                {
+                    _hasLogToken = false;
+                    _cache.Options.LogFile.RollbackTransaction(ref _logToken);
+                }
             }
 
             public void Dispose()
@@ -207,10 +227,6 @@ namespace CSharpTest.Net.Collections
                 finally
                 {
                     _disposed = true;
-#if BPlusTransaction
-                    if (_implicitTrans != null)
-                        _implicitTrans.Dispose();
-#endif
                 }
             }
         }
