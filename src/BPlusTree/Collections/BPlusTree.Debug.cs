@@ -1,4 +1,4 @@
-﻿#region Copyright 2011-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2011-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -205,8 +205,7 @@ namespace CSharpTest.Net.Collections
             }
             for (int i = me.Count; i < me.Size && !me.IsRoot; i++)
             {
-                Assert(me[i].IsNode == false, "Non-cleared element value.");
-                Assert(me[i].IsValue == false, "Non-cleared element value.");
+                Assert(me[i].IsEmpty, "Non-cleared element value.");
                 bool isKeyClass = ReferenceEquals(default(TKey), null);
                 Assert(isKeyClass 
                     ? ReferenceEquals(me[i].Key, null) 

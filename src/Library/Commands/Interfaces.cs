@@ -1,4 +1,4 @@
-﻿#region Copyright 2009-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2009-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,10 +14,11 @@
 #endregion
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace CSharpTest.Net.Commands
 {
-	/// <summary>
+    /// <summary>
 	/// Used for obtaining input directly from user rather than from the std:in stream
 	/// </summary>
 	public delegate Char ReadNextCharacter();
@@ -43,12 +44,22 @@ namespace CSharpTest.Net.Commands
 		/// Lists all the commands that have been added to the interpreter
 		/// </summary>
 		ICommand[] Commands { get; }
-		
+
+        /// <summary>
+        /// Returns true if the command was found and cmd output parameter is set.
+        /// </summary>
+	    bool TryGetCommand(string name, out ICommand cmd);
+
 		/// <summary>
 		/// Lists all the options that have been added to the interpreter, use the set/get commands
 		/// to modify their values.
 		/// </summary>
 		IOption[] Options { get; }
+
+        /// <summary>
+        /// Returns true if the command was found and cmd output parameter is set.
+        /// </summary>
+        bool TryGetOption(string name, out IOption cmd);
 
 		/// <summary> 
 		/// Command to get an option value by name
@@ -65,7 +76,13 @@ namespace CSharpTest.Net.Commands
 		/// as needed.
 		/// </summary>
 		void Run(params string[] arguments);
-		
+
+        /// <summary>
+        /// Run the command whos name is the first argument with the remaining arguments provided to the command
+        /// as needed.
+        /// </summary>
+	    void Run(string[] arguments, TextWriter mapstdout, TextWriter mapstderr, TextReader mapstdin);
+
 		/// <summary>
 		/// Runs each line from the reader until EOF, can be used with Console.In
 		/// </summary>
@@ -80,6 +97,11 @@ namespace CSharpTest.Net.Commands
 		/// Reads a keystroke, not from the std:in stream, rather from the console or ui.
 		/// </summary>
 		ReadNextCharacter ReadNextCharacter { get; }
+
+        /// <summary>
+        /// Returns an HTML document for help on all items (when item == null) or a specific item.
+        /// </summary>
+	    string GetHtmlHelp(string item);
 	}
 
 	/// <summary>
@@ -96,7 +118,9 @@ namespace CSharpTest.Net.Commands
 	/// <summary> A base interface that provides name and display information </summary>
 	public interface IDisplayInfo
 	{
-		/// <summary> Returns the display name of the item </summary>
+        /// <summary> Returns the type this was reflected from, or null if created without reflection </summary>
+	    Type ReflectedType { get; }
+	    /// <summary> Returns the display name of the item </summary>
 		string DisplayName { get; }
 		/// <summary> Returns the name of the item </summary>
 		string[] AllNames { get; }
@@ -105,8 +129,11 @@ namespace CSharpTest.Net.Commands
 		/// <summary> Returns the description of the item </summary>
 		string Description { get; }
 		/// <summary> Returns true if the items should be displayed. </summary>
-		bool Visible { get; }
-
+        bool Visible { get; set; }
+        /// <summary> Dynamically adds an attribute to the item. </summary>
+        void AddAttribute<T>(T attribute) where T : Attribute;
+	    /// <summary> Returns true if the attribute was found </summary>
+	    bool TryGetAttribute<T>(out T found) where T : Attribute;
 		/// <summary> Renders the help information to Console.Out </summary>
 		void Help();
 	}

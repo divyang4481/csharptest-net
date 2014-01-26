@@ -138,4 +138,7 @@
   <data name="FailedToConstructSingleton(System.Type type)" xml:space="preserve">
     <value>The singleton for type {0} threw an excpetion.</value>
   </data>
+  <data name="LurchTableCorruptionException" xml:space="preserve">
+    <value>The LurchTable internal datastructure appears to be corrupted.</value>
+  </data>
 </root>

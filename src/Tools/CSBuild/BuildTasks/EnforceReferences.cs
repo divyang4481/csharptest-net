@@ -1,4 +1,4 @@
-﻿#region Copyright 2010-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2010-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -59,7 +59,7 @@ namespace CSharpTest.Net.CSBuild.BuildTasks
 				resolveType.Add("{HintPathFromItem}");
 				if (!_noprojectrefs)
 					resolveType.Add("{CandidateAssemblyFiles}");
-                if (_framework == FrameworkVersions.v40)
+                if (_framework >= FrameworkVersions.v40)
                     resolveType.Add("{TargetFrameworkDirectory}"); //TODO: unable to avoid this for System.Core?
 
 				project.Properties[MSProp.AssemblySearchPaths] = String.Join(";", resolveType.ToArray());
@@ -94,7 +94,7 @@ namespace CSharpTest.Net.CSBuild.BuildTasks
 
                     if (engine.Projects.TryGetProject(reference, out refProj))
                         refItem.FullPath = refProj.TargetFullName;
-                    else if (_assemblyNameToFile.TryGetValue(reference.Assembly.Name, out refItem))
+                    else if (!String.IsNullOrEmpty(reference.Assembly.Name) && _assemblyNameToFile.TryGetValue(reference.Assembly.Name, out refItem))
                     { }
                     else if (!_strict)
                     { continue; } //ignore unknown reference

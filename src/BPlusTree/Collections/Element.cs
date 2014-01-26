@@ -1,4 +1,4 @@
-﻿#region Copyright 2011-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2011-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -32,7 +32,8 @@ namespace CSharpTest.Net.Collections
             public Element(TKey k, Element value) { Key = k; _child = value._child; }
 
             public bool IsNode { get { return _child is NodeHandle; } }
-            public bool IsValue { get { return _child is TValue; } }
+            public bool IsValue { get { return !(_child is NodeHandle); } } // Fix for null child value
+            public bool IsEmpty { get { return ReferenceEquals(null, _child); } }
             public NodeHandle ChildNode { get { return (NodeHandle)_child; } }
             public TValue Payload { get { return (TValue)_child; } }
 

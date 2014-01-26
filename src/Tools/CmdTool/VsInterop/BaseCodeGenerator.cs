@@ -1,4 +1,4 @@
-#region Copyright 2009-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+#region Copyright 2009-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -151,7 +151,7 @@ namespace CSharpTest.Net.CustomTool.VsInterop
 
         private static IEnumerable<string> GetRegistryKeysToAdd()
         {
-            string[] versions = new string[] {"8.0", "9.0", "10.0"};
+            string[] versions = new string[] {"8.0", "9.0", "10.0", "11.0"};
             string[] languages = new string[]
                                      {
                                          /* CSharp */ "{FAE04EC1-301F-11D3-BF4B-00C04F79EFBC}",

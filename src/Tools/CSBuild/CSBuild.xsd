@@ -214,6 +214,7 @@
       <xs:enumeration value="v3.0" />
       <xs:enumeration value="v3.5" />
       <xs:enumeration value="v4.0" />
+      <xs:enumeration value="v4.5" />
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name="BuildPlatforms">

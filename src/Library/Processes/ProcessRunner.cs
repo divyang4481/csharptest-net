@@ -1,4 +1,4 @@
-﻿#region Copyright 2009-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2009-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -72,10 +72,15 @@ namespace CSharpTest.Net.Processes
 			if(w != null) w.Dispose();
 		}
 
+        /// <summary>
+        /// Returns the remote process Id
+        /// </summary>
+        public int PID { get { return _running.Id; } }
+
     	/// <summary> Returns a debug-view string of process/arguments to execute </summary>
 		public override string ToString()
 		{
-			return String.Format("{0} {1}", _executable, ArgumentList.Join(_arguments));
+			return String.Format("{0} {1}", _executable, ArgumentList.EscapeArguments(_arguments));
 		}
 
 		/// <summary> Notifies caller of writes to the std::err or std::out </summary>
@@ -242,7 +247,7 @@ namespace CSharpTest.Net.Processes
 			_stdIn = null;
 			_running = new Process();
 
-			string stringArgs = ArgumentList.Join(arguments);
+			string stringArgs = ArgumentList.EscapeArguments(arguments);
 			ProcessStartInfo psi = new ProcessStartInfo(_executable, stringArgs);
 			psi.WorkingDirectory = this.WorkingDirectory;
 
@@ -321,7 +326,8 @@ namespace CSharpTest.Net.Processes
 		void process_Exited(object o, EventArgs e)
 		{
 			Trace.TraceInformation("EXIT: {0}", _running.StartInfo.FileName);
-			_exitCode = _running.ExitCode;
+            try { _exitCode = _running.ExitCode; }
+            catch (InvalidOperationException) { _exitCode = -1; }
 			TryRaiseExitedEvent(_mreProcessExit);
 		}
 

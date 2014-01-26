@@ -1,4 +1,4 @@
-﻿#region Copyright 2009-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2009-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -79,13 +79,26 @@ namespace CSharpTest.Net.Commands
 			{ Help(); return; }
 
 			//translate ordinal referenced names
+		    Argument last = null;
 			for (int i = 0; i < _arguments.Length && args.Unnamed.Count > 0; i++)
 			{
-				args.Add(_arguments[i].DisplayName, args.Unnamed[0]);
+			    if (_arguments[i].Type == typeof (ICommandInterpreter))
+			        break;
+			    last = _arguments[i];
+                args.Add(last.DisplayName, args.Unnamed[0]);
 				args.Unnamed.RemoveAt(0);
 			}
 
-			List<object> invokeArgs = new List<object>();
+            if (last != null && args.Unnamed.Count > 0 && last.Type.IsArray)
+		    {
+                for (int i = 0; i < _arguments.Length && args.Unnamed.Count > 0; i++)
+                {
+                    args.Add(last.DisplayName, args.Unnamed[0]);
+                    args.Unnamed.RemoveAt(0);
+                }
+		    }
+
+		    List<object> invokeArgs = new List<object>();
 			foreach (Argument arg in _arguments)
 			{
 				object argValue = arg.GetArgumentValue(interpreter, args, arguments);

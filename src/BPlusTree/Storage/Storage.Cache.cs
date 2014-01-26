@@ -1,4 +1,4 @@
-﻿#region Copyright 2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2012-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,64 +14,94 @@
 #endregion
 using System;
 using System.Collections.Generic;
-using System.Threading;
-using CSharpTest.Net.Storage;
 using CSharpTest.Net.Interfaces;
 using CSharpTest.Net.Serialization;
-using CSharpTest.Net.Synchronization;
+using System.Threading;
 
 namespace CSharpTest.Net.Collections
 {
     partial class BPlusTree<TKey, TValue>
     {
-        class StorageCache : INodeStorage, ITransactable
+        class StorageCache : INodeStorage, ITransactable, INodeStoreWithCount
         {
-            enum StoreAction { None, Write }
-            class StorageInfo
-            {
-                private readonly IStorageHandle _handle;
-                public StorageInfo(IStorageHandle handle, Node node)
-                {
-                    _handle = handle;
-                    Node = node;
-                    Action = StoreAction.None;
-                    RefCount = 0;
-                }
-
-                public int RefCount;
-                public Node Node;
-                public StoreAction Action;
-                public IStorageHandle Handle { get { return _handle; } }
-            }
-
             private readonly INodeStorage _store;
-            private readonly int _sizeLimit;
-            private ILockStrategy _lock;
-            private Dictionary<IStorageHandle, StorageInfo> _cache;
-            private Queue<IStorageHandle> _ordered;
+            private readonly LurchTable<IStorageHandle, object> _cache, _dirty;
+
+            private readonly ThreadStart _writeBehindFunc;
+            private IAsyncResult _asyncWriteBehind;
+            private readonly int _asyncThreshold;
 
             ISerializer<Node> _serializer;
 
             public StorageCache(INodeStorage store, int sizeLimit)
             {
+                _asyncThreshold = 50;
+                _writeBehindFunc = Flush;
+                _asyncWriteBehind = null;
+
                 _store = store;
-                _sizeLimit = sizeLimit;
-                _lock = new SimpleReadWriteLocking();
-                _cache = new Dictionary<IStorageHandle, StorageInfo>();
-                _ordered = new Queue<IStorageHandle>();
+                _cache = new LurchTable<IStorageHandle, object>(  LurchTableOrder.Access, sizeLimit, 1000000, sizeLimit >> 4, 1000, EqualityComparer<IStorageHandle>.Default);
+                _dirty = new LurchTable<IStorageHandle, object>(LurchTableOrder.Modified, sizeLimit, 1000000, sizeLimit >> 4, 1000, EqualityComparer<IStorageHandle>.Default);
+                _dirty.ItemRemoved += OnItemRemoved;
             }
 
             public void Dispose()
             {
-                _store.Dispose();
+                using(_cache)
+                {
+                    _dirty.ItemRemoved -= OnItemRemoved;
+                    ClearCache();
+                    _store.Dispose();
+                }
+            }
+
+            private void ClearCache()
+            {
+                lock (_writeBehindFunc)
+                {
+                    CompleteAsync();
+                    _cache.Clear();
+                    _dirty.Clear();
+                }
+            }
+
+            public int Count
+            {
+                get
+                {
+                    INodeStoreWithCount tstore = _store as INodeStoreWithCount;
+                    return (tstore != null) ? tstore.Count : -1;
+                }
+                set
+                {
+                    INodeStoreWithCount tstore = _store as INodeStoreWithCount;
+                    if (tstore != null)
+                        tstore.Count = value;
+                }
             }
 
             public void Commit()
             {
-                Flush();
-                ITransactable tstore = _store as ITransactable;
-                if (tstore != null)
-                    tstore.Commit();
+                lock (_writeBehindFunc)
+                {
+                    CompleteAsync();
+
+                    Flush();
+
+                    ITransactable tstore = _store as ITransactable;
+                    if (tstore != null)
+                        tstore.Commit();
+                }
+            }
+
+            private void CompleteAsync()
+            {
+                var completion = _asyncWriteBehind;
+                if (completion != null && !completion.IsCompleted)
+                {
+                    _asyncWriteBehind = null;
+                    _writeBehindFunc.EndInvoke(completion);
+                }
             }
 
             public void Rollback()
@@ -79,23 +109,17 @@ namespace CSharpTest.Net.Collections
                 ITransactable tstore = _store as ITransactable;
                 if (tstore != null)
                 {
-                    using (_lock.Write())
-                    {
-                        _ordered.Clear();
-                        _cache.Clear();
-                        tstore.Rollback();
-                    }
+                    _serializer = null;
+                    ClearCache();
+                    tstore.Rollback();
                 }
             }
 
             public void Reset()
             {
-                using (_lock.Write())
-                {
-                    _ordered.Clear();
-                    _cache.Clear();
-                    _store.Reset();
-                }
+                _serializer = null;
+                ClearCache();
+                _store.Reset();
             }
 
             public IStorageHandle OpenRoot(out bool isNew)
@@ -108,122 +132,115 @@ namespace CSharpTest.Net.Collections
                 return _store.Create();
             }
 
-            private void Flush()
+            struct FetchFromStore<TNode> : ICreateOrUpdateValue<IStorageHandle, object>
             {
-                using (_lock.Write())
-                {
-                    Flush(0);
-                    _ordered.Clear();
-                    foreach (StorageInfo item in _cache.Values)
-                    {
-                        if (item.Action == StoreAction.Write)
-                            _store.Update(item.Handle, _serializer, item.Node);
-                    }
-                    _cache.Clear();
-                }
-            }
+                public INodeStorage Storage;
+                public ISerializer<TNode> Serializer;
+                public LurchTable<IStorageHandle, object> DirtyCache;
+                public TNode Value;
+                public bool Success;
 
-            private void Flush(int maxBacklog)
-            {
-                while (_cache.Count >= maxBacklog && _ordered.Count > 0)
+                public bool CreateValue(IStorageHandle key, out object value)
                 {
-                    IStorageHandle hremove = _ordered.Dequeue();
-                    StorageInfo remove;
-                    if (!_cache.TryGetValue(hremove, out remove))
-                        continue;
-                    int refCount = Interlocked.Decrement(ref remove.RefCount);
-                    if (refCount == 0)
+                    if (DirtyCache.TryGetValue(key, out value) && value != null)
                     {
-                        _cache.Remove(hremove);
-                        if (remove.Action == StoreAction.Write)
-                            _store.Update(remove.Handle, _serializer, remove.Node);
+                        Success = true;
+                        Value = (TNode)value;
+                        return true;
                     }
-                }
-            }
 
-            private void CacheAdd(IStorageHandle handle, StorageInfo storageInfo)
-            {
-                Flush(_sizeLimit);
-                _cache.Add(handle, storageInfo);
+                    Success = Storage.TryGetNode(key, out Value, Serializer);
+                    if (Success)
+                    {
+                        value = Value;
+                        return true;
+                    }
+
+                    value = null;
+                    return false;
+                }
+                public bool UpdateValue(IStorageHandle key, ref object value)
+                {
+                    Success = value != null;
+                    Value = (TNode)value;
+                    return false;
+                }
             }
 
             public bool TryGetNode<TNode>(IStorageHandle handle, out TNode tnode, ISerializer<TNode> serializer)
             {
                 if (_serializer == null) _serializer = (ISerializer<Node>) serializer;
-                StorageInfo info;
-                Node node;
 
-                using (_lock.Read())
+                var fetch = new FetchFromStore<TNode>
+                                {
+                                    DirtyCache = _dirty,
+                                    Storage = _store, 
+                                    Serializer = serializer,
+                                };
+
+                _cache.AddOrUpdate(handle, ref fetch);
+                if (fetch.Success)
                 {
-                    if (_cache.TryGetValue(handle, out info))
-                    {
-                        tnode = (TNode)(object)info.Node;
-                        return true;
-                    }
+                    tnode = fetch.Value;
+                    return true;
                 }
-                using (_lock.Write())
-                {
-                    if (_cache.TryGetValue(handle, out info))
-                    {
-                        tnode = (TNode) (object) info.Node;
-                        Interlocked.Increment(ref info.RefCount);
-                        _ordered.Enqueue(handle);
-                        return true;
-                    }
-
-                    if (!_store.TryGetNode(handle, out tnode, serializer))
-                        return false;
-                    node = (Node)(object)tnode;
-                    CacheAdd(handle, info = new StorageInfo(handle, node));
-
-                    tnode = (TNode)(object)info.Node;
-                    Interlocked.Increment(ref info.RefCount);
-                    _ordered.Enqueue(handle);
-                }
-                return true;
+                tnode = default(TNode);
+                return false;
             }
 
             public void Update<TNode>(IStorageHandle handle, ISerializer<TNode> serializer, TNode tnode)
             {
                 if (_serializer == null) _serializer = (ISerializer<Node>)serializer;
-                StorageInfo info;
-                Node node = (Node)(object)tnode;
 
-                using (_lock.Write())
+                _cache[handle] = tnode;
+                _dirty[handle] = tnode;
+
+                var completion = _asyncWriteBehind;
+                if (_dirty.Count > _asyncThreshold && (completion == null || completion.IsCompleted))
                 {
-                    if (_cache.TryGetValue(handle, out info))
+                    lock (_writeBehindFunc)
                     {
-                        Interlocked.Increment(ref info.RefCount);
-                        info.Action = StoreAction.Write;
-                        info.Node = node;
-                        Interlocked.Increment(ref info.RefCount);
-                        _ordered.Enqueue(handle);
-                        return;
+                        if (completion == null || completion.IsCompleted)
+                            _asyncWriteBehind = _writeBehindFunc.BeginInvoke(null, null);
                     }
-
-                    CacheAdd(handle, info = new StorageInfo(handle, node));
-                    info.Action = StoreAction.Write;
-                    info.Node = node;
-                    Interlocked.Increment(ref info.RefCount);
-                    _ordered.Enqueue(handle);
                 }
             }
 
             public void Destroy(IStorageHandle handle)
             {
-                using (_lock.Write())
-                {
-                    _cache.Remove(handle);
-                }
+                _dirty[handle] = null;
+                _dirty.Remove(handle);
+                _cache.Remove(handle);
                 _store.Destroy(handle);
             }
 
-            public IStorageHandle ReadFrom(System.IO.Stream stream)
+            void OnItemRemoved(KeyValuePair<IStorageHandle, object> item)
+            {
+                var ser = _serializer;
+                if (ser != null && item.Value != null)
+                    _store.Update(item.Key, ser, (Node)item.Value);
+            }
+
+            private void Flush()
+            {
+                try
+                {
+                    KeyValuePair<IStorageHandle, object> value;
+                    while (_dirty.TryDequeue(out value))
+                    { }
+                }
+                finally
+                {
+                    _asyncWriteBehind = null;
+                }
+            }
+
+            IStorageHandle ISerializer<IStorageHandle>.ReadFrom(System.IO.Stream stream)
             {
                 return _store.ReadFrom(stream);
             }
 
-            public void WriteTo(IStorageHandle value, System.IO.Stream stream)
+            void ISerializer<IStorageHandle>.WriteTo(IStorageHandle value, System.IO.Stream stream)
             {
                 _store.WriteTo(value, stream);
             }

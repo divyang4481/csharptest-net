@@ -1,4 +1,4 @@
-﻿#region Copyright 2011-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2011-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -213,7 +213,7 @@ namespace CSharpTest.Net.IO
         FPut _fput;
         FGet _fget;
 
-        int _prevFreeBlock, _prevFreeHandle;
+        int _firstFreeBlock, _prevFreeBlock, _prevFreeHandle;
         OrdinalList _freeHandles;
         OrdinalList _freeBlocks;
         OrdinalList _reservedBlocks;
@@ -402,7 +402,7 @@ namespace CSharpTest.Net.IO
 
                     foreach (int ifree in _reservedBlocks)
                     {
-                        _prevFreeBlock = Math.Min(_prevFreeBlock, ifree);
+                        _firstFreeBlock = Math.Min(_firstFreeBlock, ifree);
                         break;
                     }
                     _reservedBlocks = _freeBlocks.Invert((_sections.Length*BlocksPerSection) - 1);
@@ -483,11 +483,11 @@ namespace CSharpTest.Net.IO
             {
                 _reservedBlocks = usedBlocks;
             }
-            _prevFreeBlock = _prevFreeHandle = 0;
+            _firstFreeBlock = _prevFreeBlock = _prevFreeHandle = 0;
             return true;
         }
 
-        private void AddSection()
+        private int AddSection()
         {
             FileSection n = new FileSection(_sections.Length, BlockSize);
             lock (_sync)
@@ -517,44 +517,63 @@ namespace CSharpTest.Net.IO
             _sections = grow;
             _freeHandles = freehandles;
             _freeBlocks = freeblocks;
+            return firstFree;
         }
 
         private uint TakeBlocks(int blocksNeeded)
         {
             lock (_sync)
             {
+                bool rescan = false;
                 bool resized = false;
+                int startingFrom = _prevFreeBlock;
+                int endingBefore = int.MaxValue;
                 while (true)
                 {
                     int found = 0;
                     int last = int.MinValue;
                     int first = int.MaxValue;
-                    foreach (int free in _freeBlocks.EnumerateFrom(_prevFreeBlock))
+                    foreach (int free in _freeBlocks.EnumerateRange(startingFrom, endingBefore))
                     {
-                        if(_reservedBlocks.Contains(free))
+                        if (_reservedBlocks.Contains(free))
                             continue;
+
+                        if (found == 0)
+                        {
+                            _prevFreeBlock = free;
+                            if (!resized && rescan)
+                                _firstFreeBlock = free;
+                        }
 
                         first = Math.Min(first, free);
                         found = (last + 1 != free) ? 1 : found + 1;
                         last = free;
                         if (found == blocksNeeded)
                         {
-                            _prevFreeBlock = first;
-
                             int start = free - (blocksNeeded - 1);
                             for (int i = start; i <= free; i++)
                                 _freeBlocks.Remove(i);
 
-                            uint blockId = (uint)start;
-                            blockId |= ((uint)Math.Min(16, blocksNeeded) - 1 << 28) & 0xF0000000u;
+                            uint blockId = (uint) start;
+                            blockId |= ((uint) Math.Min(16, blocksNeeded) - 1 << 28) & 0xF0000000u;
                             return blockId;
                         }
                     }
                     if (resized)
                         throw new ArgumentOutOfRangeException("length");
 
-                    resized = true;
-                    AddSection();
+                    if (!rescan && _firstFreeBlock < startingFrom)
+                    {
+                        rescan = true;
+                        endingBefore = startingFrom + blocksNeeded - 1;
+                        startingFrom = _firstFreeBlock;
+                    }
+                    else
+                    {
+                        resized = true;
+                        startingFrom = AddSection();
+                        endingBefore = int.MaxValue;
+                    }
                 }
             }
         }
@@ -564,7 +583,7 @@ namespace CSharpTest.Net.IO
             int free = (block.Section * BlocksPerSection) + block.Offset;
             if (free > 0)
             {
-                _prevFreeBlock = Math.Min(_prevFreeBlock, free);
+                _firstFreeBlock = Math.Min(_firstFreeBlock, free);
 
                 if(block.ActualBlocks == 16)
                 {
@@ -707,7 +726,7 @@ namespace CSharpTest.Net.IO
                 _freeBlocks.Clear();
                 _freeHandles.Clear();
                 _reservedBlocks.Clear();
-                _prevFreeBlock = _prevFreeHandle = 0;
+                _firstFreeBlock = _prevFreeBlock = _prevFreeHandle = 0;
 
                 _sections = new FileSection[0];
                 AddSection();
@@ -928,7 +947,7 @@ namespace CSharpTest.Net.IO
 
                         if (block.Count == 16)
                         {
-                            long position = BlocksPerSection*BlockSize*block.Section;
+                            long position = (long)BlocksPerSection*BlockSize*block.Section;
                             position += BlockSize*block.Offset;
                             byte[] header = new byte[BlockHeaderSize];
                             if (BlockHeaderSize != fget(position, header, 0, header.Length))

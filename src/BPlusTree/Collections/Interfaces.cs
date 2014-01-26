@@ -1,4 +1,4 @@
-﻿#region Copyright 2011-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2011-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -41,5 +41,15 @@ namespace CSharpTest.Net.Collections
 
         /// <summary> Updates the node of the specified handle with the instance given </summary>
         void Update<TNode>(IStorageHandle handle, ISerializer<TNode> serializer, TNode node);
+    }
+
+    /// <summary> An optional interface that allows storage provides to persist the record count </summary>
+    public interface INodeStoreWithCount : INodeStorage, Interfaces.ITransactable
+    {
+        /// <summary>
+        /// Used to retrieve the current record count after opening a store, -1 indicates an invalid entry.
+        /// Prior to Commit() the count will be set to the actual record count.
+        /// </summary>
+        int Count { get; set; }
     }
 }

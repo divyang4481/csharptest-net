@@ -24,3 +24,5 @@ Release
 src\Packaging
 src\TestResult.xml
 src\BPlusTree\README.htm
+*.sln.DotSettings
+src/CSBuild*

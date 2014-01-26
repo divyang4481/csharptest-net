@@ -57,6 +57,10 @@
     <Compile Include="..\..\BPlusTree\BPlusTree.Test\TestDictionary.cs">
       <Link>TestDictionary.cs</Link>
     </Compile>
+    <Compile Include="TestCrc64.cs" />
+    <Compile Include="TestDbGuid.cs" />
+    <Compile Include="TestLurchTable.cs" />
+    <Compile Include="TestLurchTableThreading.cs" />
     <Compile Include="TestTransactedCompoundFile.cs" />
     <Compile Include="TestBackgroundWriter.cs" />
     <Compile Include="TestBTreeList.cs" />

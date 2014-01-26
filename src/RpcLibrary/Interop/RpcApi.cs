@@ -1,4 +1,4 @@
-﻿#region Copyright 2010-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2010-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -37,43 +37,42 @@ namespace CSharpTest.Net.RpcLibrary.Interop
 
             if (Is64BitProcess)
             {
-                //Same as 32-bit except: [8] = 8; [32] = 24;
-                TYPE_FORMAT = new byte[39]
-                                  {
-                                      0, 0, 27, 0, 1, 0, 40, 0, 8, 0, 1, 0, 2, 91, 17, 12, 8, 92, 17, 20, 2, 0, 18, 0, 2
-                                      , 0, 27, 0,
-                                      1, 0,
-                                      40, 84, 24, 0, 1, 0, 2, 91, 0
-                                  };
-                //Very different from 32-bit:
-                FUNC_FORMAT = new byte[61]
-                                  {
-                                      0, 72, 0, 0, 0, 0, 0, 0, 48, 0, 50, 0, 0, 0, 8, 0, 36, 0, 71, 5, 10, 7, 1, 0, 1, 0
-                                      , 0, 0, 0, 0
-                                      , 72,
-                                      0, 8, 0, 8, 0, 11, 0, 16, 0, 2, 0, 80, 33, 24, 0, 8, 0, 19, 32, 32, 0, 18, 0, 112,
-                                      0, 40, 0,
-                                      16, 0,
-                                      0
-                                  };
+                TYPE_FORMAT = new byte[]
+                    {
+                        0x00, 0x00, 0x1b, 0x00, 0x01, 0x00, 0x28, 0x00, 0x08, 0x00,
+                        0x01, 0x00, 0x01, 0x5b, 0x11, 0x0c, 0x08, 0x5c, 0x11, 0x14,
+                        0x02, 0x00, 0x12, 0x00, 0x02, 0x00, 0x1b, 0x00, 0x01, 0x00,
+                        0x28, 0x54, 0x18, 0x00, 0x01, 0x00, 0x01, 0x5b, 0x00
+                    };
+                FUNC_FORMAT = new byte[]
+                    {
+                        0x00, 0x68, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x30, 0x00,
+                        0x32, 0x00, 0x00, 0x00, 0x08, 0x00, 0x24, 0x00, 0x47, 0x05,
+                        0x0a, 0x07, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00,
+                        0x48, 0x00, 0x08, 0x00, 0x08, 0x00, 0x0b, 0x00, 0x10, 0x00,
+                        0x02, 0x00, 0x50, 0x21, 0x18, 0x00, 0x08, 0x00, 0x13, 0x20,
+                        0x20, 0x00, 0x12, 0x00, 0x70, 0x00, 0x28, 0x00, 0x10, 0x00,
+                        0x00
+                    };
             }
             else
             {
-                TYPE_FORMAT = new byte[39]
-                                  {
-                                      0, 0, 27, 0, 1, 0, 40, 0, 4, 0, 1, 0, 2, 91, 17, 12, 8, 92, 17, 20, 2, 0, 18, 0, 2
-                                      , 0, 27, 0,
-                                      1, 0,
-                                      40, 84, 12, 0, 1, 0, 2, 91, 0
-                                  };
-                FUNC_FORMAT = new byte[59]
-                                  {
-                                      0, /*104*/72, 0, 0, 0, 0, 0, 0, 24, 0, 50, 0, 0, 0, 8, 0, 36, 0, 71, 5, 8, 7, 1, 0
-                                      , 1, 0, 0, 0
-                                      , 72, 0, 4,
-                                      0, 8, 0, 11, 0, 8, 0, 2, 0, 80, 33, 12, 0, 8, 0, 19, 32, 16, 0, 18, 0, 112, 0, 20,
-                                      0, 16, 0, 0
-                                  };
+                TYPE_FORMAT = new byte[]
+                    {
+                        0x00, 0x00, 0x1b, 0x00, 0x01, 0x00, 0x28, 0x00, 0x04, 0x00,
+                        0x01, 0x00, 0x01, 0x5b, 0x11, 0x0c, 0x08, 0x5c, 0x11, 0x14,
+                        0x02, 0x00, 0x12, 0x00, 0x02, 0x00, 0x1b, 0x00, 0x01, 0x00,
+                        0x28, 0x54, 0x0c, 0x00, 0x01, 0x00, 0x01, 0x5b, 0x00
+                    };
+                FUNC_FORMAT = new byte[]
+                    {
+                        0x00, 0x68, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x18, 0x00,
+                        0x32, 0x00, 0x00, 0x00, 0x08, 0x00, 0x24, 0x00, 0x47, 0x05,
+                        0x08, 0x07, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x48, 0x00,
+                        0x04, 0x00, 0x08, 0x00, 0x0b, 0x00, 0x08, 0x00, 0x02, 0x00,
+                        0x50, 0x21, 0x0c, 0x00, 0x08, 0x00, 0x13, 0x20, 0x10, 0x00,
+                        0x12, 0x00, 0x70, 0x00, 0x14, 0x00, 0x10, 0x00, 0x00
+                    };
             }
             FUNC_FORMAT_PTR = new Ptr<byte[]>(FUNC_FORMAT);
         }

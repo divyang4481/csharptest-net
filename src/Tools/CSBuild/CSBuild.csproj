@@ -108,6 +108,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <EmbeddedResource Include="v45.config" />
     <EmbeddedResource Include="v40.config" />
     <EmbeddedResource Include="v30.config" />
     <EmbeddedResource Include="v20.config" />

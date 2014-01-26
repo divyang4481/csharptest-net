@@ -1,4 +1,4 @@
-﻿#region Copyright 2010-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2010-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -61,6 +61,8 @@ namespace CSharpTest.Net.CSBuild.Build
         v35 = 35,
         [XmlEnum("v4.0")]
         v40 = 40,
+        [XmlEnum("v4.5")]
+        v45 = 45,
     }
 
     public enum BuildPlatforms

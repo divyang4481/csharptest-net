@@ -1,4 +1,4 @@
-﻿#region Copyright 2010-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2010-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -106,6 +106,7 @@ namespace CSharpTest.Net.RpcLibrary
             {
                 protect = RpcProtectionLevel.RPC_C_PROTECT_LEVEL_DEFAULT;
                 types = new RpcAuthentication[] { RpcAuthentication.RPC_C_AUTHN_NONE };
+                credentials = null;
             }
 
             AuthenticateAs(serverPrincipalName, credentials, protect, types);
@@ -272,7 +273,7 @@ namespace CSharpTest.Net.RpcLibrary
                 pStub =
                     handle.CreatePtr(new MIDL_STUB_DESC(handle, handle.Pin(new RPC_CLIENT_INTERFACE(iid)),
                                                         RpcApi.TYPE_FORMAT,
-                                                        true));
+                                                        false));
             }
             int szResponse = 0;
             IntPtr response, result;

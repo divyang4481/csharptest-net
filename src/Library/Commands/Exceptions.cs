@@ -1,4 +1,4 @@
-﻿#region Copyright 2009-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2009-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,11 +29,17 @@ namespace CSharpTest.Net.Commands
 		/// </summary>
 		public InterpreterException(string text, params object[] format)
 			: base(format.Length == 0 ? text : String.Format(text, format))
-		{ }
+        { }
+        /// <summary>
+        /// Constructs an exception
+        /// </summary>
+        public InterpreterException(string text, Exception innerException)
+            : base(text, innerException)
+        { }
 		/// <summary>
 		/// Constructs an exception durring deserialization
 		/// </summary>
-		public InterpreterException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
+		protected InterpreterException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
 			: base(info, context)
 		{ }
 		/// <summary>

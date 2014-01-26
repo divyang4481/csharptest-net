@@ -1,4 +1,4 @@
-﻿#region Copyright 2009-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2009-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -105,7 +105,15 @@ namespace CSharpTest.Net.Commands
 		/// <summary> Returns the visibility of the command </summary>
 		public virtual bool Visible { get { return _visible; } set { _visible = value; } }
 
-		void IDisplayInfo.Help() { }
+        Type IDisplayInfo.ReflectedType { get { return null; } }
+        void IDisplayInfo.AddAttribute<T>(T attribute) { }
+	    bool IDisplayInfo.TryGetAttribute<T>(out T found)
+	    {
+	        found = null;
+	        return false;
+	    }
+
+        void IDisplayInfo.Help() { }
 	}
 
 	/// <summary> Contains display info and a default value </summary>

@@ -1,4 +1,4 @@
-﻿#region Copyright 2010-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2010-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -63,9 +63,12 @@ namespace CSharpTest.Net.CSBuild.Build
 			Version fullVersion = engine.GetType().Assembly.GetName().Version;
 			string version = fullVersion.ToString(2);
 			if (toolsVersion == FrameworkVersions.v30 && version == "2.0")
-				version = "3.0";//these use the same build runtime
+				version = "3.0";//these use the same build runtime: 2.0/3.0
+		    if (toolsVersion == FrameworkVersions.v45 && version == "4.0")
+                version = "4.5";//these use the same build runtime: 4.0/4.5
+
 			if (version.Replace(".", "") != toolsVersion.ToString().TrimStart('v'))
-				throw new ApplicationException(String.Format("Expected runtime {0}, found {1}.", toolsVersion, fullVersion));
+                throw new ApplicationException(String.Format("Expected runtime {0}, found ({1}){2}.", toolsVersion, version, fullVersion));
 
             Log.Verbose("Using build engine: {0}", engine.GetType().Assembly.FullName);
 

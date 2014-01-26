@@ -1,4 +1,4 @@
-﻿#region Copyright 2009-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2009-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Threading;
 using CSharpTest.Net.Utils;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -65,7 +66,10 @@ namespace CSharpTest.Net.Commands
 				Command.Make(this, this.GetType().GetMethod("Help", new Type[] { typeof(string), typeof(bool) } )),
 				Option.Make(this, this.GetType().GetProperty("ErrorLevel")),
 				Option.Make(this, this.GetType().GetProperty("Prompt"))
-				);
+			);
+
+		    if (System.Net.HttpListener.IsSupported)
+		        _buildInCommands.AddRange(Command.Make(this, this.GetType().GetMethod("HostHttp")));
 			
 			_buildInCommands.Add(this, defaultCmds);
 
@@ -214,7 +218,24 @@ namespace CSharpTest.Net.Commands
 				return filters.ToArray();
 			}
 		}
-		/// <summary> Command to get an option value </summary>
+
+	    /// <summary>
+	    /// Returns true if the command was found and cmd output parameter is set.
+	    /// </summary>
+	    public bool TryGetCommand(string name, out ICommand cmd)
+	    {
+	        return _commands.TryGetValue(name, out cmd);
+	    }
+
+	    /// <summary>
+	    /// Returns true if the command was found and cmd output parameter is set.
+	    /// </summary>
+	    public bool TryGetOption(string name, out IOption cmd)
+        {
+            return _options.TryGetValue(name, out cmd);
+        }
+
+	    /// <summary> Command to get an option value </summary>
 		[Command(Category = "Built-in", Description = "Gets a global option by name")]
 		public object Get(string property)
 		{
@@ -344,32 +365,38 @@ namespace CSharpTest.Net.Commands
 		/// </summary>
 		public void Run(params string[] arguments)
 		{
-			TextWriter stdout = Console.Out;
-			TextWriter stderr = Console.Error;
-			TextReader stdin = Console.In;
-			try
-			{
-				try
-				{
-					GetHead().Next(Check.NotNull(arguments));
-				}
-				finally
-				{
-					if (!Object.ReferenceEquals(stdout, Console.Out))
-						Console.SetOut(stdout);
-					if (!Object.ReferenceEquals(stderr, Console.Error))
-						Console.SetError(stderr);
-					if (!Object.ReferenceEquals(stdin, Console.In))
-						Console.SetIn(stdin);
-				}
-			}
-			catch (System.Threading.ThreadAbortException) { throw; }
-			catch (QuitException) { throw; }
-			catch (Exception e)
-			{
-				OnError(e);
-			}
+            try
+            {
+                GetHead().Next(Check.NotNull(arguments));
+            }
+            catch (System.Threading.ThreadAbortException) { throw; }
+            catch (QuitException) { throw; }
+            catch (Exception e)
+            {
+                OnError(e);
+            }
 		}
+
+        /// <summary> 
+        /// Run the command whos name is the first argument with the remaining arguments provided to the command
+        /// as needed.
+        /// </summary>
+        public void Run(string[] arguments, TextWriter mapstdout, TextWriter mapstderr, TextReader mapstdin)
+        {
+            TextWriter stdout = ConsoleOutput.Capture(mapstdout);
+            TextWriter stderr = ConsoleError.Capture(mapstderr);
+            TextReader stdin = ConsoleInput.Capture(mapstdin);
+            try
+            {
+                GetHead().Next(Check.NotNull(arguments));
+            }
+            finally
+            {
+                ConsoleOutput.Restore(mapstdout, stdout);
+                ConsoleError.Restore(mapstderr, stderr);
+                ConsoleInput.Restore(mapstdin, stdin);
+            }
+        }
 
 		/// <summary>
 		/// Runs each line from the reader until EOF, can be used with Console.In
@@ -444,6 +471,199 @@ namespace CSharpTest.Net.Commands
 			get { return _fnNextCh; }
 			set { _fnNextCh = Check.NotNull(value); }
 		}
-	}
+
+        /// <summary>
+        /// Adds the specified attribute to every command argument by the given name.
+        /// </summary>
+	    public void AddGlobalArgumentAttribute(string argumentName, Attribute attribute)
+	    {
+	        foreach (var command in _commands.Values)
+	        {
+	            foreach (var argument in command.Arguments)
+	            {
+	                if (argument.DisplayName == argumentName)
+	                    argument.AddAttribute(attribute);
+	            }
+	        }
+	    }
+
+        #region ConsoleWriter/ConsoleOutput/ConsoleError/ConsoleInput
+        private abstract class ConsoleWriter : TextWriter
+        {
+            protected abstract TextWriter Writer { get; }
+            public override void Close() { Writer.Close(); }
+            protected override void Dispose(bool disposing) { }
+            public override void Flush() { Writer.Flush(); }
+            public override void Write(char value) { Writer.Write(value); }
+            public override void Write(char[] buffer) { Writer.Write(buffer); }
+            public override void Write(char[] buffer, int index, int count) { Writer.Write(buffer, index, count); }
+            public override void Write(string value) { Writer.Write(value); }
+            public override System.Text.Encoding Encoding { get { return Writer.Encoding; } }
+        }
+        private sealed class ConsoleOutput : ConsoleWriter
+        {
+            private static readonly ConsoleOutput _instance = new ConsoleOutput();
+            private static TextWriter _default, _expected;
+            private static TextWriter _global;
+            private static int _referenceCount = 0;
+            [ThreadStatic]
+            private static TextWriter _writer;
+            public static TextWriter Capture(TextWriter output)
+            {
+                if (output == null) return null;
+                lock (typeof (Console))
+                {
+                    if (1 == Interlocked.Increment(ref _referenceCount))
+                    {
+                        _default = Console.Out;
+                        Console.SetOut(_instance);
+                        _expected = Console.Out;
+                    }
+                    else if (!ReferenceEquals(_expected, Console.Out))
+                    {
+                        Console.SetOut(_instance);
+                        _expected = Console.Out;
+                    }
+
+                    Interlocked.Exchange(ref _global, output);
+                    return Interlocked.Exchange(ref _writer, output);
+                }
+            }
+            public static void Restore(TextWriter replaced, TextWriter original)
+            {
+                if (replaced == null) return;
+                lock (typeof (Console))
+                {
+                    Interlocked.CompareExchange(ref _writer, original, replaced);
+                    Interlocked.CompareExchange(ref _global, original, replaced);
+
+                    if (0 == Interlocked.Decrement(ref _referenceCount))
+                    {
+                        Console.SetOut(_default);
+                        _default = null;
+                    }
+                    else if (!ReferenceEquals(_expected, Console.Out))
+                    {
+                        Console.SetOut(_instance);
+                        _expected = Console.Out;
+                    }
+                }
+            }
+            protected override TextWriter Writer { get { return _writer ?? _global ?? _default; } }
+	    }
+        private sealed class ConsoleError : ConsoleWriter
+        {
+            private static readonly ConsoleError _instance = new ConsoleError();
+            private static TextWriter _default, _expected;
+            private static TextWriter _global;
+            private static int _referenceCount = 0;
+            private ConsoleError() { }
+            [ThreadStatic]
+            private static TextWriter _writer;
+            public static TextWriter Capture(TextWriter output)
+            {
+                if (output == null) return null;
+                lock (typeof(Console))
+                {
+                    if (1 == Interlocked.Increment(ref _referenceCount))
+                    {
+                        _default = Console.Error;
+                        Console.SetError(_instance);
+                        _expected = Console.Error;
+                    }
+                    else if (!ReferenceEquals(_expected, Console.Error))
+                    {
+                        Console.SetError(_instance);
+                        _expected = Console.Error;
+                    }
+
+                    Interlocked.Exchange(ref _global, output);
+                    return Interlocked.Exchange(ref _writer, output);
+                }
+            }
+            public static void Restore(TextWriter replaced, TextWriter original)
+            {
+                if (replaced == null) return;
+                lock (typeof(Console))
+                {
+                    Interlocked.CompareExchange(ref _writer, original, replaced);
+                    Interlocked.CompareExchange(ref _global, original, replaced);
+
+                    if (0 == Interlocked.Decrement(ref _referenceCount))
+                    {
+                        Console.SetError(_default);
+                        _default = null;
+                    }
+                    else if (!ReferenceEquals(_expected, Console.Error))
+                    {
+                        Console.SetError(_instance);
+                        _expected = Console.Error;
+                    }
+                }
+            }
+            protected override TextWriter Writer { get { return _writer ?? _global ?? _default; } }
+        }
+        private sealed class ConsoleInput : TextReader
+        {
+            private static readonly ConsoleInput _instance = new ConsoleInput();
+            private static TextReader _default, _expected;
+            private static TextReader _global;
+            private static int _referenceCount = 0;
+            private ConsoleInput() { }
+            [ThreadStatic]
+            private static TextReader _reader;
+            public static TextReader Capture(TextReader output)
+            {
+                if (output == null) return null;
+                lock (typeof(Console))
+                {
+                    if (1 == Interlocked.Increment(ref _referenceCount))
+                    {
+                        _default = Console.In;
+                        Console.SetIn(_instance);
+                        _expected = Console.In;
+                    }
+                    else if (!ReferenceEquals(_expected, Console.In))
+                    {
+                        Console.SetIn(_instance);
+                        _expected = Console.In;
+                    }
+
+                    Interlocked.Exchange(ref _global, output);
+                    return Interlocked.Exchange(ref _reader, output);
+                }
+            }
+            public static void Restore(TextReader replaced, TextReader original)
+            {
+                if (replaced == null) return;
+                lock (typeof(Console))
+                {
+                    Interlocked.CompareExchange(ref _reader, original, replaced);
+                    Interlocked.CompareExchange(ref _global, original, replaced);
+
+                    if (0 == Interlocked.Decrement(ref _referenceCount))
+                    {
+                        Console.SetIn(_default);
+                        _default = null;
+                    }
+                    else if (!ReferenceEquals(_expected, Console.In))
+                    {
+                        Console.SetIn(_instance);
+                        _expected = Console.In;
+                    }
+                }
+            }
+            private TextReader Reader { get { return _reader ?? _global ?? _default; } }
+            public override void Close() { Reader.Close(); }
+            protected override void Dispose(bool disposing) { }
+            public override int Peek() { return Reader.Peek(); }
+            public override int Read() { return Reader.Read(); }
+            public override int Read(char[] buffer, int index, int count) { return Reader.Read(buffer, index, count); }
+            public override string ReadToEnd() { return Reader.ReadToEnd(); }
+            public override int ReadBlock(char[] buffer, int index, int count) { return Reader.ReadBlock(buffer, index, count); }
+            public override string ReadLine() { return Reader.ReadLine(); }
+        }
+        #endregion
+    }
 
 }

@@ -1,4 +1,4 @@
-﻿#region Copyright 2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2012-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,6 +12,7 @@
  * limitations under the License.
  */
 #endregion
+//#define DEBUG
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
@@ -301,40 +302,45 @@ namespace CSharpTest.Net.Library.Test
             const string myTestValue1 = "T1", myTestValue2 = "t2";
             string test;
 
-            BTreeDictionary<int, string> data = new BTreeDictionary<int, string>(Comparer);
+            BTreeDictionary<int, string> tree = new BTreeDictionary<int, string>(8, Comparer);
+            FactoryMethod<BTreeDictionary<int, string>> verify = delegate() { tree.DebugAssert(); return tree; };
             Stopwatch time = new Stopwatch();
             time.Start();
             //large order-forward
             for (int i = start; i != stop; i += incr)
-                if (!data.TryAdd(i, myTestValue1)) throw new ApplicationException();
+            {
+                if (i == 988)
+                    i = 988;
+                if (!verify().TryAdd(i, myTestValue1)) throw new ApplicationException();
+            }
 
             Trace.TraceInformation("{0} insert  {1} in {2}", name, count, time.ElapsedMilliseconds);
             time.Reset();
             time.Start();
 
             for (int i = start; i != stop; i += incr)
-                if (!data.TryGetValue(i, out test) || test != myTestValue1) throw new ApplicationException();
+                if (!verify().TryGetValue(i, out test) || test != myTestValue1) throw new ApplicationException();
 
             Trace.TraceInformation("{0} seek    {1} in {2}", name, count, time.ElapsedMilliseconds);
             time.Reset();
             time.Start();
 
             for (int i = start; i != stop; i += incr)
-                if (!data.TryUpdate(i, myTestValue2)) throw new ApplicationException();
+                if (!verify().TryUpdate(i, myTestValue2)) throw new ApplicationException();
 
             Trace.TraceInformation("{0} modify  {1} in {2}", name, count, time.ElapsedMilliseconds);
             time.Reset();
             time.Start();
 
             for (int i = start; i != stop; i += incr)
-                if (!data.TryGetValue(i, out test) || test != myTestValue2) throw new ApplicationException();
+                if (!verify().TryGetValue(i, out test) || test != myTestValue2) throw new ApplicationException();
 
             Trace.TraceInformation("{0} seek#2  {1} in {2}", name, count, time.ElapsedMilliseconds);
             time.Reset();
             time.Start();
 
             int tmpCount = 0;
-            foreach (KeyValuePair<int, string> tmp in data)
+            foreach (KeyValuePair<int, string> tmp in verify())
                 if (tmp.Value != myTestValue2) throw new ApplicationException();
                 else tmpCount++;
             if (tmpCount != count) throw new ApplicationException();
@@ -344,12 +350,16 @@ namespace CSharpTest.Net.Library.Test
             time.Start();
 
             for (int i = start; i != stop; i += incr)
-                if (!data.Remove(i)) throw new ApplicationException();
+            {
+                if (i == 16)
+                    i = 16;
+                if (!verify().Remove(i)) throw new ApplicationException();
+            }
 
             Trace.TraceInformation("{0} delete  {1} in {2}", name, count, time.ElapsedMilliseconds);
 
             for (int i = start; i != stop; i += incr)
-                if (data.TryGetValue(i, out test)) throw new ApplicationException();
+                if (verify().TryGetValue(i, out test)) throw new ApplicationException();
         }
     }
 }
