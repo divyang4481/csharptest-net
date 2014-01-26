@@ -1,4 +1,4 @@
-﻿#region Copyright 2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2012-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,6 +14,7 @@
 #endregion
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace CSharpTest.Net.Collections
 {
@@ -800,7 +801,9 @@ namespace CSharpTest.Net.Collections
                     Node oldNext = split.Next;
                     split.Next = this;
                     if ((Next = oldNext) == null)
-                        last = split;
+                        last = this;
+                    else 
+                        Next.Prev = this;
                 }
                 else //if (split.Children != null)
                 {
@@ -831,7 +834,10 @@ namespace CSharpTest.Net.Collections
                 _values[ix] = new KeyValuePair<TKey, TValue>();
                 _count--;
                 if (ix < _count)
+                {
                     Array.Copy(_values, ix + 1, _values, ix, _count - ix);
+                    _values[_count] = new KeyValuePair<TKey, TValue>();
+                }
             }
             void RemoveChild(int ix, ref Node first, ref Node last)
             {
@@ -850,7 +856,10 @@ namespace CSharpTest.Net.Collections
                 _children[ix] = new KeyValuePair<TKey, Node>();
                 _count--;
                 if (ix < _count)
+                {
                     Array.Copy(_children, ix + 1, _children, ix, _count - ix);
+                    _children[_count] = new KeyValuePair<TKey, Node>();
+                }
             }
             public void Join(int firstIx, int secondIx, ref Node nodeFirst, ref Node nodeLast)
             {
@@ -925,5 +934,97 @@ namespace CSharpTest.Net.Collections
             }
         }
         #endregion
+
+        /// <summary>
+        /// Ensures data integrity or raises exception
+        /// </summary>
+        [Conditional("DEBUG")]
+        public void DebugAssert()
+        {
+#if DEBUG
+            Node foundFirst = _root;
+            while (!foundFirst.IsLeaf)
+                foundFirst = foundFirst.Children[0].Value;
+
+            if (!ReferenceEquals(_first, foundFirst))
+                throw new ApplicationException("The _first node reference is incorrect.");
+
+            Node foundLast = _root;
+            while (!foundLast.IsLeaf)
+                foundLast = foundLast.Children[foundLast.Count - 1].Value;
+
+            if (!ReferenceEquals(_last, foundLast))
+                throw new ApplicationException("The _last node reference is incorrect.");
+
+            int counter = 0;
+            var tmp = _first;
+            while (tmp != null)
+            {
+                if (tmp.Next == null && !ReferenceEquals(_last, tmp))
+                    throw new ApplicationException("Forward links corrupted.");
+                if (!tmp.IsLeaf)
+                    throw new ApplicationException("Non Leaf in linked list.");
+                counter += tmp.Count;
+                tmp = tmp.Next;
+            }
+            if (counter != _count)
+                throw new ApplicationException(String.Format("Found {0} items in links, {1} expected.", counter, _count));
+            counter = 0;
+            tmp = _last;
+            while (tmp != null)
+            {
+                if (tmp.Prev == null && !ReferenceEquals(_first, tmp))
+                    throw new ApplicationException("Forward links corrupted.");
+                if (!tmp.IsLeaf)
+                    throw new ApplicationException("Non Leaf in linked list.");
+                counter += tmp.Count;
+                tmp = tmp.Prev;
+            }
+            if (counter != _count)
+                throw new ApplicationException(String.Format("Found {0} items in links, {1} expected.", counter, _count));
+
+            counter = DescendAssert(_root);
+            if (counter != _count)
+                throw new ApplicationException(String.Format("Tree crawl found {0} items, {1} expected.", counter, _count));
+#endif
+        }
+        
+#if DEBUG
+        private int DescendAssert(Node node)
+        {
+            var eq = EqualityComparer<TValue>.Default;
+            int count = 0;
+            if (node.IsLeaf)
+            {
+                for (int i = 0; i < node.Values.Length; i++)
+                {
+                    if (i < node.Count)
+                        count++;
+                    else
+                    {
+                        if (!eq.Equals(default(TValue), node.Values[i].Value))
+                            throw new ApplicationException("Unexpected non-default value after count.");
+                    }
+                }
+            }
+            else
+            {
+                for (int i=0; i < node.Children.Length; i++)
+                {
+                    if (i < node.Count)
+                        count += DescendAssert(node.Children[i].Value);
+                    else
+                    {
+                        if (node.Children[i].Value != null)
+                            throw new ApplicationException("Unexpected non-null child after count.");
+                    }
+                }
+            }
+
+            if (count == 0 && _count != 0)
+                throw new ApplicationException("Unexpected empty count.");
+            return count;
+        }
+#endif
     }
 }

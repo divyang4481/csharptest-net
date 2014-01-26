@@ -1,4 +1,4 @@
-﻿#region Copyright 2011-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2011-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,7 +25,7 @@ namespace CSharpTest.Net.Collections
     /// <summary>
     /// Implements an IDictionary interface for a simple file-based database
     /// </summary>
-    public sealed partial class BPlusTree<TKey, TValue> : IDisposable, ITransactable, IDictionary<TKey, TValue>, 
+    public partial class BPlusTree<TKey, TValue> : IDisposable, ITransactable, IDictionary<TKey, TValue>, 
                                                           IDictionaryEx<TKey, TValue>, IConcurrentDictionary<TKey, TValue>
     {
         readonly BPlusTreeOptions<TKey, TValue> _options;
@@ -144,6 +144,13 @@ namespace CSharpTest.Net.Collections
                     }
                 }
             }
+
+            var nodeStoreWithCount = _storage.Storage as INodeStoreWithCount;
+            if (nodeStoreWithCount != null)
+            {
+                _count = nodeStoreWithCount.Count;
+                _hasCount = _count >= 0;
+            }
         }
 
         /// <summary>
@@ -203,6 +210,10 @@ namespace CSharpTest.Net.Collections
             bool locked = requiresLock && _selfLock.TryWrite(LockTimeout);
             try
             {
+                if (_storage.Storage is INodeStoreWithCount)
+                {
+                    ((INodeStoreWithCount)_storage.Storage).Count = _hasCount ? _count : -1;
+                }
                 if (_storage.Storage is ITransactable)
                 {
                     ((ITransactable)_storage.Storage).Commit();

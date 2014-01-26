@@ -1,4 +1,4 @@
-﻿#region Copyright 2011-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2011-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -48,7 +48,7 @@ namespace CSharpTest.Net.Collections
                         {
                             using (_owner._cacheLock.Write(_owner.Options.LockTimeout))
                             {
-                                WeakReference<CacheEntry> me;
+                                Utils.WeakReference<CacheEntry> me;
                                 if (_owner._cache.TryGetValue(Handle, out me) && me.IsAlive == false)
                                     _owner._cache.Remove(Handle);
                             }
@@ -64,17 +64,17 @@ namespace CSharpTest.Net.Collections
                 public readonly NodeHandle Handle;
                 public Node Node;
             }
-            private readonly ObjectKeepAlive _keepAlive;
+            private readonly IObjectKeepAlive _keepAlive;
 
-            private readonly Dictionary<NodeHandle, WeakReference<CacheEntry>> _cache;
+            private readonly Dictionary<NodeHandle, Utils.WeakReference<CacheEntry>> _cache;
             private bool _disposed;
             private CacheEntry _root;
             private ILockStrategy _cacheLock;
 
             public NodeCacheNormal(BPlusTreeOptions<TKey, TValue> options) : base(options)
             {
-                _keepAlive = new ObjectKeepAlive(options.CacheKeepAliveMinimumHistory, options.CacheKeepAliveMaximumHistory, TimeSpan.FromMilliseconds(options.CacheKeepAliveTimeout));
-                _cache = new Dictionary<NodeHandle, WeakReference<CacheEntry>>();
+                _keepAlive = options.CreateCacheKeepAlive();
+                _cache = new Dictionary<NodeHandle, Utils.WeakReference<CacheEntry>>();
                 _cacheLock = new SimpleReadWriteLocking();
             }
 
@@ -121,7 +121,7 @@ namespace CSharpTest.Net.Collections
 
             CacheEntry GetCache(NodeHandle handle, bool isNew)
             {
-                WeakReference<CacheEntry> weakRef;
+                Utils.WeakReference<CacheEntry> weakRef;
                 CacheEntry entry = null;
 
                 if (!isNew)
@@ -149,7 +149,7 @@ namespace CSharpTest.Net.Collections
                     {
                         if (!_cache.TryGetValue(handle, out weakRef))
                         {
-                            _cache.Add(handle, weakRef = new WeakReference<CacheEntry>(entry = new CacheEntry(this, handle)));
+                            _cache.Add(handle, weakRef = new Utils.WeakReference<CacheEntry>(entry = new CacheEntry(this, handle)));
                             handle.SetCacheEntry(weakRef);
                         }
                         else

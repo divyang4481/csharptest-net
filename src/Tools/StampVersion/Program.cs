@@ -1,4 +1,4 @@
-﻿#region Copyright 2009-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2009-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,6 +31,10 @@ namespace CSharpTest.Net.StampVersion
             Console.WriteLine("        /version:{Version} - defines the entire version string, i.e. 1.0.0.0");
             Console.WriteLine("        /version:{File Path} - file path of a text file contain a line with:");
             Console.WriteLine("                       Version: {Version}");
+            Console.WriteLine("");
+            Console.WriteLine("        /fileversion:{Version} - defines the file version string if different");
+            Console.WriteLine("        /fileversion:{File Path} - file path of a text file contain a line with:");
+            Console.WriteLine("                       FileVersion: {Version}");
             Console.WriteLine("");
 			Console.WriteLine("        /major:{Number} - defines the major (2th part) of the version");
 			Console.WriteLine("        /major:{File Path} - file path of a text file contain a line with:");
@@ -92,6 +96,8 @@ namespace CSharpTest.Net.StampVersion
 					if (major == null && minor == null && build == null && revision == null)
 						return DoHelp();
 
+				    string fileversion = args.SafeGet("fileversion");
+
 					FileList files = new FileList(@"AssemblyInfo.cs");
 
 					Regex versionPattern = new Regex(@"[^a-z,A-Z,0-9](?<Type>AssemblyVersion|AssemblyFileVersion)\s*\(\s*\" + '\"' +
@@ -137,6 +143,11 @@ namespace CSharpTest.Net.StampVersion
 									parts = new string[] { parts[0], parts[1], parts[2] };
 								if (parts.Length >= 3 && parts[2] == "*")
 									parts = new string[] { parts[0], parts[1] };
+
+							    if (!String.IsNullOrEmpty(fileversion))
+							    {
+							        parts = fileversion.Split('.');
+							    }
 							}
 
 							string newVersion = String.Join(".", parts);
@@ -145,6 +156,9 @@ namespace CSharpTest.Net.StampVersion
 						}
 						content.Append(text, lastpos, text.Length - lastpos);
 
+					    if ((file.Attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
+					        file.Attributes = file.Attributes & ~FileAttributes.ReadOnly;
+                            
 						File.WriteAllText(file.FullName, content.ToString());
 					}
 				}

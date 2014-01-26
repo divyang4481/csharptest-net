@@ -1,4 +1,4 @@
-﻿#region Copyright 2009-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2009-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -53,206 +53,250 @@ namespace CSharpTest.Net.Commands
 		PipeCommands = 0x00000100,
 		/// <summary> A command filter that allows redirect of std in/out to files. </summary>
 		IORedirect = 0x00000200,
+        /// <summary> A command that allows the console application to be hosted as a restful HTTP server. </summary>
+        HostHTTP = 0x00000400
 	}
 
-	sealed class BuiltInCommands
-	{
-		Dictionary<DefaultCommands, IDisplayInfo> _contents;
+    partial class CommandInterpreter
+    {
+        sealed class BuiltInCommands
+        {
+            readonly Dictionary<DefaultCommands, IDisplayInfo> _contents;
 
-		internal BuiltInCommands(params IDisplayInfo[] all)
-		{
-			_contents = new Dictionary<DefaultCommands, IDisplayInfo>();
-			foreach(IDisplayInfo d in all)
-				_contents.Add((DefaultCommands)Enum.Parse(typeof(DefaultCommands), d.DisplayName, true), d);
-			foreach(IDisplayInfo d in BuiltIn.Commands)
-				_contents.Add((DefaultCommands)Enum.Parse(typeof(DefaultCommands), d.DisplayName, true), d);
-		}
+            internal BuiltInCommands(params IDisplayInfo[] all)
+            {
+                _contents = new Dictionary<DefaultCommands, IDisplayInfo>();
+                foreach (IDisplayInfo d in BuiltIn.Commands)
+                    _contents.Add((DefaultCommands)Enum.Parse(typeof(DefaultCommands), d.DisplayName, true), d);
+                AddRange(all);
+            }
 
-		public void Add(CommandInterpreter ci, DefaultCommands cmds)
-		{
-			foreach (DefaultCommands key in Enum.GetValues(typeof(DefaultCommands)))
-			{
-				IDisplayInfo item ;
-				if (key == (key & cmds) && _contents.TryGetValue(key, out item))
-				{
-					if (item is ICommandFilter)
-						ci.AddFilter(item as ICommandFilter);
-					else if (item is ICommand)
-						ci.AddCommand(item as ICommand);
-					else if (item is IOption)
-						ci.AddOption(item as IOption);
-				}
-			}
-		}
+            public void AddRange(params IDisplayInfo[] all)
+            {
+                foreach (IDisplayInfo d in all)
+                    _contents.Add((DefaultCommands)Enum.Parse(typeof(DefaultCommands), d.DisplayName, true), d);
+            }
 
-		static class BuiltIn
-		{
-			public static ICommand[] Commands
-			{
-				get
-				{
-					Type t = typeof(BuiltIn);
-					List<ICommand> cmds = new List<ICommand>();
-					foreach (MethodInfo mi in t.GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod))
-						if (!mi.IsSpecialName)
-							cmds.Add(Command.Make(t, mi));
-					return cmds.ToArray();
-				}
-			}
+            public void Add(CommandInterpreter ci, DefaultCommands cmds)
+            {
+                foreach (DefaultCommands key in Enum.GetValues(typeof(DefaultCommands)))
+                {
+                    IDisplayInfo item;
+                    if (key == (key & cmds) && _contents.TryGetValue(key, out item))
+                    {
+                        if (item is ICommandFilter)
+                            ci.AddFilter(item as ICommandFilter);
+                        else if (item is ICommand)
+                            ci.AddCommand(item as ICommand);
+                        else if (item is IOption)
+                            ci.AddOption(item as IOption);
+                    }
+                }
+            }
 
-			[Command("Echo", Category = "Built-in", Description = "Writes the arguments to standard output.", Visible = true)]
-			public static void Echo(
-				[AllArguments, Argument(Category = "Built-in", Description = "The text to write to standard out.")]
-				string[] args)
-			{
-				Console.WriteLine(ArgumentList.Join(args));
-			}
+            internal static class BuiltIn
+            {
+                public static ICommand[] Commands
+                {
+                    get
+                    {
+                        Type t = typeof(BuiltIn);
+                        List<ICommand> cmds = new List<ICommand>();
+                        foreach (MethodInfo mi in t.GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod))
+                            if (!mi.IsSpecialName)
+                                cmds.Add(Command.Make(t, mi));
+                        return cmds.ToArray();
+                    }
+                }
 
-			private static int NextRedirect(string[] args)
-			{
-				for (int ix = args.Length -1; ix >= 0; ix--)
-					if (args[ix].StartsWith("<") || args[ix].StartsWith(">")) return ix;
-				return -1;
-			}
+                [Command("Echo", Category = "Built-in", Description = "Writes the arguments to standard output.", Visible = true)]
+                public static void Echo(
+                    [AllArguments, Argument(Category = "Built-in", Description = "The text to write to standard out.")]
+				    string[] args)
+                {
+                    Console.WriteLine(ArgumentList.EscapeArguments(args));
+                }
 
-			[CommandFilter('>', '<', Category = "Built-in", Description = "A command filter that allows redirect of std in/out to files.", Visible = false)]
-			public static void IORedirect(ICommandInterpreter ci, ICommandChain chain, string[] args)
-			{
-				TextReader rin = null, stdin = Console.In;
-				TextWriter rout = null, stdout = Console.Out;
-				try
-				{
-					int pos;
-					while ((pos = NextRedirect(args)) > 0)
-					{
-						List<string> cmd1 = new List<string>(args);
-						List<string> cmd2 = new List<string>(args);
-						cmd1.RemoveRange(pos, cmd1.Count - pos);
-						cmd2.RemoveRange(0, pos);
+                private static int NextRedirect(string[] args)
+                {
+                    for (int ix = args.Length - 1; ix >= 0; ix--)
+                        if (args[ix].StartsWith("<") || args[ix].StartsWith(">")) return ix;
+                    return -1;
+                }
 
-						args = cmd1.ToArray();
-						string file = String.Join(" ", cmd2.ToArray());
-						bool isout = file.StartsWith(">");
-						bool isappend = isout && file.StartsWith(">>");
-						file = file.TrimStart('>', '<').Trim();
+                [CommandFilter('>', '<', Category = "Built-in", Description = "A command filter that allows redirect of std in/out to files.", Visible = false)]
+                public static void IORedirect(ICommandInterpreter ci, ICommandChain chain, string[] args)
+                {
+                    TextReader rin = null;
+                    TextWriter rout = null;
+                    int pos;
+                    try
+                    {
+                        while ((pos = NextRedirect(args)) > 0)
+                        {
+                            List<string> cmd1 = new List<string>(args);
+                            List<string> cmd2 = new List<string>(args);
+                            cmd1.RemoveRange(pos, cmd1.Count - pos);
+                            cmd2.RemoveRange(0, pos);
 
-						if (!isout)
-							Console.SetIn(rin = File.OpenText(file));
-						else
-							Console.SetOut(rout = isappend ? File.AppendText(file) : File.CreateText(file));
-					}
+                            args = cmd1.ToArray();
+                            string file = String.Join(" ", cmd2.ToArray());
+                            bool isout = file.StartsWith(">");
+                            bool isappend = isout && file.StartsWith(">>");
+                            file = file.TrimStart('>', '<').Trim();
 
-					chain.Next(args);
-				}
-				finally
-				{
-					if (rin != null) { Console.SetIn(stdin); rin.Close(); rin.Dispose(); }
-					if (rout != null) { Console.SetOut(stdout); rout.Close(); rout.Dispose(); }
-				}
-			}
+                            if (!isout)
+                                rin = File.OpenText(file);
+                            else
+                                rout = isappend ? File.AppendText(file) : File.CreateText(file);
+                        }
+                    }
+                    catch
+                    {
+                        using (rin)
+                        using (rout)
+                            throw;
+                    }
+                    TextReader stdin = ConsoleInput.Capture(rin);
+                    TextWriter stdout = ConsoleOutput.Capture(rout);
+                    try
+                    {
+                        chain.Next(args);
+                    }
+                    finally
+                    {
+                        using (rin)
+                            ConsoleInput.Restore(rin, stdin);
+                        using (rout)
+                            ConsoleOutput.Restore(rout, stdout);
+                    }
+                }
 
-			[Command("Find", Category = "Built-in", Description = "Reads the input stream and shows any line containing the text specified.", Visible = true)]
-			public static void Find( 
-				[Argument("text", Category = "Built-in", Description = "The text to search for in the input stream.")]
-				string text,
-				[Argument("filename", "f", Category = "Built-in", Description = "Specifies a file read and search, omit to use standard input.", DefaultValue = null)]
-				string filename,
-				[Argument("V", Category = "Built-in", Description = "Displays all lines NOT containing the specified string.", DefaultValue = false)]
-				bool invert,
-				[Argument("C", Category = "Built-in", Description = "Displays only the count of lines containing the string.", DefaultValue = false)]
-				bool count,
-				[Argument("I", Category = "Built-in", Description = "Ignores the case of characters when searching for the string.", DefaultValue = false)]
-				bool ignoreCase
-				)
-			{
-				StringComparison cmp = StringComparison.Ordinal;
-				if (ignoreCase) cmp = StringComparison.OrdinalIgnoreCase;
+                [Command("Find", Category = "Built-in", Description = "Reads the input stream and shows any line containing the text specified.", Visible = true)]
+                public static void Find(
+                    [Argument("text", Category = "Built-in", Description = "The text to search for in the input stream.")]
+				    string text,
+                    [Argument("filename", "f", Category = "Built-in", Description = "Specifies a file read and search, omit to use standard input.", DefaultValue = null)]
+				    string filename,
+                    [Argument("V", Category = "Built-in", Description = "Displays all lines NOT containing the specified string.", DefaultValue = false)]
+				    bool invert,
+                    [Argument("C", Category = "Built-in", Description = "Displays only the count of lines containing the string.", DefaultValue = false)]
+				    bool count,
+                    [Argument("I", Category = "Built-in", Description = "Ignores the case of characters when searching for the string.", DefaultValue = false)]
+				    bool ignoreCase
+                    )
+                {
+                    StringComparison cmp = StringComparison.Ordinal;
+                    if (ignoreCase) cmp = StringComparison.OrdinalIgnoreCase;
 
-				StreamReader disposeMe = null;
-				TextReader rdr = Console.In;
-				if (!String.IsNullOrEmpty(filename))
-					rdr = disposeMe = File.OpenText(filename);
-				try
-				{
-					int counter = 0;
-					string line;
-					while (null != (line = rdr.ReadLine()))
-					{
-						bool found = (line.IndexOf(text, cmp) >= 0);
-						found = invert ? !found : found;
-						if (found)
-						{
-							counter++;
-							if (!count) Console.WriteLine(line);
-						}
-					}
-				}
-				finally
-				{
-					if (disposeMe != null)
-						disposeMe.Dispose();
-				}
-			}
+                    StreamReader disposeMe = null;
+                    TextReader rdr = Console.In;
+                    if (!String.IsNullOrEmpty(filename))
+                        rdr = disposeMe = File.OpenText(filename);
+                    try
+                    {
+                        int counter = 0;
+                        string line;
+                        while (null != (line = rdr.ReadLine()))
+                        {
+                            bool found = (line.IndexOf(text, cmp) >= 0);
+                            found = invert ? !found : found;
+                            if (found)
+                            {
+                                counter++;
+                                if (!count) Console.WriteLine(line);
+                            }
+                        }
 
-			[Command("More", Category = "Built-in", Description = "Reads the input stream and shows one screen at a time to standard output.", Visible = true)]
-			public static void More(ICommandInterpreter ci)
-			{
-				int pos = 2;
-				int lines = Console.WindowHeight;
+                        if (count)
+                            Console.WriteLine(counter);
+                    }
+                    finally
+                    {
+                        if (disposeMe != null)
+                            disposeMe.Dispose();
+                    }
+                }
 
-				string line;
-				while (null != (line = Console.ReadLine()))
-				{
-					Console.WriteLine(line);
-					if (++pos >= lines)
-					{
-						Console.Write("-- More --");
-						ci.ReadNextCharacter();
-						Console.WriteLine();
-						pos = 1;
-					}
-				}
-			}
+                [Command("More", Category = "Built-in", Description = "Reads the input stream and shows one screen at a time to standard output.", Visible = true)]
+                public static void More(ICommandInterpreter ci)
+                {
+                    int pos = 2;
+                    int lines;
+                    try
+                    {
+                        lines = Console.WindowHeight;
+                    }
+                    catch (System.IO.IOException)
+                    {
+                        lines = 25;
+                    }
 
-			private static int NextPipe(string[] args)
-			{
-				for (int ix = 0; ix < args.Length; ix++)
-					if (args[ix].StartsWith("|")) return ix;
-				return -1;
-			}
+                    string line;
+                    while (null != (line = Console.ReadLine()))
+                    {
+                        Console.WriteLine(line);
+                        if (++pos >= lines)
+                        {
+                            Console.Write("-- More --");
+                            ci.ReadNextCharacter();
+                            Console.WriteLine();
+                            pos = 1;
+                        }
+                    }
+                }
 
-			[CommandFilter('|', Category = "Built-in", Description = "A command filter that allows piping the output of one command into the input of another.", Visible = false)]
-			public static void PipeCommands(ICommandInterpreter ci, ICommandChain chain, string[] args)
-			{
-				int pos;
-				while ((pos = NextPipe(args)) > 0)
-				{
-					List<string> cmd1 = new List<string>(args);
-					cmd1.RemoveRange(pos, cmd1.Count - pos);
-					List<string> cmd2 = new List<string>(args);
-					cmd2.RemoveRange(0, pos);
-					cmd2[0] = cmd2[0].TrimStart('|');
-					if (cmd2[0].Length == 0)
-						cmd2.RemoveAt(0);
-					if (cmd2.Count == 0)
-					{
-						args = cmd1.ToArray();
-						break;
-					}
-					else
-						args = cmd2.ToArray();
+                private static int NextPipe(string[] args)
+                {
+                    for (int ix = 0; ix < args.Length; ix++)
+                        if (args[ix].StartsWith("|")) return ix;
+                    return -1;
+                }
 
-					TextWriter stdout = Console.Out;
-					StringWriter wtr = new StringWriter();
-					Console.SetOut(wtr);
-					chain.Next(cmd1.ToArray());
-					Console.SetOut(stdout);
+                [CommandFilter('|', Category = "Built-in", Description = "A command filter that allows piping the output of one command into the input of another.", Visible = false)]
+                public static void PipeCommands(ICommandInterpreter ci, ICommandChain chain, string[] args)
+                {
+                    TextReader rdr = null, stdin = null;
+                    int pos;
+                    while ((pos = NextPipe(args)) > 0)
+                    {
+                        List<string> cmd1 = new List<string>(args);
+                        cmd1.RemoveRange(pos, cmd1.Count - pos);
+                        List<string> cmd2 = new List<string>(args);
+                        cmd2.RemoveRange(0, pos);
+                        cmd2[0] = cmd2[0].TrimStart('|');
+                        if (cmd2[0].Length == 0)
+                            cmd2.RemoveAt(0);
+                        if (cmd2.Count == 0)
+                        {
+                            args = cmd1.ToArray();
+                            break;
+                        }
+                        else
+                            args = cmd2.ToArray();
 
-					Console.SetIn(new StringReader(wtr.ToString()));
-				}
+                        StringWriter wtr = new StringWriter();
+                        TextWriter stdout = ConsoleOutput.Capture(wtr);
+                        stdin = ConsoleInput.Capture(rdr);
 
-				chain.Next(args);
-			}
-		}
-	}
+                        try { chain.Next(cmd1.ToArray()); }
+                        finally 
+                        { 
+                            ConsoleInput.Restore(rdr, stdin);
+                            ConsoleOutput.Restore(wtr, stdout); 
+                        }
+
+                        rdr = new StringReader(wtr.ToString());
+                    }
+
+                    stdin = ConsoleInput.Capture(rdr);
+                    try { chain.Next(args); }
+                    finally
+                    {
+                        ConsoleInput.Restore(rdr, stdin);
+                    }
+                }
+            }
+        }
+    }
 }

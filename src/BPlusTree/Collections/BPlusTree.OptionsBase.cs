@@ -1,4 +1,4 @@
-﻿#region Copyright 2011-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2011-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,12 +12,13 @@
  * limitations under the License.
  */
 #endregion
-
 using System;
 using System.Collections.Generic;
 using System.IO;
+using CSharpTest.Net.Interfaces;
 using CSharpTest.Net.Serialization;
 using CSharpTest.Net.Synchronization;
+using CSharpTest.Net.Utils;
 
 namespace CSharpTest.Net.Collections
 {
@@ -409,6 +410,17 @@ namespace CSharpTest.Net.Collections
                 _cachePolicy = value;
             }
         }
+
+        /// <summary>
+        /// CacheKeepAliveFactory provides a delegate to inject an implementation of the IObjectKeepAlive
+        /// interface while then igoring all the other CacheKeepAliveXXX properties.
+        /// </summary>
+        public FactoryMethod<IObjectKeepAlive> CacheKeepAliveFactory
+        {
+            get { return _cacheKeepAliveFactory; }
+            set { _cacheKeepAliveFactory = value; }
+        }
+
         /// <summary> 
         /// Determins minimum number of recently visited nodes to keep alive in memory.  This number defines
         /// the history size, not the number of distinct nodes.  This number will always be kept reguardless
@@ -419,7 +431,7 @@ namespace CSharpTest.Net.Collections
             get { return _keepAliveMinHistory; }
             set
             {
-                InvalidConfigurationValueException.Assert(value >= 0 && value <= ushort.MaxValue, "CacheKeepAliveMinimumHistory", "The valid range is from 0 to 65,535.");
+                InvalidConfigurationValueException.Assert(value >= 0 && value <= int.MaxValue, "CacheKeepAliveMinimumHistory", "The valid range is from 0 to MaxValue.");
                 _keepAliveMinHistory = value;
                 _keepAliveMaxHistory = Math.Max(_keepAliveMaxHistory, value);
             }
@@ -434,7 +446,7 @@ namespace CSharpTest.Net.Collections
             get { return _keepAliveMaxHistory; }
             set
             {
-                InvalidConfigurationValueException.Assert(value >= 0 && value <= ushort.MaxValue, "CacheKeepAliveMaximumHistory", "The valid range is from 0 to 65,535.");
+                InvalidConfigurationValueException.Assert(value >= 0 && value <= int.MaxValue, "CacheKeepAliveMaximumHistory", "The valid range is from 0 to MaxValue.");
                 _keepAliveMaxHistory = value;
                 _keepAliveMinHistory = Math.Min(_keepAliveMinHistory, value);
             }
@@ -469,6 +481,7 @@ namespace CSharpTest.Net.Collections
 
         internal bool UseStorageCache;
         internal ITransactionLog<TKey, TValue> LogFile;
+        private FactoryMethod<IObjectKeepAlive> _cacheKeepAliveFactory;
 
         internal ExistingLogAction ExistingLogAction
         {
@@ -484,6 +497,19 @@ namespace CSharpTest.Net.Collections
         internal int FillChildNodes { get { return _fillChildNodes; } }
         /// <summary> The desired fill-size of node that contain values </summary>
         internal int FillValueNodes { get { return _fillValueNodes; } }
+        /// <summary>
+        /// Creates the keep-alive object reference tracking implementation
+        /// </summary>
+        internal IObjectKeepAlive CreateCacheKeepAlive()
+        {
+            if (_cacheKeepAliveFactory != null)
+                return _cacheKeepAliveFactory();
+
+            return new ObjectKeepAlive(
+                CacheKeepAliveMinimumHistory, 
+                CacheKeepAliveMaximumHistory,
+                TimeSpan.FromMilliseconds(CacheKeepAliveTimeout));
+        }
         #endregion
     }
 }

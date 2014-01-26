@@ -41,6 +41,7 @@
       <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="System.Security" />
+    <Reference Include="System.ServiceProcess" />
     <Reference Include="System.Web">
       <Private>False</Private>
       <SpecificVersion>False</SpecificVersion>
@@ -72,17 +73,25 @@
     <Compile Include="Bases\Equatable.cs" />
     <Compile Include="Collections\BTreeDictionary.cs" />
     <Compile Include="Collections\BTreeList.cs" />
+    <Compile Include="Collections\HashUtilities.cs" />
     <Compile Include="Collections\IConcurrentDictionary.cs" />
     <Compile Include="Collections\IDictionaryEx.cs" />
     <Compile Include="Collections\KeyValueComparer.cs" />
+    <Compile Include="Collections\LurchTable.cs" />
     <Compile Include="Collections\MergeSort.cs" />
     <Compile Include="Collections\OrderedEnumeration.cs" />
     <Compile Include="Collections\OrderedKeyValuePairs.cs" />
     <Compile Include="Collections\SynchronizedDictionary.cs" />
     <Compile Include="Collections\SynchronizedList.cs" />
+    <Compile Include="Commands\CommandService.cs" />
+    <Compile Include="Commands\HttpCommands.cs" />
     <Compile Include="Crypto\SecureTransferMessage.cs" />
     <Compile Include="Crypto\SecureTransferServer.cs" />
     <Compile Include="Crypto\SecureTransferClient.cs" />
+    <Compile Include="Data\DbGuid.cs" />
+    <Compile Include="Http\HttpServer.cs" />
+    <Compile Include="Http\MimeMessage.cs" />
+    <Compile Include="Http\TcpServer.cs" />
     <Compile Include="Interfaces\IFactory.cs">
     </Compile>
     <Compile Include="Cloning\ClonableExtensions.cs" />
@@ -161,6 +170,7 @@
     <Compile Include="IO\ClampedStream.cs" />
     <Compile Include="IO\TransactedCompoundFile.cs" />
     <Compile Include="IO\Crc32.cs" />
+    <Compile Include="IO\Crc64.cs" />
     <Compile Include="IO\FileStreamFactory.cs" />
     <Compile Include="IO\FindFile.cs" />
     <Compile Include="IO\FragmentedFile.cs" />
@@ -208,6 +218,8 @@
     <Compile Include="Serialization\StorageClasses.cs" />
     <Compile Include="AppConfig\UserSettingsSection.cs" />
     <Compile Include="Serialization\VariantNumberSerializer.cs" />
+    <Compile Include="Services\ServiceAccessRights.cs" />
+    <Compile Include="Services\SvcControlManager.cs" />
     <Compile Include="Shared\PublicShared.cs" />
     <Compile Include="Synchronization\ReservedWriteLocking.cs" />
     <Compile Include="Synchronization\DebugLocking.cs" />
@@ -226,6 +238,7 @@
     <Compile Include="Threading\IWaitAndContinue.cs" />
     <Compile Include="Threading\IWorkQueue.cs" />
     <Compile Include="Synchronization\MutexLock.cs" />
+    <Compile Include="Threading\CallsPerSecondCounter.cs" />
     <Compile Include="Threading\UsageCounter.cs" />
     <Compile Include="Threading\WaitAndContinueList.cs" />
     <Compile Include="Threading\WaitAndContinueWorker.cs" />

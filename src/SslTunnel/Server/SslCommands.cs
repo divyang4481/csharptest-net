@@ -81,6 +81,70 @@ namespace CSharpTest.Net.SslTunnel.Server
             }
         }
 
+        [Command(Description = "Find a certificate from the machine by name.")]
+        public static void FindCert(
+            [Argument(Description = "The qualified host name used to created the certificate.")]
+			string name
+            )
+        {
+            if (name.StartsWith("CN=") == false)
+                name = String.Format("CN={0}", name);
+
+            StringBuilder sbknown = new StringBuilder();
+
+            X509Certificate2 found = null;
+            X509Store store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
+            store.Open(OpenFlags.ReadWrite);
+            try
+            {
+                foreach (X509Certificate2 cert in store.Certificates)
+                {
+                    if (cert.Subject == name)
+                        found = cert;
+                    sbknown.AppendLine(cert.Subject);
+                }
+
+                if (found != null)
+                {
+                    Console.WriteLine("Found the following certificate:");
+                    Console.WriteLine();
+                    SslCertValidator.DebugDumpCertificate(found, Console.Out);
+
+                    Console.WriteLine("SignatureAlgorithm = {0}", found.SignatureAlgorithm);
+                    Console.WriteLine("HasPrivateKey = {0}", found.HasPrivateKey);
+                    try
+                    {
+                        Console.WriteLine("PrivateKeySize = {0}", found.PrivateKey.KeySize);
+                    }
+                    catch(Exception e)
+                    {
+                        if (found.HasPrivateKey)
+                            Console.Error.WriteLine(e);
+                    }
+                    Console.WriteLine();
+
+                    //always grants network service the right to this key
+                    string fqpath = CertUtils.GetKeyFileName(found);
+                    Console.WriteLine("Private Key File: {0}", fqpath);
+                    if (File.Exists(fqpath))
+                    {
+                        FileSecurity fsec = new FileSecurity(fqpath, AccessControlSections.Access);
+                        foreach (FileSystemAccessRule r in fsec.GetAccessRules(true, false, typeof (NTAccount)))
+                            Console.WriteLine("  {0,6}  {1,32}  {2}", r.AccessControlType, r.IdentityReference.Value,
+                                              r.FileSystemRights);
+                    }
+                    else Console.WriteLine("File not found.");
+                }
+            }
+            finally { store.Close(); }
+
+            if (found == null)
+            {
+                Console.WriteLine("Unable to locate '{0}' in:", name);
+                Console.WriteLine(sbknown.ToString());
+            }
+        }
+
         [Command(Description = "Creates a self-signed certificate for client or server authentication.")]
         public static void MakeCert(
             [Argument(Description = "The qualified host name of the machine to create the certificate for.")]

@@ -1,4 +1,4 @@
-﻿#region Copyright 2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2012-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -326,6 +326,38 @@ namespace CSharpTest.Net.Library.Test
             Assert.AreEqual(2, e.Current.Key);
             Assert.IsTrue(e.MoveNext());
             Assert.AreEqual(1, e.Current.Key);
+            Assert.IsFalse(e.MoveNext());
+        }
+
+        [Test]
+        public void TestOrderedKeyValuePairsMergeOnDuplicate()
+        {
+            var x = new[] { new KeyValuePair<int, int>(1, 1) };
+            var y = new[] { new KeyValuePair<int, int>(1, 2), new KeyValuePair<int, int>(2, 2) };
+
+            IEnumerator<KeyValuePair<int, int>> e =
+                OrderedKeyValuePairs<int, int>
+                .Merge(Comparer<int>.Default, DuplicateHandling.FirstValueWins, x, y)
+                .GetEnumerator();
+
+            Assert.IsTrue(e.MoveNext());
+            Assert.AreEqual(1, e.Current.Key);
+            Assert.AreEqual(1, e.Current.Value);
+            Assert.IsTrue(e.MoveNext());
+            Assert.AreEqual(2, e.Current.Key);
+            Assert.AreEqual(2, e.Current.Value);
+            Assert.IsFalse(e.MoveNext());
+            
+            e = OrderedKeyValuePairs<int, int>
+                .Merge(Comparer<int>.Default, DuplicateHandling.LastValueWins, x, y)
+                .GetEnumerator();
+
+            Assert.IsTrue(e.MoveNext());
+            Assert.AreEqual(1, e.Current.Key);
+            Assert.AreEqual(2, e.Current.Value);
+            Assert.IsTrue(e.MoveNext());
+            Assert.AreEqual(2, e.Current.Key);
+            Assert.AreEqual(2, e.Current.Value);
             Assert.IsFalse(e.MoveNext());
         }
 

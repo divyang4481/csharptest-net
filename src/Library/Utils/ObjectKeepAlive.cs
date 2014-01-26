@@ -1,4 +1,4 @@
-﻿#region Copyright 2011-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2011-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,13 +17,36 @@ using System.Threading;
 
 namespace CSharpTest.Net.Utils
 {
+
+    /// <summary>
+    /// Provides an interface for tracking a limited number of references to objects for use in a WeakReference
+    /// cache.
+    /// </summary>
+    public interface IObjectKeepAlive
+    {
+        /// <summary>
+        /// Clears the entire keep-alive cache
+        /// </summary>
+        void Clear();
+
+        /// <summary>
+        /// Can be called periodically by external threads to ensure cleanup instead of depending upon calls to Add()
+        /// </summary>
+        void Tick();
+
+        /// <summary>
+        /// Cleans up expired items and adds the object to the list of items to keep alive.
+        /// </summary>
+        void Add(object item);
+    }
+
     /// <summary>
     /// Provides a means of forcing the garbage collector to wait on objects aquired from permanent 
     /// storage while only holding WeakReference's of the object.  Essentially uses a simple lockless 
     /// algorithm to track the most recently loaded objects so that they will stay alive longer.
     /// </summary>
     [System.Diagnostics.DebuggerDisplay("{_head.Start}-{_tail.Last}")]
-    public class ObjectKeepAlive
+    public class ObjectKeepAlive : IObjectKeepAlive
     {
         private const int BucketSize = 100;
 

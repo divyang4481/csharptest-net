@@ -1,4 +1,41 @@
+===FINAL RELEASE NOTICE===
+
+This will be the last release in it's current form.  Projects are being split out and moved to GitHub in the comming weeks/months:
+
+/BPlusTree
+/RpcLibrary
+/Library/Commands
+/Library/Tools
+/SslTunnel
+
+* Not sure what will happen to the rest, may reduce the library and move to GitHub, but this repo will close.
+
 ===Library History===
+*2.14.126.467*
+
+Additions in this release:
+
+  # Added CSharpTest.Net.Collections.LurchTable a thread-safe dictionary with the option of linking entries by insert, modify, or access.  (LinkedHashMap for C#)
+  # Added CSharpTest.Net.Data.DbGuid to provide time based sequential GUID generation (COMB Guid).
+  # BPlusTree added INodeStoreWithCount and allowed injection of IObjectKeepAlive implementation.
+  # Added Crc64 for a quick 64-bit CRC using algorithm (CRC-64/XZ)
+  # Added a simple HttpServer class.
+  # Added Services/ServiceAccessRights and Services/SvcControlManager to provide more control over services.
+  # Added Http/MimeMessage to parse raw HTML form where ContentType = "multipart/form-data", including one or more attachments.
+  # Extended the CommandInterpreter to allow exposing console commands over REST services via built-in service.
+  # Added a CallsPerSecondCounter to allow quick estimation of performance metrics in high-traffic code.
+  # Added an experimental TcpServer (currently under test)
+  # Extended the RpcError enumeration to encompass more errors and decorated descriptions.
+  # RpcLibrary now supports RpcServerRegisterIf2 allowing un-authenticated TCP access and control of max TCP request size.
+  # Added the IDL for the RpcLibrary for unmanaged interop
+ 
+Fixes in this release:
+
+  # Converted BPlusTree's Storage.Cache to use LurchTable to address memory issues in buggy LRU cache.
+  # Optimization of BPlusTree's TransactedCompoundFile in location of free data blocks.
+  # Fixed the dreaded SEHException in the RpcLibrary, now expect acurate RpcException with correct RpcError details.
+
+
 *2.12.810.409*
 
 NOTES:  Major version increment primarily due to extensive changes in BPlusTree's capabilities and storage format.  The next release will flag the v1 Options class as Obsolete to ensure people are using the latest version.  All new code should be using 'OptionsV2' when constructing a BPlusTree.

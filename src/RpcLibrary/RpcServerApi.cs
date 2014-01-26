@@ -1,4 +1,4 @@
-﻿#region Copyright 2010-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2010-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,10 +27,12 @@ namespace CSharpTest.Net.RpcLibrary
     {
         /// <summary> The max limit of in-flight calls </summary>
         public const int MAX_CALL_LIMIT = 255;
+        /// <summary> Use the default request limits </summary>
+        public const int DEF_REQ_LIMIT = -1;
 
         private static readonly UsageCounter _listenerCount = new UsageCounter("RpcApi.Listener.{0}", System.Diagnostics.Process.GetCurrentProcess().Id);
         private bool _isListening;
-        private uint _maxCalls;
+        private int _maxCalls;
 
         /// <summary> The interface Id the service is using </summary>
         public readonly Guid IID;
@@ -50,12 +52,25 @@ namespace CSharpTest.Net.RpcLibrary
         /// servers/services within a single process.
         /// </summary>
         public RpcServerApi(Guid iid)
+            : this(iid, MAX_CALL_LIMIT, DEF_REQ_LIMIT, false)
+        {
+        }
+        /// <summary>
+        /// Constructs an RPC server for the given interface guid, the guid is used to identify multiple rpc
+        /// servers/services within a single process.
+        /// </summary>
+        public RpcServerApi(Guid iid, int maxCalls, int maxRequestBytes, bool allowAnonTcp)
         {
             IID = iid;
-            _maxCalls = MAX_CALL_LIMIT;
+            _maxCalls = maxCalls;
             _handle = new RpcServerHandle();
-            ServerRegisterInterface(_handle, IID, RpcEntryPoint);
+
+            // Guid.Empty to avoid registration of any interface allowing access to AddProtocol/AddAuthentication
+            // without creating a channel
+            if (!Guid.Empty.Equals(iid))
+                ServerRegisterInterface(_handle, IID, RpcEntryPoint, maxCalls, maxRequestBytes, allowAnonTcp);
         }
+
         /// <summary>
         /// Disposes of the server and stops listening if the server is currently listening
         /// </summary>
@@ -69,10 +84,10 @@ namespace CSharpTest.Net.RpcLibrary
         /// Used to ensure that the server is listening with a specific protocol type.  Once invoked this
         /// can not be undone, and all RPC servers within the process will be available on that protocol
         /// </summary>
-        public void AddProtocol(RpcProtseq protocol, string endpoint, uint maxCalls)
+        public bool AddProtocol(RpcProtseq protocol, string endpoint, int maxCalls)
         {
-            ServerUseProtseqEp(protocol, maxCalls, endpoint);
             _maxCalls = Math.Max(_maxCalls, maxCalls);
+            return ServerUseProtseqEp(protocol, maxCalls, endpoint);
         }
         /// <summary>
         /// Adds a type of authentication sequence that will be allowed for RPC connections to this process.
@@ -213,34 +228,57 @@ namespace CSharpTest.Net.RpcLibrary
 
         [DllImport("Rpcrt4.dll", EntryPoint = "RpcServerUnregisterIf", CallingConvention = CallingConvention.StdCall,
             CharSet = CharSet.Unicode, SetLastError = true)]
-        private static extern RpcError RpcServerUnregisterIf(IntPtr IfSpec, IntPtr MgrTypeUuid,
-                                                             uint WaitForCallsToComplete);
+        private static extern RpcError RpcServerUnregisterIf(IntPtr IfSpec, IntPtr MgrTypeUuid, uint WaitForCallsToComplete);
 
         #region RpcServerXXXX routines
 
         [DllImport("Rpcrt4.dll", EntryPoint = "RpcServerUseProtseqEpW", CallingConvention = CallingConvention.StdCall,
             CharSet = CharSet.Unicode, SetLastError = true)]
-        private static extern RpcError RpcServerUseProtseqEp(String Protseq, uint MaxCalls, String Endpoint,
-                                                             IntPtr SecurityDescriptor);
+        private static extern RpcError RpcServerUseProtseqEp(String Protseq, int MaxCalls, String Endpoint, IntPtr SecurityDescriptor);
 
-        private static void ServerUseProtseqEp(RpcProtseq protocol, uint maxCalls, String endpoint)
+        private static bool ServerUseProtseqEp(RpcProtseq protocol, int maxCalls, String endpoint)
         {
             Log.Verbose("ServerUseProtseqEp({0})", protocol);
             RpcError err = RpcServerUseProtseqEp(protocol.ToString(), maxCalls, endpoint, IntPtr.Zero);
             if (err != RpcError.RPC_S_DUPLICATE_ENDPOINT)
                 RpcException.Assert(err);
+
+            return err == RpcError.RPC_S_OK;
         }
 
-        [DllImport("Rpcrt4.dll", EntryPoint = "RpcServerRegisterIf", CallingConvention = CallingConvention.StdCall,
-            CharSet = CharSet.Unicode, SetLastError = true)]
+        delegate int RPC_IF_CALLBACK_FN(IntPtr Interface, IntPtr Context);
+        private static readonly FunctionPtr<RPC_IF_CALLBACK_FN> hAuthCall = new FunctionPtr<RPC_IF_CALLBACK_FN>(AuthCall);
+        static int AuthCall(IntPtr Interface, IntPtr Context) 
+        {
+            return (int)RpcError.RPC_S_OK; 
+        }
+
+        [DllImport("Rpcrt4.dll", EntryPoint = "RpcServerRegisterIf2", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode, SetLastError = true)]
+        private static extern RpcError RpcServerRegisterIf2(IntPtr IfSpec, IntPtr MgrTypeUuid, IntPtr MgrEpv, int Flags, int MaxCalls, int MaxRpcSize, IntPtr hProc);
+
+        [DllImport("Rpcrt4.dll", EntryPoint = "RpcServerRegisterIf", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode, SetLastError = true)]
         private static extern RpcError RpcServerRegisterIf(IntPtr IfSpec, IntPtr MgrTypeUuid, IntPtr MgrEpv);
 
-        private static void ServerRegisterInterface(RpcHandle handle, Guid iid, RpcExecute fnExec)
+        private static void ServerRegisterInterface(RpcHandle handle, Guid iid, RpcExecute fnExec, int maxCalls, int maxRequestBytes, bool allowAnonTcp)
         {
-            Log.Verbose("ServerRegisterInterface({0})", iid);
-            Ptr<RPC_SERVER_INTERFACE> sIf = MIDL_SERVER_INFO.Create(handle, iid, RpcApi.TYPE_FORMAT, RpcApi.FUNC_FORMAT,
-                                                                    fnExec);
-            RpcException.Assert(RpcServerRegisterIf(sIf.Handle, IntPtr.Zero, IntPtr.Zero));
+            const int RPC_IF_ALLOW_CALLBACKS_WITH_NO_AUTH = 0x0010;
+            int flags = 0;
+            IntPtr fnAuth = IntPtr.Zero;
+            if (allowAnonTcp)
+            {
+                flags = RPC_IF_ALLOW_CALLBACKS_WITH_NO_AUTH;
+                fnAuth = hAuthCall.Handle;
+            }
+
+            Ptr<RPC_SERVER_INTERFACE> sIf = MIDL_SERVER_INFO.Create(handle, iid, RpcApi.TYPE_FORMAT, RpcApi.FUNC_FORMAT, fnExec);
+
+            if (!allowAnonTcp && maxRequestBytes < 0)
+                RpcException.Assert(RpcServerRegisterIf(sIf.Handle, IntPtr.Zero, IntPtr.Zero));
+            else
+                RpcException.Assert(RpcServerRegisterIf2(sIf.Handle, IntPtr.Zero, IntPtr.Zero, flags, 
+                    maxCalls <= 0 ? MAX_CALL_LIMIT : maxCalls, 
+                    maxRequestBytes <= 0 ? 80 * 1024 : maxRequestBytes, fnAuth));
+
             handle.Handle = sIf.Handle;
         }
 
@@ -268,9 +306,9 @@ namespace CSharpTest.Net.RpcLibrary
 
         [DllImport("Rpcrt4.dll", EntryPoint = "RpcServerListen", CallingConvention = CallingConvention.StdCall,
             CharSet = CharSet.Unicode, SetLastError = true)]
-        private static extern RpcError RpcServerListen(uint MinimumCallThreads, uint MaxCalls, uint DontWait);
+        private static extern RpcError RpcServerListen(uint MinimumCallThreads, int MaxCalls, uint DontWait);
 
-        private static void ServerListen(uint maxCalls)
+        private static void ServerListen(int maxCalls)
         {
             Log.Verbose("Begin Server Listening");
             RpcError result = RpcServerListen(1, maxCalls, 1);

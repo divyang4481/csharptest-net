@@ -1,4 +1,4 @@
-﻿#region Copyright 2011-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2011-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,6 +14,7 @@
 #endregion
 using System.Collections.Generic;
 using NUnit.Framework;
+using System;
 
 namespace CSharpTest.Net.Library.Test
 {
@@ -21,6 +22,21 @@ namespace CSharpTest.Net.Library.Test
         where TList : ICollection<TItem>, new()
     {
         protected abstract TItem[] GetSample();
+
+        protected TList CreateSample(TItem[] items)
+        {
+            TList list = new TList();
+
+            int count = 0;
+            Assert.AreEqual(count, list.Count);
+
+            foreach (TItem item in items)
+            {
+                list.Add(item);
+                Assert.AreEqual(++count, list.Count);
+            }
+            return list;
+        }
 
         [Test]
         public void TestAddRemove()
@@ -149,6 +165,51 @@ namespace CSharpTest.Net.Library.Test
                 Assert.IsTrue(items.Remove(item));
 
             Assert.AreEqual(0, items.Count);
+        }
+
+        public static void VerifyCollection<T, TC>(IEqualityComparer<T> comparer, ICollection<T> expected, TC collection) where TC : ICollection<T>
+        {
+            Assert.AreEqual(expected.IsReadOnly, collection.IsReadOnly);
+            Assert.AreEqual(expected.Count, collection.Count);
+            CompareEnumerations(comparer, expected, collection);
+            using (var a = expected.GetEnumerator())
+            using (var b = collection.GetEnumerator())
+            {
+                bool result;
+                Assert.IsTrue(b.MoveNext());
+                b.Reset();
+                Assert.AreEqual(result = a.MoveNext(), b.MoveNext());
+                while (result)
+                {
+                    Assert.IsTrue(comparer.Equals(a.Current, b.Current));
+                    Assert.IsTrue(comparer.Equals(a.Current, (T)((System.Collections.IEnumerator)b).Current));
+                    Assert.AreEqual(result = a.MoveNext(), b.MoveNext());
+                }
+            }
+
+            T[] items = new T[10 + collection.Count];
+            collection.CopyTo(items, 5);
+            Array.Copy(items, 5, items, 0, collection.Count);
+            Array.Resize(ref items, collection.Count);
+            CompareEnumerations(comparer, expected, collection);
+
+            for( int i=0; i < 5; i++)
+                Assert.IsTrue(collection.Contains(items[i]));
+        }
+
+        public static void CompareEnumerations<T>(IEqualityComparer<T> comparer, IEnumerable<T> expected, IEnumerable<T> collection)
+        {
+            using (var a = expected.GetEnumerator())
+            using (var b = collection.GetEnumerator())
+            {
+                bool result;
+                Assert.AreEqual(result = a.MoveNext(), b.MoveNext());
+                while (result)
+                {
+                    Assert.IsTrue(comparer.Equals(a.Current, b.Current));
+                    Assert.AreEqual(result = a.MoveNext(), b.MoveNext());
+                }
+            }
         }
     }
 }

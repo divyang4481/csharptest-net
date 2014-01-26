@@ -1,4 +1,4 @@
-﻿#region Copyright 2008-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2008-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -99,9 +99,10 @@ namespace CSharpTest.Net.CSBuild
 			{
 				case FrameworkVersions.v20:
 				case FrameworkVersions.v30: frmwrk = "v2.0.50727"; break;
-				case FrameworkVersions.v35: frmwrk = "v3.5"; break;
-				case FrameworkVersions.v40: frmwrk = "v4.0.30319"; break;
-				default: throw new ArgumentException("Unknown framework version");
+                case FrameworkVersions.v35: frmwrk = "v3.5"; break;
+                case FrameworkVersions.v40:
+                case FrameworkVersions.v45: frmwrk = "v4.0.30319"; break;
+				default: throw new ArgumentException("Unknown framework version: " + framework);
 			}
 
 			string windir = Environment.GetFolderPath(Environment.SpecialFolder.System);

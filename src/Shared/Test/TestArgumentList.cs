@@ -1,4 +1,4 @@
-﻿#region Copyright 2008-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2008-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using CSharpTest.Net.Utils;
 
+#pragma warning disable 618 //CSharpTest.Net.Utils.ArgumentList.Join(params string[])' is obsolete
 #pragma warning disable 1591
 namespace CSharpTest.Net.Utils.Test
 {

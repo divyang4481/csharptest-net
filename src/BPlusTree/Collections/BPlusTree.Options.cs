@@ -1,4 +1,4 @@
-﻿#region Copyright 2011-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2011-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,11 +12,11 @@
  * limitations under the License.
  */
 #endregion
-
 using System;
 using System.Collections.Generic;
 using System.IO;
 using CSharpTest.Net.IO;
+using CSharpTest.Net.Interfaces;
 using CSharpTest.Net.Serialization;
 using CSharpTest.Net.Storage;
 using CSharpTest.Net.Synchronization;
@@ -49,6 +49,8 @@ namespace CSharpTest.Net.Collections
             public OptionsV2(ISerializer<TKey> keySerializer, ISerializer<TValue> valueSerializer, IComparer<TKey> comparer)
                 : base(keySerializer, valueSerializer, comparer)
             {
+                CacheKeepAliveMinimumHistory = 128;
+                CacheKeepAliveMaximumHistory = 1024;
             }
 
             /// <summary>
@@ -165,7 +167,7 @@ namespace CSharpTest.Net.Collections
                 MaximumValueNodes = maxValueNodes;
                 MinimumValueNodes = Math.Max(2, maxValueNodes / 3);
             }
-
+            
             /// <summary> Used to create the correct storage type </summary>
             internal override INodeStorage CreateStorage()
             {
@@ -245,7 +247,7 @@ namespace CSharpTest.Net.Collections
         /// Defines the options nessessary to construct a BPlusTree implementation
         /// </summary>
         [System.ComponentModel.Browsable(false)]
-        public sealed class Options : BPlusTreeOptions<TKey, TValue>
+        public sealed partial class Options : BPlusTreeOptions<TKey, TValue>
         {
             private int _fileGrowthRate = 100;
             private int _concurrentWriters = 8;

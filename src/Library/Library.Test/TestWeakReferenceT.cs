@@ -1,4 +1,4 @@
-﻿#region Copyright 2011-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2011-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -33,12 +33,12 @@ namespace CSharpTest.Net.Library.Test
         [Test]
         public void TestDestoryed()
         {
-            WeakReference<MyObject> r;
+            Utils.WeakReference<MyObject> r;
             if (true)
             {
                 MyObject obj = new MyObject();
 
-                r = new WeakReference<MyObject>(obj);
+                r = new Utils.WeakReference<MyObject>(obj);
                 Assert.IsTrue(r.IsAlive);
                 Assert.IsNotNull(r.Target);
                 MyObject test;
@@ -66,9 +66,9 @@ namespace CSharpTest.Net.Library.Test
         public void TestSerialization()
         {
             string value = "Testing Value";
-            WeakReference<string> r;
-            r = new WeakReference<string>(value);
-            WeakReference<string> r2 = new Cloning.SerializerClone().Clone(r);
+            Utils.WeakReference<string> r;
+            r = new Utils.WeakReference<string>(value);
+            Utils.WeakReference<string> r2 = new Cloning.SerializerClone().Clone(r);
 
             Assert.AreEqual(r.Target, r2.Target);
             Assert.AreEqual(value, r2.Target);
@@ -81,7 +81,7 @@ namespace CSharpTest.Net.Library.Test
         {
             string value1 = "Testing Value - 1";
             string value2 = "Testing Value - 2";
-            WeakReference<string> r = new WeakReference<string>(value1);
+            Utils.WeakReference<string> r = new Utils.WeakReference<string>(value1);
 
             string tmp;
             Assert.IsTrue(r.TryGetTarget(out tmp) && tmp == value1);
@@ -95,7 +95,7 @@ namespace CSharpTest.Net.Library.Test
         {
             string value1 = "Testing Value - 1";
             object value2 = new MyObject();
-            WeakReference<string> r = new WeakReference<string>(value1);
+            Utils.WeakReference<string> r = new Utils.WeakReference<string>(value1);
 
             string tmp;
             Assert.IsTrue(r.TryGetTarget(out tmp) && tmp == value1);

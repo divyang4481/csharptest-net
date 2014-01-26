@@ -1,4 +1,4 @@
-﻿#region Copyright 2010-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2010-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -41,9 +41,11 @@ namespace CSharpTest.Net.CustomTool.Projects
 			{
 				try
 				{
+                    System.Diagnostics.Trace.TraceInformation("Comparing '{0}' == '{1}'", filename, item.FullFileName);
 					if (StringComparer.OrdinalIgnoreCase.Equals(item.FullFileName, filename) && File.Exists(item.FullFileName))
 					{
-						if (nameSpace == item.CustomNamespace || nameSpace == item.DefaultNamespace)
+                        System.Diagnostics.Trace.TraceInformation("Comparing '{0}' == '{1}' || '{2}'", nameSpace, item.CustomNamespace, item.DefaultNamespace);
+                        if (nameSpace == item.CustomNamespace || nameSpace == item.DefaultNamespace)
 							return item;
 					}
 				}

@@ -1,4 +1,4 @@
-﻿#region Copyright 2009-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2009-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -41,6 +41,8 @@ namespace CSharpTest.Net.Library.Test
 
                 Assert.AreEqual(0, runner.Run("/C", "dir", "/b", "/on", "/ad-h-s", "c:\\"));
                 Assert.AreEqual(String.Empty, err.ToString());
+
+                Assert.AreNotEqual(0, runner.PID);
 
                 StringReader rdr = new StringReader(wtr.ToString());
                 List<DirectoryInfo> rootdirs = new List<DirectoryInfo>(new DirectoryInfo("C:\\").GetDirectories());

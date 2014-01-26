@@ -1,4 +1,4 @@
-﻿#region Copyright 2009-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2009-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -140,6 +140,22 @@ namespace CSharpTest.Net.SslTunnel.Test
 				X509Certificate2 cert = new X509Certificate2(testName + ".cer");
 				Assert.AreEqual("CN=" + testName, cert.Subject);
 				Assert.AreEqual("CN=" + testName, cert.Issuer);
+
+                _stdout.GetStringBuilder().Length = 0;
+				SslTunnel.Server.Commands.FindCert(testName);
+			    string fileFound = null;
+                using (StringReader rdr = new StringReader(Respose))
+				{
+					while (null != (line = rdr.ReadLine()))
+					{
+                        if (line.StartsWith("Private Key File:"))
+                        {
+                            fileFound = line.Substring("Private Key File:".Length);
+                        }
+					}
+				}
+
+                Assert.IsNotNull(fileFound, "Unable to locate local private key file.");
 
 				SslTunnel.Server.Commands.RemoveCert(testName);
 			}

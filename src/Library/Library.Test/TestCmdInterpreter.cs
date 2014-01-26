@@ -1,4 +1,4 @@
-﻿#region Copyright 2009-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2009-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -44,7 +44,25 @@ namespace CSharpTest.Net.Library.Test
 		}
 		#endregion
 
-		/// <summary> Used to provide a set of test commands </summary>
+        [DebuggerNonUserCode]
+	    private static int WindowHeight
+	    {
+	        get
+	        {
+	            int windowHeight;
+	            try
+	            {
+	                windowHeight = Console.WindowHeight;
+	            }
+	            catch (System.IO.IOException)
+	            {
+	                windowHeight = 25;
+	            }
+	            return windowHeight;
+	        }
+	    }
+
+	    /// <summary> Used to provide a set of test commands </summary>
 		class TestCommands
 		{
 			string _data;
@@ -135,12 +153,6 @@ namespace CSharpTest.Net.Library.Test
 
 			public void BlowUp([DefaultValue(false)] bool apperror)
 			{
-				//with reckless disregaurd we replace std in/out/stderr, fortunatly when the command completes all
-				//are restored, regaurdless of error state.
-				Console.SetOut(new StringWriter());
-				Console.SetError(new StringWriter());
-				Console.SetIn(new StringReader(String.Empty));
-
 				if( apperror )
 					throw new ApplicationException("BlowUp");
 				throw new Exception("BlowUp");
@@ -204,12 +216,14 @@ namespace CSharpTest.Net.Library.Test
 			try
 			{
 				StringWriter sw = new StringWriter();
-				Console.SetOut(sw);
-				Console.SetError(sw);
+                Console.SetOut(sw);
+                StringWriter swe = new StringWriter();
+                Console.SetError(swe);
 				Console.SetIn(new StringReader(input));
 
 				ci.Prompt = String.Empty;
 				ci.Run(Console.In);
+			    sw.WriteLine(swe.ToString());
 				return sw.ToString().Trim();
 			}
 			finally
@@ -402,7 +416,7 @@ namespace CSharpTest.Net.Library.Test
 			ci.ErrorLevel = 0;
 			result = Capture(ci, "BlowUp false");
 			Assert.AreNotEqual(0, ci.ErrorLevel);
-			Assert.IsTrue(result.Contains("System.Exception: BlowUp"));
+			Assert.IsTrue(result.Contains("System.Exception: BlowUp"), "Expected \"System.Exception: BlowUp\" in {0}", result);
 
 			//ApplicationExcpetion dumps message only:
 			ci.ErrorLevel = 0;
@@ -429,7 +443,7 @@ namespace CSharpTest.Net.Library.Test
 			Assert.AreEqual("Unknown option specified: MissingProperty", result);
 
 			result = Capture(ci, "ECHO $$(MissingProperty) $$(xx x$$y $$ abc"); // <= escape '$' with '$$'
-			Assert.AreEqual("\"$(MissingProperty)\" \"$(xx\" x$y $ abc", result); // <= extra '$' was removed.
+			Assert.AreEqual("$(MissingProperty) $(xx x$y $ abc", result); // <= extra '$' was removed.
 		}
 
 		class ErrorReader : TextReader
@@ -502,7 +516,7 @@ namespace CSharpTest.Net.Library.Test
 			//replace the keystroke wait
 			ci.ReadNextCharacter = GetSpace;
 
-			string input = String.Format("Count {0} | MORE", (int)(Console.WindowHeight * 1.5));
+            string input = String.Format("Count {0} | MORE", (int)(WindowHeight * 1.5));
 
 			result = Capture(ci, input);
 
@@ -529,7 +543,7 @@ namespace CSharpTest.Net.Library.Test
 				DefaultCommands.Echo | DefaultCommands.Find | DefaultCommands.PipeCommands,
 				new TestCommands());
 
-			string input = String.Format("Count {0} | MORE", (int)(Console.WindowHeight * 1.5));
+            string input = String.Format("Count {0} | MORE", (int)(WindowHeight * 1.5));
 
 			result = Capture(ci, "Count 220 |FIND \"1\" |FIND \"0\" | FIND /V \"3\" | FIND /V \"4\" | FIND /V \"5\" | FIND /V \"6\" | FIND /V \"7\" | FIND /V \"8\" | FIND /V \"9\"");
 			Assert.AreEqual("10\r\n100\r\n101\r\n102\r\n110\r\n120\r\n201\r\n210", result);

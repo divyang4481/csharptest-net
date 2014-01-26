@@ -1,4 +1,4 @@
-﻿#region Copyright 2009-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2009-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -61,8 +61,8 @@ namespace CSharpTest.Net.Commands
 		public bool IsInterpreter { get { return Parameter.ParameterType == typeof(ICommandInterpreter); } }
 		public bool IsAllArguments { get { return _allArguments; } }
 		public Object DefaultValue { get { return _default; } }
-
-		internal Object GetArgumentValue(ICommandInterpreter interpreter, ArgumentList args, string[] allArguments)
+        
+	    internal Object GetArgumentValue(ICommandInterpreter interpreter, ArgumentList args, string[] allArguments)
 		{
 			object value = null;
 

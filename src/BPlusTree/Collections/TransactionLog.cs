@@ -1,4 +1,4 @@
-#region Copyright 2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+#region Copyright 2012-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -349,6 +349,7 @@ namespace CSharpTest.Net.Collections
                     const int minSize = 16;
                     byte[] bytes = buffer.GetBuffer();
                     int size, temp, nbytes, szcontent;
+                    short opCount;
                     LogEntry entry = new LogEntry();
 
                     length = io.Length;
@@ -363,49 +364,55 @@ namespace CSharpTest.Net.Collections
 
                     while (valid && (pos = position[0] = io.Position) + minSize < length)
                     {
-                        size = PrimitiveSerializer.Int32.ReadFrom(io);
-                        size = ((byte)(size >> 24) == 0xbb) ? size & 0x00FFFFFF : -1;
-                        if (size < minSize || pos + size + 4 > length)
+                        try
                         {
-                            if (fixedOffset)
-                                yield break;
+                            size = PrimitiveSerializer.Int32.ReadFrom(io);
+                            size = ((byte)(size >> 24) == 0xbb) ? size & 0x00FFFFFF : -1;
+                            if (size < minSize || pos + size + 4 > length)
+                            {
+                                if (fixedOffset)
+                                    yield break;
+                                break;
+                            }
+                            fixedOffset = false;
+
+                            if (size > buffer.Capacity)
+                            {
+                                buffer.Capacity = (size + 8192);
+                                bytes = buffer.GetBuffer();
+                            }
+
+                            szcontent = size - 8;
+
+                            buffer.Position = 0;
+                            buffer.SetLength(szcontent);
+                            nbytes = 0;
+                            while (nbytes < szcontent && (temp = io.Read(bytes, nbytes, szcontent - nbytes)) != 0)
+                                nbytes += temp;
+
+                            if (nbytes != szcontent)
+                                break;
+                            Crc32 crc = new Crc32();
+                            crc.Add(bytes, 0, nbytes);
+                            temp = PrimitiveSerializer.Int32.ReadFrom(io);
+                            if (crc.Value != temp)
+                                break;
+
+                            temp = PrimitiveSerializer.Int32.ReadFrom(io);
+                            if ((byte)(temp >> 24) != 0xee || (temp & 0x00FFFFFF) != size)
+                                break;
+
+                            entry.TransactionId = PrimitiveSerializer.Int32.ReadFrom(buffer);
+                            _transactionId = Math.Max(_transactionId, entry.TransactionId + 1);
+
+                            opCount = PrimitiveSerializer.Int16.ReadFrom(buffer);
+                            if (opCount <= 0 || opCount >= short.MaxValue)
+                                break;
+                        }
+                        catch(InvalidDataException)
+                        {
                             break;
                         }
-                        fixedOffset = false;
-
-                        if (size > buffer.Capacity)
-                        {
-                            buffer.Capacity = (size + 8192);
-                            bytes = buffer.GetBuffer();
-                        }
-
-                        szcontent = size - 8;
-
-                        buffer.Position = 0;
-                        buffer.SetLength(szcontent);
-                        nbytes = 0;
-                        while (nbytes < szcontent && (temp = io.Read(bytes, nbytes, szcontent - nbytes)) != 0)
-                            nbytes += temp;
-
-                        if (nbytes != szcontent)
-                            break;
-                        Crc32 crc = new Crc32();
-                        crc.Add(bytes, 0, nbytes);
-                        temp = PrimitiveSerializer.Int32.ReadFrom(io);
-                        if (crc.Value != temp)
-                            break;
-
-                        temp = PrimitiveSerializer.Int32.ReadFrom(io);
-                        if ((byte)(temp >> 24) != 0xee || (temp & 0x00FFFFFF) != size)
-                            break;
-
-                        entry.TransactionId = PrimitiveSerializer.Int32.ReadFrom(buffer);
-                        _transactionId = Math.Max(_transactionId, entry.TransactionId + 1);
-
-                        short opCount = PrimitiveSerializer.Int16.ReadFrom(buffer);
-                        if(opCount <= 0 || opCount >= short.MaxValue)
-                            break;
-
                         while (opCount-- > 0)
                         {
                             entry.OpCode = (OperationCode)PrimitiveSerializer.Int16.ReadFrom(buffer);

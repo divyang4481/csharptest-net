@@ -1,4 +1,4 @@
-﻿#region Copyright 2011-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2011-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,6 +19,7 @@ using CSharpTest.Net.IO;
 using CSharpTest.Net.Collections;
 using CSharpTest.Net.Serialization;
 using CSharpTest.Net.Interfaces;
+using System.Threading;
 
 #pragma warning disable 1591
 
@@ -142,9 +143,10 @@ namespace CSharpTest.Net.Storage
         [DebuggerDisplay("{Id}")]
         struct FileId : IStorageHandle
         {
+            private static int _uniqueCounter = new Random().Next();
             public readonly uint Id;
             public readonly uint Unique;
-            public FileId(uint id) : this(id, (uint)new Crc32(Guid.NewGuid().ToByteArray()).Value) 
+            public FileId(uint id) : this(id, unchecked((uint)Interlocked.Increment(ref _uniqueCounter))) 
             { }
             public FileId(uint id, uint unique) 
             { Id = id; Unique = unique; }

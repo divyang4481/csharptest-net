@@ -1,4 +1,4 @@
-﻿#region Copyright 2011-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2011-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -127,6 +127,13 @@ namespace CSharpTest.Net.BPlusTree.Test
             }
         }
 
+        [Test, Explicit]
+        public void LoopTestAbortWritersAndRecover()
+        {
+            for (int i = 0; i < 10; i++)
+                TestAbortWritersAndRecover();
+        }
+
         [Test]
         public void TestAbortWritersAndRecover()
         {
@@ -146,12 +153,12 @@ namespace CSharpTest.Net.BPlusTree.Test
                 {
                     options.CreateFile = CreatePolicy.Never;
                     int recoveredRecords = BPlusTree<KeyInfo, DataValue>.RecoverFile(options);
-                    if (recoveredRecords != RecordsCreated)
+                    if (recoveredRecords < RecordsCreated)
                         Assert.Fail("Unable to recover records, recieved ({0} of {1}).", recoveredRecords, RecordsCreated);
 
                     options.FileName = copy.TempPath;
                     recoveredRecords = BPlusTree<KeyInfo, DataValue>.RecoverFile(options);
-                    Assert.IsTrue(recoveredRecords >= minRecordCreated);
+                    Assert.IsTrue(recoveredRecords >= minRecordCreated, "Expected at least " + minRecordCreated + " found " + recoveredRecords);
 
                     using (BPlusTree<KeyInfo, DataValue> dictionary = new BPlusTree<KeyInfo, DataValue>(options))
                     {

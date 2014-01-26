@@ -1,4 +1,4 @@
-﻿#region Copyright 2009-2012 by Roger Knapp, Licensed under the Apache License, Version 2.0
+﻿#region Copyright 2009-2014 by Roger Knapp, Licensed under the Apache License, Version 2.0
 /* Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -267,11 +267,17 @@ namespace CSharpTest.Net.Collections
 
 		object ICollection.SyncRoot
 		{
-			get { return this; }
-		}
+            get { return this; }
+        }
 
         /// <summary> Returns an enumeration of the ordinal values </summary>
         public IEnumerable<int> EnumerateFrom(int startAt)
+        {
+            return EnumerateRange(startAt, int.MaxValue);
+        }
+
+        /// <summary> Returns an enumeration of the ordinal values </summary>
+        public IEnumerable<int> EnumerateRange(int startAt, int endAt)
         {
             int ordinal = startAt & ~0x07;
             //foreach (byte i in _bits)
@@ -290,6 +296,8 @@ namespace CSharpTest.Net.Collections
                     if ((i & 0x0080) != 0) yield return ordinal + 7;
                 }
                 ordinal += 8;
+                if (ordinal > endAt)
+                    break;
             }
         }
 
